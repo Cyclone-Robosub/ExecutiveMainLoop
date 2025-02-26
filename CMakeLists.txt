@@ -7,8 +7,9 @@ add_compile_options("-DMOCK_RPI")
 
 
 
-add_executable(ExecuteLoop)
-  #"lib/LQR_Control.h" "lib/Physics.h" "testing/Physics_Testing.cpp")
+add_executable(ExecutiveLoop 
+        main.cpp)
+  
 
 # GTest start
 include(FetchContent)
@@ -25,7 +26,7 @@ enable_testing()
 
 
 add_subdirectory(yaml-cpp)
-target_link_libraries(ExecuteLoop yaml-cpp)
+target_link_libraries(ExecutiveLoop yaml-cpp)
 #target_link_libraries(run_tests yaml-cpp)
 
 
