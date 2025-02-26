@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.15)
 project(ExecutiveMainLoop)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_compile_options("-DMOCK_RPI")
 
 
@@ -24,7 +24,8 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 
-
+find_package(Threads REQUIRED)
+target_link_libraries(ExecutiveLoop Threads::Threads)
 add_subdirectory(yaml-cpp)
 target_link_libraries(ExecutiveLoop yaml-cpp)
 #target_link_libraries(run_tests yaml-cpp)
