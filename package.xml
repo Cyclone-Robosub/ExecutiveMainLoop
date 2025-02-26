@@ -3,7 +3,7 @@
 <package format="3">
   <name>executive_main_loop</name>
   <version>0.0.0</version>
-  <description>Research Cyclone Package</description>
+  <description>Executive Main Loop Package</description>
   <maintainer email="crs.aggies@gmail.com">Cyclone RoboSub UC Davis</maintainer>
   <license>TODO</license>
 

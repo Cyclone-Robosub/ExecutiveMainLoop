@@ -25,11 +25,11 @@ int main(){
     Setup initStateandConfig = Setup();
     ExecutiveMainLoop mainLoop;
 
-    //can't get std::jthread to work
-    std::thread ReadInputsThread(&ExecutiveMainLoop::ReadInputs, &mainLoop);
-    std::thread UpdateStateThread(&ExecutiveMainLoop::UpdateState, &mainLoop);
-    std::thread ExecutiveDecisionLoopThread(&ExecutiveMainLoop::ExecuteDecisionLoop, &mainLoop);
-    std::thread SendThrusterCommandsThread(&ExecutiveMainLoop::SendThrusterCommands, &mainLoop);
+    
+    std::jthread ReadInputsThread(&ExecutiveMainLoop::ReadInputs, &mainLoop);
+    std::jthread UpdateStateThread(&ExecutiveMainLoop::UpdateState, &mainLoop);
+    std::jthread ExecutiveDecisionLoopThread(&ExecutiveMainLoop::ExecuteDecisionLoop, &mainLoop);
+    std::jthread SendThrusterCommandsThread(&ExecutiveMainLoop::SendThrusterCommands, &mainLoop);
 
 
     ReadInputsThread.join();
