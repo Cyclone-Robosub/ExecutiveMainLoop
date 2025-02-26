@@ -5,6 +5,7 @@ namespace fs = std::filesystem;
 class Setup {
 public:
     //Reads the Init.yaml and state.yaml
+    //We can create a ROS pacakdge of the Statefile and load in using ROS parameters and not have to anything because we will make a ROS node of the state.yaml file.
   Setup() {
     if (fs::exists("Init.yaml")) {
       //Need to decide how to set the variables
