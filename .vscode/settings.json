@@ -93,7 +93,9 @@
         "queue": "cpp",
         "stack": "cpp",
         "__nullptr": "cpp",
-        "__string": "cpp"
+        "__string": "cpp",
+        "cinttypes": "cpp",
+        "typeindex": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
