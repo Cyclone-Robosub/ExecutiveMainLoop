@@ -95,7 +95,10 @@
         "__nullptr": "cpp",
         "__string": "cpp",
         "cinttypes": "cpp",
-        "typeindex": "cpp"
+        "typeindex": "cpp",
+        "source_location": "cpp",
+        "regex": "cpp"
     },
-    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "ros.distro": "jazzy"
 }
