@@ -97,8 +97,16 @@
         "cinttypes": "cpp",
         "typeindex": "cpp",
         "source_location": "cpp",
-        "regex": "cpp"
+        "regex": "cpp",
+        "strstream": "cpp",
+        "cfenv": "cpp",
+        "coroutine": "cpp",
+        "expected": "cpp",
+        "future": "cpp",
+        "shared_mutex": "cpp",
+        "stdfloat": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-    "ros.distro": "jazzy"
+    "ros.distro": "jazzy",
+    "C_Cpp.clang_format_fallbackStyle": "Google"
 }
