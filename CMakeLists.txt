@@ -33,8 +33,7 @@ ament_package()
 
 find_package(Threads REQUIRED)
 target_link_libraries(ExecutiveLoop Threads::Threads)
-add_subdirectory(Libraries/yaml-cpp)
-target_link_libraries(ExecutiveLoop yaml-cpp)
+
 
 #target_link_libraries(run_tests yaml-cpp)
 

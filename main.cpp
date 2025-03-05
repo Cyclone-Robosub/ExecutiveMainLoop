@@ -35,13 +35,13 @@ class ExecutiveMainLoop : public rclcpp::Node {
     }
     void depthSensorCallback(const std_msgs::msg::String::SharedPtr msg)
          {
-          std::lock_guard<std::mutex> lock(mutex_);
+        //  std::lock_guard<std::mutex> lock(mutex_);
       depth_msg = msg->data;
     }
 
     void imuSensorCallback(const std_msgs::msg::String::SharedPtr msg)
          {
-       std::lock_guard<std::mutex> lock(mutex_);
+      // std::lock_guard<std::mutex> lock(mutex_);
       imu_msg = msg->data;
     }
 
@@ -53,6 +53,7 @@ class ExecutiveMainLoop : public rclcpp::Node {
     void ReadInputs() {
 
       while (status) {
+
          std::lock_guard<std::mutex> lock(mutex_);
         // Have to check what the msg is saying.
         // Parse msg data. Put the research data into a vector or varibles.
@@ -68,19 +69,23 @@ class ExecutiveMainLoop : public rclcpp::Node {
     }
 
     void UpdateState() {
+      //get a notification here
 
       while (status) {
         // Get the varaibles and put it into the state file.Timestampted for
         // every 0.1seconds.
+        if(!depth_msg.empty() && !imu_msg.empty() ){
         std::this_thread::sleep_for(std::chrono::milliseconds(95));
+        outStateFile << "," << depth_msg << "," << imu_msg;
+        }
         // add Time element
-        // outStateFile << "," << depth << "," << imu_data << std::endl;
-        // Need to see William's code to put PWM here.
+        // Need to see William's code to put PWM here in the status file.
       }
     }
 
     void ExecuteDecisionLoop() {
       while (status) {
+        // William's code call here
       }
       // if all decisions/tasks are done make TasksCompleted true;
     }
@@ -88,6 +93,7 @@ class ExecutiveMainLoop : public rclcpp::Node {
     // Sends Commands to Thruster Queue
     void SendThrusterCommands() {
       while (status) {
+        //send it back to William's code.
       }
     }
 
@@ -138,6 +144,7 @@ public:
                       std::placeholders::_1), sub1_opt);
 
     // Priority
+    // Need to input IMU inilization with ROS.
     imu_sensor_Subscription_ = this->create_subscription<std_msgs::msg::String>(
         "imuSensorData", rclcpp::QoS(5),
         std::bind(&ExecutiveMainLoop::imuSensorCallback, mainLoop,
@@ -168,7 +175,7 @@ public:
     // these functions will have wait functions just in case with a queue
     // system.
 
-    std::jthread ReadInputsThread(&ExecutiveMainLoop::ReadInputs, mainLoop);
+   // std::jthread ReadInputsThread(&ExecutiveMainLoop::ReadInputs, mainLoop);
     // Creates a new thread for each node. Need to check if it does
 
     /*
