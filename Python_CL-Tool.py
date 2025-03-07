@@ -108,7 +108,7 @@ class Thrust_Control:
     
     def __init__(self, frequency=10):
         rclpy.init()
-        self.publishCommand = Publisher()
+        self.publishCommandObject = Publisher()
         self.plant = Plant()
         # Define PWM pins for each thruster
         self.thrusters = [
@@ -120,6 +120,10 @@ class Thrust_Control:
             20,
             19,
             21]
+        rclpy.spin(self.sendArray(self.publishCommandObject))
+    def sendArray(self, publishCommandObject):
+        while True:
+            publishCommandObject.publish_array(self.thrusters)
         
         # Set default frequency and duty cycle
 
@@ -184,7 +188,7 @@ def main():
     tc.pwm(zero_set)
     while True:
         givenArray = [8]
-        
+
 
 
     

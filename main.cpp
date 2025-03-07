@@ -36,7 +36,7 @@ public:
       python_cltool_subscription =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "python_cltool_topic", 5,
-            std::bind(&ExecutiveMainLoop::ExecuteDecisionLoop, this,
+            std::bind(&ExecutiveMainLoop::executeDecisionLoop, this,
                       std::placeholders::_1));
   }
 
@@ -86,10 +86,13 @@ public:
   }
 
   void executeDecisionLoop(const std_msgs::msg::Int32MultiArray::SharedPtr msg) {
-    while (loopIsRunning) {
-      for(auto i : msg){
-          std::cout << *i << std::endl;
-        }
+
+    while (true) {
+     std::cout << "Received Int32MultiArray: ";
+  for (int32_t value : msg->data) {
+    std::cout << value << " ";
+  }
+  std::cout << std::endl;
     }
     // if all decisions/tasks are done, make tasksCompleted true;
   }
@@ -190,39 +193,22 @@ int main(int argc, char *argv[]) {
   // rclcpp::spin(ReadInputsNode);
 
   std::jthread UpdateStateThread(&ExecutiveMainLoop::updateState, mainLoopNode);
-  std::jthread ExecutiveDecisionLoopThread(&ExecutiveMainLoop::executeDecisionLoop, mainLoopNode);
+  
     // Note: We can join these two threads above and bottom if Rasberry PI
     // really does not like multithreading.
     std::jthread SendThrusterCommandsThread(
-        &ExecutiveMainLoop::SendThrusterCommands, objectMainLoop
+        &ExecutiveMainLoop::sendThrusterCommands, mainLoopNode
 );
     std::cout << "Here" << std::endl;
     rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
-      auto sensorNode = std::make_shared<SensorsData>(objectMainLoop
-);
-auto mainLoopNode = std::make_shared<ExecutiveMainLoop>(objectMainLoop
+      auto sensorNode = std::make_shared<SensorsData>(mainLoopNode
 );
       SensorsExecutor.add_node(sensorNode);
       SensorsExecutor.add_node(mainLoopNode);
       SensorsExecutor.spin();
       rclcpp::shutdown();
     std::cout << "Here" << std::endl;
-    /*
-      ReadInputsThread.join();
-     UpdateStateThread.join();
-     ExecutiveDecisionLoopThread.join();
-     SendThrusterCommandsThread.join();*/
-  std::jthread SendThrusterCommandsThread(&ExecutiveMainLoop::sendThrusterCommands, mainLoopNode);
-  std::cout << "Here" << std::endl;
-  
-  rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
-  auto sensorNode = std::make_shared<SensorsData>(mainLoopNode);
-
-  SensorsExecutor.add_node(sensorNode);
-  SensorsExecutor.spin();
-
-  rclcpp::shutdown();
-  std::cout << "Here" << std::endl;
+   
   /*
     ReadInputsThread.join();
     UpdateStateThread.join();
