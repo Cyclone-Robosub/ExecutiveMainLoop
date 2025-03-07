@@ -13,7 +13,6 @@ add_executable(ExecutiveLoop main.cpp)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 enable_testing()
-find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 ament_target_dependencies(ExecutiveLoop rclcpp std_msgs)
