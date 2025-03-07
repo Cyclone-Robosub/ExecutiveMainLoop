@@ -9,6 +9,7 @@
 
 #include "SetupConfig/SetupRobot.cpp"
 #include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/int32_multi_array.hpp"
 #include "std_msgs/msg/string.hpp"
 
 using namespace std::literals;
@@ -32,6 +33,11 @@ public:
       // Append this for every new file.
       stateFile << "Time,Depth(m),IMU Data, PWM Data\n";
     }
+      python_cltool_subscription =
+        this->create_subscription<std_msgs::msg::Int32MultiArray>(
+            "python_cltool_topic", 5,
+            std::bind(&ExecutiveMainLoop::ExecuteDecisionLoop, this,
+                      std::placeholders::_1));
   }
 
   void depthSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
@@ -79,9 +85,11 @@ public:
     }
   }
 
-  void executeDecisionLoop() {
+  void executeDecisionLoop(const std_msgs::msg::Int32MultiArray::SharedPtr msg) {
     while (loopIsRunning) {
-      // William's code call here
+      for(auto i : msg){
+          std::cout << *i << std::endl;
+        }
     }
     // if all decisions/tasks are done, make tasksCompleted true;
   }
@@ -105,6 +113,8 @@ private:
   std::mutex mutex_;
   std::string depth_msg;
   std::string imu_msg;
+    rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
+      python_cltool_subscription;
   std::vector<float> imu_data;
   float depth;
 
@@ -183,6 +193,25 @@ int main(int argc, char *argv[]) {
   std::jthread ExecutiveDecisionLoopThread(&ExecutiveMainLoop::executeDecisionLoop, mainLoopNode);
     // Note: We can join these two threads above and bottom if Rasberry PI
     // really does not like multithreading.
+    std::jthread SendThrusterCommandsThread(
+        &ExecutiveMainLoop::SendThrusterCommands, objectMainLoop
+);
+    std::cout << "Here" << std::endl;
+    rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
+      auto sensorNode = std::make_shared<SensorsData>(objectMainLoop
+);
+auto mainLoopNode = std::make_shared<ExecutiveMainLoop>(objectMainLoop
+);
+      SensorsExecutor.add_node(sensorNode);
+      SensorsExecutor.add_node(mainLoopNode);
+      SensorsExecutor.spin();
+      rclcpp::shutdown();
+    std::cout << "Here" << std::endl;
+    /*
+      ReadInputsThread.join();
+     UpdateStateThread.join();
+     ExecutiveDecisionLoopThread.join();
+     SendThrusterCommandsThread.join();*/
   std::jthread SendThrusterCommandsThread(&ExecutiveMainLoop::sendThrusterCommands, mainLoopNode);
   std::cout << "Here" << std::endl;
   
