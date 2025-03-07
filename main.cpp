@@ -23,11 +23,11 @@ public:
   // Maybe we could code each function to setup on its own.
   // The functions run assuming that the inital first iteration
   // of the loop starts stage by stage with no wait.
-  ExecutiveMainLoop() : Node("executive_main_node") status(true), tasksCompleted(false) {
-    fs::path currentPath = fs::current_path() / "state.csv";
+  ExecutiveMainLoop() : Node("executive_main_node") loopIsRunning(true), tasksCompleted(false) {
+    fs::path stateFilePath = fs::current_path() / "state.csv";
 
-    if (!fs::exists(currentPath)) {
-      stateFile.open(currentPath, std::ofstream::app);
+    if (!fs::exists(stateFilePath)) {
+      stateFile.open(stateFilePath, std::ofstream::app);
 
       // Append this for every new file.
       stateFile << "Time,Depth(m),IMU Data, PWM Data\n";
@@ -50,7 +50,7 @@ public:
   // implementations, but one of them has to be the best.
 
   void readInputs() {
-    while (status) {
+    while (loopIsRunning) {
       std::lock_guard<std::mutex> lock(mutex_);
       // Have to check what the msg is saying.
       // Parse msg data. Put the research data into a vector or varibles.
@@ -67,7 +67,7 @@ public:
 
   // get a notification here
   void updateState() {
-    while (status) {
+    while (loopIsRunning) {
       // Get the varaibles and put it into the state file.
       // timestamped every 0.1 seconds.
       if(!depth_msg.empty() && !imu_msg.empty() ){
@@ -80,7 +80,7 @@ public:
   }
 
   void executeDecisionLoop() {
-    while (status) {
+    while (loopIsRunning) {
       // William's code call here
     }
     // if all decisions/tasks are done, make tasksCompleted true;
@@ -88,16 +88,16 @@ public:
 
   // Sends Commands to Thruster Queue
   void sendThrusterCommands() {
-    while (status) {
+    while (loopIsRunning) {
       // send it back to William's code.
     }
   }
 
-  bool returnStatus() { return status; }
+  bool returnStatus() { return loopIsRunning; }
   bool returntasksCompleted() { return tasksCompleted; }
   void executeFailCommands() {
     stateFile.close();
-    status = false;
+    loopIsRunning = false;
   }
 
 private:
@@ -108,7 +108,7 @@ private:
   std::vector<float> imu_data;
   float depth;
 
-  bool status;
+  bool loopIsRunning;
   bool tasksCompleted;
 
   std::string getCurrentDateTime() {
