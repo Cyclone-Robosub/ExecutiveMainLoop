@@ -4,3 +4,6 @@
 [submodule "gtest"]
 	path = lib/gtest
 	url = https://github.com/google/googletest
+[submodule "ament_cmake"]
+    path = lib/ament_cmake
+    url = https://github.com/ament/ament_cmake
