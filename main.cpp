@@ -25,12 +25,10 @@ public:
   // of the loop starts stage by stage with no wait.
   ExecutiveMainLoop() : Node("executive_main_node") loopIsRunning(true), tasksCompleted(false) {
     fs::path stateFilePath = fs::current_path() / "state.csv";
-
-    if (!fs::exists(stateFilePath)) {
-      stateFile.open(stateFilePath, std::ofstream::app);
-
-      // Append this for every new file.
-      stateFile << "Time,Depth(m),IMU Data, PWM Data\n";
+    stateFile.open(stateFilePath, std::ofstream::app);
+    // Append header if empty state file
+    if (fs::file_size(stateFilePath) == 0) {
+      stateFile << "Time,Depth(m),IMU Data,PWM Data\n";
     }
   }
 
@@ -65,17 +63,19 @@ public:
     }
   }
 
-  // get a notification here
+  /* 
+   * Get the varaibles and put it into the state file.
+   * time, depth, imu, pwm
+   * timestamped every 0.1 seconds.
+   */
   void updateState() {
     while (loopIsRunning) {
-      // Get the varaibles and put it into the state file.
-      // timestamped every 0.1 seconds.
       if(!depth_msg.empty() && !imu_msg.empty() ){
         std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
-        stateFile << "," << depth_msg << "," << imu_msg;
+        std::string time = getCurrentTime();
+        // TODO: add William's code to add PWM data
+        stateFile << time << "," << depth_msg << "," << imu_msg << "," << "N/A";
       }
-      // add Time element
-      // Need to see William's code to put PWM here in the status file.
     }
   }
 
@@ -93,11 +93,7 @@ public:
     }
   }
 
-  bool returnStatus() { return loopIsRunning; }
-  bool returntasksCompleted() { return tasksCompleted; }
-  void executeFailCommands() {
-    stateFile.close();
-    loopIsRunning = false;
+  bool ralse;
   }
 
 private:
@@ -111,7 +107,7 @@ private:
   bool loopIsRunning;
   bool tasksCompleted;
 
-  std::string getCurrentDateTime() {
+  std::string getCurrentTime() {
     time_t now = time(0);
     tm *localTime = localtime(&now);
     char buffer[80];
@@ -124,19 +120,23 @@ class SensorsData : public rclcpp::Node {
 public:
   SensorsData(std::shared_ptr<ExecutiveMainLoop> mainLoopNode) : Node("sensorsNode") {
     callbackDepth = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    callbackIMU = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-
     auto depthOptions = rclcpp::SubscriptionOptions();
     depthOptions.callback_group = callbackDepth;
+
+    callbackIMU = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     auto imuOptions = rclcpp::SubscriptionOptions();
     imuOptions.callback_group = callbackIMU;
 
     depth_subscription_ = this->create_subscription<std_msgs::msg::String>(
       "depthSensorData", rclcpp::QoS(5),
-      std::bind(&ExecutiveMainLoop::depthSensorCallback,mainLoopNode,
-                std::placeholders::_1), sub1_opt
+      std::bind(&ExecutiveMainLoop::depthSensorCallback, mainLoopNode, std::placeholders::_1), 
+      sub1_opt
     );
-
+eturnStatus() { return loopIsRunning; }
+  bool returntasksCompleted() { return tasksCompleted; }
+  void executeFailCommands() {
+    stateFile.close();
+    loopIsRunning = f
     // Priority
     // Need to input IMU inilization with ROS.
     imu_subscription_ = this->create_subscription<std_msgs::msg::String>(
@@ -153,10 +153,9 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr imu_subscription_;
 };
 
-
 int main(int argc, char *argv[]) {
   // setup time.
-  //  setup Robot during inilization.
+  // setup Robot during inilization.
   // std::cout << "Checking" << std::endl;
   rclcpp::init(argc, argv);
   //ExecutiveMainLoop
