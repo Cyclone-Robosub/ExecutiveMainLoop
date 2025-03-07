@@ -23,7 +23,7 @@ public:
   // Maybe we could code each function to setup on its own.
   // The functions run assuming that the inital first iteration
   // of the loop starts stage by stage with no wait.
-  ExecutiveMainLoop() : Node("executive_main_node") loopIsRunning(true), tasksCompleted(false) {
+  ExecutiveMainLoop() : Node("executive_main_node") {
     fs::path stateFilePath = fs::current_path() / "state.csv";
 
     if (!fs::exists(stateFilePath)) {
@@ -131,10 +131,10 @@ public:
     auto imuOptions = rclcpp::SubscriptionOptions();
     imuOptions.callback_group = callbackIMU;
 
-    depth_subscription_ = this->create_subscription<std_msgs::msg::String>(
+    depth_sensor_subscription_ = this->create_subscription<std_msgs::msg::String>(
       "depthSensorData", rclcpp::QoS(5),
       std::bind(&ExecutiveMainLoop::depthSensorCallback,mainLoopNode,
-                std::placeholders::_1), sub1_opt
+                std::placeholders::_1), depthOptions
     );
 
     // Priority
@@ -142,7 +142,7 @@ public:
     imu_subscription_ = this->create_subscription<std_msgs::msg::String>(
       "imuSensorData", rclcpp::QoS(5),
       std::bind(&ExecutiveMainLoop::imuSensorCallback, mainLoopNode,
-                std::placeholders::_1),sub2_opt
+                std::placeholders::_1),imuOptions
     );
 
   }
@@ -179,11 +179,11 @@ int main(int argc, char *argv[]) {
   // rclcpp::shutdown();
   // rclcpp::spin(ReadInputsNode);
 
-  std::jthread UpdateStateThread(&ExecutiveMainLoop::UpdateState, mainLoopNode);
-  std::jthread ExecutiveDecisionLoopThread(&ExecutiveMainLoop::ExecuteDecisionLoop, mainLoopNode);
+  std::jthread UpdateStateThread(&ExecutiveMainLoop::updateState, mainLoopNode);
+  std::jthread ExecutiveDecisionLoopThread(&ExecutiveMainLoop::executeDecisionLoop, mainLoopNode);
     // Note: We can join these two threads above and bottom if Rasberry PI
     // really does not like multithreading.
-  std::jthread SendThrusterCommandsThread(&ExecutiveMainLoop::SendThrusterCommands, mainLoopNode);
+  std::jthread SendThrusterCommandsThread(&ExecutiveMainLoop::sendThrusterCommands, mainLoopNode);
   std::cout << "Here" << std::endl;
   
   rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
