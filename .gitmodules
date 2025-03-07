@@ -4,3 +4,6 @@
 [submodule "gtest"]
 	path = lib/gtest
 	url = https://github.com/google/googletest
+[submodule "yaml-cpp"]
+	path = lib/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp
