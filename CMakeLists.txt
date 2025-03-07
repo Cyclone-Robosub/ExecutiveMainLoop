@@ -30,7 +30,7 @@ find_package(Threads REQUIRED)
 target_link_libraries(ExecutiveLoop Threads::Threads)
 
 
-#target_link_libraries(run_tests yaml-cpp)
+#target_link_libraries(run_tests yaml-cpp::yaml-cpp)
 
 
 #Gtest end
