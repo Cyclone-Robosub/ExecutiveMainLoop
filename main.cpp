@@ -12,6 +12,7 @@
 #include "std_msgs/msg/string.hpp"
 using namespace std::literals;
 namespace fs = std::filesystem;
+#define WAIT_TIME 95
 
 
 // start the executive Loop
@@ -126,7 +127,7 @@ class ExecutiveMainLoop : public rclcpp::Node {
   };
   class SensorsData : public rclcpp::Node {
 public:
-  SensorsData(std::shared_ptr<ExecutiveMainLoop> mainLoop) : Node("sensorsNode") {
+  SensorsData(std::shared_ptr<ExecutiveMainLoop> objectMainLoop) : Node("sensorsNode") {
     callbackDepth = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
     callbackIMU = this->create_callback_group(
@@ -140,14 +141,16 @@ public:
     depth_sensor_Subscription_ =
         this->create_subscription<std_msgs::msg::String>(
             "depthSensorData", rclcpp::QoS(5),
-            std::bind(&ExecutiveMainLoop::depthSensorCallback,mainLoop,
+            std::bind(&ExecutiveMainLoop::depthSensorCallback,objectMainLoop
+        ,
                       std::placeholders::_1), sub1_opt);
 
     // Priority
     // Need to input IMU inilization with ROS.
     imu_sensor_Subscription_ = this->create_subscription<std_msgs::msg::String>(
         "imuSensorData", rclcpp::QoS(5),
-        std::bind(&ExecutiveMainLoop::imuSensorCallback, mainLoop,
+        std::bind(&ExecutiveMainLoop::imuSensorCallback, objectMainLoop
+    ,
                   std::placeholders::_1),sub2_opt);
 
   }
@@ -166,16 +169,17 @@ public:
     //  setup Robot during inilization.
     // std::cout << "Checking" << std::endl;
     rclcpp::init(argc, argv);
-    auto mainLoop = std::make_shared<ExecutiveMainLoop>();
+    //ExecutiveMainLoop
+    auto objectMainLoop = std::make_shared<ExecutiveMainLoop>();
     SetupRobot initStateandConfig = SetupRobot();
-    // ExecutiveMainLoop mainLoop = ExecutiveMainLoop(argc, argv);
+    // ExecutiveMainLoop objectMainLoop = ExecutiveMainLoop(argc, argv);
     // records false if run has not completed yet.
     bool runStatus = false;
     // these threads functions will have loops that go on for ever
     // these functions will have wait functions just in case with a queue
     // system.
 
-   // std::jthread ReadInputsThread(&ExecutiveMainLoop::ReadInputs, mainLoop);
+   // std::jthread ReadInputsThread(&ExecutiveMainLoop::ReadInputs, objectMainLoop);
     // Creates a new thread for each node. Need to check if it does
 
     /*
@@ -185,16 +189,19 @@ public:
     // rclcpp::shutdown();
     // rclcpp::spin(ReadInputsNode);
 
-    std::jthread UpdateStateThread(&ExecutiveMainLoop::UpdateState, mainLoop);
+    std::jthread UpdateStateThread(&ExecutiveMainLoop::UpdateState, objectMainLoop);
     std::jthread ExecutiveDecisionLoopThread(
-        &ExecutiveMainLoop::ExecuteDecisionLoop, mainLoop);
+        &ExecutiveMainLoop::ExecuteDecisionLoop, objectMainLoop
+);
     // Note: We can join these two threads above and bottom if Rasberry PI
     // really does not like multithreading.
     std::jthread SendThrusterCommandsThread(
-        &ExecutiveMainLoop::SendThrusterCommands, mainLoop);
+        &ExecutiveMainLoop::SendThrusterCommands, objectMainLoop
+);
     std::cout << "Here" << std::endl;
     rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
-      auto sensorNode = std::make_shared<SensorsData>(mainLoop);
+      auto sensorNode = std::make_shared<SensorsData>(objectMainLoop
+);
       SensorsExecutor.add_node(sensorNode);
       SensorsExecutor.spin();
       rclcpp::shutdown();
