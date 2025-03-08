@@ -196,19 +196,17 @@ int main(int argc, char *argv[]) {
   
     // Note: We can join these two threads above and bottom if Rasberry PI
     // really does not like multithreading.
-    std::jthread SendThrusterCommandsThread(
-        &ExecutiveMainLoop::sendThrusterCommands, mainLoopNode
-);
-    std::cout << "Here" << std::endl;
-    rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
-      auto sensorNode = std::make_shared<SensorsData>(mainLoopNode
-);
-      SensorsExecutor.add_node(sensorNode);
-      SensorsExecutor.add_node(mainLoopNode);
-      SensorsExecutor.spin();
-      rclcpp::shutdown();
-    std::cout << "Here" << std::endl;
-   
+  std::jthread SendThrusterCommandsThread(&ExecutiveMainLoop::sendThrusterCommands, mainLoopNode);
+  std::cout << "User defined threads has ran sucessfully" << std::endl;
+  
+  rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
+  auto sensorNode = std::make_shared<SensorsData>(mainLoopNode);
+
+  SensorsExecutor.add_node(sensorNode);
+  SensorsExecutor.spin();
+
+  rclcpp::shutdown();
+  std::cout << "ROS2 exited normally without issue." << std::endl;
   /*
     ReadInputsThread.join();
     UpdateStateThread.join();
