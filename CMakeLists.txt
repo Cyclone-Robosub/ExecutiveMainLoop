@@ -1,23 +1,19 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.20)
 project(executive_main_loop)
+
+add_subdirectory(lib/gtest)
+add_subdirectory(lib/yaml-cpp)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-
-add_executable(ExecutiveLoop 
-        main.cpp)
+add_executable(ExecutiveLoop main.cpp)
   
-
 # GTest start
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/d144031940543e15423a25ae5a8a74141044862f.zip
-)
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
+
+target_link_libraries(ExecutiveLoop gtest gtest_main)
 
 enable_testing()
 find_package(ament_cmake REQUIRED)
@@ -28,14 +24,13 @@ install(TARGETS
   ExecutiveLoop
   DESTINATION lib/${PROJECT_NAME})
 
-
 ament_package()
 
 find_package(Threads REQUIRED)
 target_link_libraries(ExecutiveLoop Threads::Threads)
 
 
-#target_link_libraries(run_tests yaml-cpp)
+#target_link_libraries(run_tests yaml-cpp::yaml-cpp)
 
 
 #Gtest end
