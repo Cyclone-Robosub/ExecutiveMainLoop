@@ -203,6 +203,7 @@ int main(int argc, char *argv[]) {
   auto sensorNode = std::make_shared<SensorsData>(mainLoopNode);
 
   SensorsExecutor.add_node(sensorNode);
+  SensorsExecutor.add_node(mainLoopNode);
   SensorsExecutor.spin();
 
   rclcpp::shutdown();
