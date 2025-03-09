@@ -1,0 +1,30 @@
+{
+    "allowCompoundWords": true,
+    "useGitignore": true,
+    "ignorePaths": [
+        "lib/*",
+        "ros2_ws/*"
+    ],
+    "words": [
+        "baro",
+        "cltool",
+        "Dwivedi",
+        "ECEF",
+        "geph",
+        "GLONASS",
+        "gnss",
+        "logf",
+        "nmea",
+        "ntrip",
+        "pimu",
+        "pytest",
+        "rclcpp",
+        "rclpy",
+        "Robo",
+        "rostime",
+        "rpublisher",
+        "RTCM",
+        "Tanishq",
+        "xbee"
+    ]
+}
