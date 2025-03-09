@@ -1,7 +1,51 @@
-build
-.idea
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# The build dir
+build/*
+
+# I don't really know what these are for but I'll leave it here anyway
 cmake-build-debug
-.vscode
-install
-log
+.idea
+
+# vscode config except spellchecks and cpp_properties
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/cspell.json
+
+# Any log files
+*.log
+
+# Apple extended file attributes
 .DS_Store
+
