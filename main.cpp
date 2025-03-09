@@ -9,6 +9,7 @@
 
 #include "SetupConfig/SetupRobot.cpp"
 #include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/int32_multi_array.hpp"
 #include "std_msgs/msg/string.hpp"
 
 using namespace std::literals;
@@ -32,6 +33,11 @@ public:
       // Append this for every new file.
       stateFile << "Time,Depth(m),IMU Data, PWM Data\n";
     }
+      python_cltool_subscription =
+        this->create_subscription<std_msgs::msg::Int32MultiArray>(
+            "python_cltool_topic", 5,
+            std::bind(&ExecutiveMainLoop::executeDecisionLoop, this,
+                      std::placeholders::_1));
   }
 
   void depthSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
@@ -53,8 +59,8 @@ public:
     while (loopIsRunning) {
       std::lock_guard<std::mutex> lock(mutex_);
       // Have to check what the msg is saying.
-      // Parse msg data. Put the research data into a vector or varibles.
-      // IMU data will probabily go into vector.
+      // Parse msg data. Put the research data into a vector or variables.
+      // IMU data will probably go into vector.
       // IF needed we can use parameters with ROS if a lot of different types
       // of data. one part of message has to the be imu and the other part has
       // to be the depth. Assuming I have it right. Need to read
@@ -68,7 +74,7 @@ public:
   // get a notification here
   void updateState() {
     while (loopIsRunning) {
-      // Get the varaibles and put it into the state file.
+      // Get the variables and put it into the state file.
       // timestamped every 0.1 seconds.
       if(!depth_msg.empty() && !imu_msg.empty() ){
         std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
@@ -79,9 +85,14 @@ public:
     }
   }
 
-  void executeDecisionLoop() {
-    while (loopIsRunning) {
-      // William's code call here
+  void executeDecisionLoop(const std_msgs::msg::Int32MultiArray::SharedPtr msg) {
+
+    while (true) {
+     std::cout << "Received Int32MultiArray: ";
+  for (int32_t value : msg->data) {
+    std::cout << value << " ";
+  }
+  std::cout << std::endl;
     }
     // if all decisions/tasks are done, make tasksCompleted true;
   }
@@ -105,6 +116,8 @@ private:
   std::mutex mutex_;
   std::string depth_msg;
   std::string imu_msg;
+    rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
+      python_cltool_subscription;
   std::vector<float> imu_data;
   float depth;
 
@@ -138,7 +151,7 @@ public:
     );
 
     // Priority
-    // Need to input IMU inilization with ROS.
+    // Need to input IMU initialization with ROS.
     imu_subscription_ = this->create_subscription<std_msgs::msg::String>(
       "imuSensorData", rclcpp::QoS(5),
       std::bind(&ExecutiveMainLoop::imuSensorCallback, mainLoopNode,
@@ -156,7 +169,7 @@ private:
 
 int main(int argc, char *argv[]) {
   // setup time.
-  //  setup Robot during inilization.
+  //  setup Robot during initialization.
   // std::cout << "Checking" << std::endl;
   rclcpp::init(argc, argv);
   //ExecutiveMainLoop
@@ -180,20 +193,22 @@ int main(int argc, char *argv[]) {
   // rclcpp::spin(ReadInputsNode);
 
   std::jthread UpdateStateThread(&ExecutiveMainLoop::updateState, mainLoopNode);
+
   std::jthread ExecutiveDecisionLoopThread(&ExecutiveMainLoop::executeDecisionLoop, mainLoopNode);
-    // Note: We can join these two threads above and bottom if Rasberry PI
+    // Note: We can join these two threads above and bottom if Raspberry PI
     // really does not like multithreading.
   std::jthread SendThrusterCommandsThread(&ExecutiveMainLoop::sendThrusterCommands, mainLoopNode);
-  std::cout << "Here" << std::endl;
+  std::cout << "User defined threads has ran sucessfully" << std::endl;
   
   rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
   auto sensorNode = std::make_shared<SensorsData>(mainLoopNode);
 
   SensorsExecutor.add_node(sensorNode);
+  SensorsExecutor.add_node(mainLoopNode);
   SensorsExecutor.spin();
 
   rclcpp::shutdown();
-  std::cout << "Here" << std::endl;
+  std::cout << "ROS2 exited normally without issue." << std::endl;
   /*
     ReadInputsThread.join();
     UpdateStateThread.join();
