@@ -53,8 +53,8 @@ public:
     while (loopIsRunning) {
       std::lock_guard<std::mutex> lock(mutex_);
       // Have to check what the msg is saying.
-      // Parse msg data. Put the research data into a vector or varibles.
-      // IMU data will probabily go into vector.
+      // Parse msg data. Put the research data into a vector or variables.
+      // IMU data will probably go into vector.
       // IF needed we can use parameters with ROS if a lot of different types
       // of data. one part of message has to the be imu and the other part has
       // to be the depth. Assuming I have it right. Need to read
@@ -68,7 +68,7 @@ public:
   // get a notification here
   void updateState() {
     while (loopIsRunning) {
-      // Get the varaibles and put it into the state file.
+      // Get the variables and put it into the state file.
       // timestamped every 0.1 seconds.
       if(!depth_msg.empty() && !imu_msg.empty() ){
         std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
@@ -138,7 +138,7 @@ public:
     );
 
     // Priority
-    // Need to input IMU inilization with ROS.
+    // Need to input IMU initialization with ROS.
     imu_subscription_ = this->create_subscription<std_msgs::msg::String>(
       "imuSensorData", rclcpp::QoS(5),
       std::bind(&ExecutiveMainLoop::imuSensorCallback, mainLoopNode,
@@ -156,7 +156,7 @@ private:
 
 int main(int argc, char *argv[]) {
   // setup time.
-  //  setup Robot during inilization.
+  //  setup Robot during initialization.
   // std::cout << "Checking" << std::endl;
   rclcpp::init(argc, argv);
   //ExecutiveMainLoop
@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
 
   std::jthread UpdateStateThread(&ExecutiveMainLoop::updateState, mainLoopNode);
   std::jthread ExecutiveDecisionLoopThread(&ExecutiveMainLoop::executeDecisionLoop, mainLoopNode);
-    // Note: We can join these two threads above and bottom if Rasberry PI
+    // Note: We can join these two threads above and bottom if Raspberry PI
     // really does not like multithreading.
   std::jthread SendThrusterCommandsThread(&ExecutiveMainLoop::sendThrusterCommands, mainLoopNode);
   std::cout << "Here" << std::endl;
