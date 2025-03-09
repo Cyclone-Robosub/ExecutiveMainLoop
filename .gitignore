@@ -34,10 +34,6 @@
 # The build dir
 build/*
 
-# Our external submodules/libraries
-lib/*
-ros2_ws/*
-
 # I don't really know what these are for but I'll leave it here anyway
 cmake-build-debug
 .idea
