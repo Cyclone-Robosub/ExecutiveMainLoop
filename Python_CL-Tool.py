@@ -33,6 +33,7 @@ class Publisher(Node):
         msg = Int32MultiArray()
         msg.data = pwm_array
         self.commandPublisher.publish(msg)
+        
 class Plant:
     def __init__(self):
                 # Thruster positions

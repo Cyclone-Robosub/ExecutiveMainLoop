@@ -15,7 +15,7 @@
 using namespace std::literals;
 namespace fs = std::filesystem;
 
-#define UPDATE_WAIT_TIME 95
+#define UPDATE_WAIT_TIME 100
 
 // start the executive Loop
 class ExecutiveMainLoop : public rclcpp::Node {
@@ -26,27 +26,32 @@ public:
   // of the loop starts stage by stage with no wait.
   ExecutiveMainLoop() : Node("executive_main_node") {
     fs::path stateFilePath = fs::current_path() / "state.csv";
-
+    // std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
     if (!fs::exists(stateFilePath)) {
       stateFile.open(stateFilePath, std::ofstream::app);
 
       // Append this for every new file.
       stateFile << "Time,Depth(m),IMU Data, PWM Data\n";
     }
-      python_cltool_subscription =
+    /*
+    python_cltool_subscription =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "python_cltool_topic", 5,
             std::bind(&ExecutiveMainLoop::executeDecisionLoop, this,
-                      std::placeholders::_1));
+                      std::placeholders::_1));*/
   }
 
   void depthSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
     //  std::lock_guard<std::mutex> lock(mutex_);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
+    std::cout << "Got depth ";
     depth_msg = msg->data;
   }
 
   void imuSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
     // std::lock_guard<std::mutex> lock(mutex_);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
+    std::cout << "imu sensor " << std::endl;
     imu_msg = msg->data;
   }
 
@@ -54,10 +59,10 @@ public:
   // for everything and anything. Need to think about how we should the
   // standard of creating nodes and reading messages. There are multiple
   // implementations, but one of them has to be the best.
-
+/*
   void readInputs() {
     while (loopIsRunning) {
-      std::lock_guard<std::mutex> lock(mutex_);
+      //std::lock_guard<std::mutex> lock(mutex_);
       // Have to check what the msg is saying.
       // Parse msg data. Put the research data into a vector or variables.
       // IMU data will probably go into vector.
@@ -66,33 +71,41 @@ public:
       // to be the depth. Assuming I have it right. Need to read
       // multithreading with mutex condition and lock pushing to variables. or
       // anyway of setting it
-      /*depth;
-      vector[]*/
+     
     }
   }
-
+*/
   // get a notification here
   void updateState() {
     while (loopIsRunning) {
       // Get the variables and put it into the state file.
       // timestamped every 0.1 seconds.
-      if(!depth_msg.empty() && !imu_msg.empty() ){
-        std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
+      
+      if (!depth_msg.empty() && !imu_msg.empty()) {
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(UPDATE_WAIT_TIME));
+         std::cout << "testing" <<std::endl;
         stateFile << "," << depth_msg << "," << imu_msg;
+        // PWM_Object
       }
       // add Time element
       // Need to see William's code to put PWM here in the status file.
     }
   }
 
-  void executeDecisionLoop(const std_msgs::msg::Int32MultiArray::SharedPtr msg) {
-
-    while (true) {
-     std::cout << "Received Int32MultiArray: ";
-  for (int32_t value : msg->data) {
-    std::cout << value << " ";
-  }
-  std::cout << std::endl;
+  void
+  executeDecisionLoop() {
+    while (loopIsRunning) {
+      //Need to see William's python code to move foward.
+      /*
+      std::cout << "Received Int32MultiArray: ";
+      int i = 0;
+      for (int32_t value : msg->data) {
+        //inputPWM[i] = value;
+        i++;
+      }
+      i = 0;
+      std::cout << std::endl;*/
     }
     // if all decisions/tasks are done, make tasksCompleted true;
   }
@@ -100,6 +113,7 @@ public:
   // Sends Commands to Thruster Queue
   void sendThrusterCommands() {
     while (loopIsRunning) {
+
       // send it back to William's code.
     }
   }
@@ -116,12 +130,13 @@ private:
   std::mutex mutex_;
   std::string depth_msg;
   std::string imu_msg;
-    rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
+  std::vector<int32_t> inputPWM;
+  rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
       python_cltool_subscription;
   std::vector<float> imu_data;
   float depth;
 
-  bool loopIsRunning;
+  bool loopIsRunning = true;
   bool tasksCompleted;
 
   std::string getCurrentDateTime() {
@@ -135,44 +150,48 @@ private:
 
 class SensorsData : public rclcpp::Node {
 public:
-  SensorsData(std::shared_ptr<ExecutiveMainLoop> mainLoopNode) : Node("sensorsNode") {
-    callbackDepth = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    callbackIMU = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  SensorsData(std::shared_ptr<ExecutiveMainLoop> mainLoopNode)
+      : Node("sensorsNode") {
+    callbackDepth = this->create_callback_group(
+        rclcpp::CallbackGroupType::MutuallyExclusive);
+    callbackIMU = this->create_callback_group(
+        rclcpp::CallbackGroupType::MutuallyExclusive);
 
     auto depthOptions = rclcpp::SubscriptionOptions();
     depthOptions.callback_group = callbackDepth;
     auto imuOptions = rclcpp::SubscriptionOptions();
     imuOptions.callback_group = callbackIMU;
 
-    depth_sensor_subscription_ = this->create_subscription<std_msgs::msg::String>(
-      "depthSensorData", rclcpp::QoS(5),
-      std::bind(&ExecutiveMainLoop::depthSensorCallback,mainLoopNode,
-                std::placeholders::_1), depthOptions
-    );
+    depth_sensor_subscription_ =
+        this->create_subscription<std_msgs::msg::String>(
+            "depthSensorData", rclcpp::QoS(5),
+            std::bind(&ExecutiveMainLoop::depthSensorCallback, mainLoopNode,
+                      std::placeholders::_1),
+            depthOptions);
 
     // Priority
     // Need to input IMU initialization with ROS.
     imu_subscription_ = this->create_subscription<std_msgs::msg::String>(
-      "imuSensorData", rclcpp::QoS(5),
-      std::bind(&ExecutiveMainLoop::imuSensorCallback, mainLoopNode,
-                std::placeholders::_1),imuOptions
-    );
-
+        "imuSensorData", rclcpp::QoS(5),
+        std::bind(&ExecutiveMainLoop::imuSensorCallback, mainLoopNode,
+                  std::placeholders::_1),
+        imuOptions);
   }
+
 private:
   rclcpp::CallbackGroup::SharedPtr callbackDepth;
   rclcpp::CallbackGroup::SharedPtr callbackIMU;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr depth_sensor_subscription_;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr
+      depth_sensor_subscription_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr imu_subscription_;
 };
-
 
 int main(int argc, char *argv[]) {
   // setup time.
   //  setup Robot during initialization.
   // std::cout << "Checking" << std::endl;
   rclcpp::init(argc, argv);
-  //ExecutiveMainLoop
+  // ExecutiveMainLoop
   auto mainLoopNode = std::make_shared<ExecutiveMainLoop>();
   SetupRobot initStateandConfig = SetupRobot();
   // ExecutiveMainLoop mainLoopNode = ExecutiveMainLoop(argc, argv);
@@ -182,8 +201,8 @@ int main(int argc, char *argv[]) {
   // these functions will have wait functions just in case with a queue
   // system.
 
-  // std::jthread ReadInputsThread(&ExecutiveMainLoop::ReadInputs, mainLoopNode);
-  // Creates a new thread for each node. Need to check if it does
+  // std::jthread ReadInputsThread(&ExecutiveMainLoop::ReadInputs,
+  // mainLoopNode); Creates a new thread for each node. Need to check if it does
 
   /*
   //auto ReadInputsNode = rclcpp::Node::make_shared("ReadInputsNode");
@@ -204,7 +223,7 @@ int main(int argc, char *argv[]) {
   auto sensorNode = std::make_shared<SensorsData>(mainLoopNode);
 
   SensorsExecutor.add_node(sensorNode);
-  SensorsExecutor.add_node(mainLoopNode);
+  //SensorsExecutor.add_node(mainLoopNode);
   SensorsExecutor.spin();
 
   rclcpp::shutdown();

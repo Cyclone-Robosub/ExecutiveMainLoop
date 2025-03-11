@@ -1,1 +1,0 @@
-//State should be a ROS Node in order to setup the robot.
