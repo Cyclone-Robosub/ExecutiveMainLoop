@@ -11,54 +11,62 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/int32_multi_array.hpp"
 #include "std_msgs/msg/string.hpp"
+//#include "inertial_sense_ros.h"
+#include <yaml-cpp/yaml.h>
+#include "lib/Propulsion/lib/Command_Interpreter.h"
+#include "lib/Propulsion/lib/Command.h"
 
 using namespace std::literals;
 namespace fs = std::filesystem;
 
-#define UPDATE_WAIT_TIME 100
+#define UPDATE_WAIT_TIME 95
 
 // start the executive Loop
-class ExecutiveMainLoop : public rclcpp::Node {
+class ExecutiveLoop : public rclcpp::Node {
 public:
   // Setup for all the functions should be done here.
   // Maybe we could code each function to setup on its own.
   // The functions run assuming that the inital first iteration
   // of the loop starts stage by stage with no wait.
-  ExecutiveMainLoop() : Node("executive_main_node") {
-    fs::path stateFilePath = fs::current_path() / "state.csv";
-    // std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
-    if (!fs::exists(stateFilePath)) {
-      stateFile.open(stateFilePath, std::ofstream::app);
+  ExecutiveLoop() : Node("executive_main_node") {
+    loopIsRunning = true;
+    tasksCompleted = false;
+    commandInterpreter = std::make_unique<Command_Interpreter_RPi5>(thrusterPins, digitalPins);
+    commandInterpreter->initlizePins();
+    fs::path currentPath = fs::current_path();
+    fs::path stateFilePath = currentPath.parent_path();
+    std::string stateFileString = std::string(currentPath) + "/state.csv";
+    if (!std::filesystem::exists(stateFileString)) {
+      stateFile.open(stateFileString, std::ofstream::app);
 
       // Append this for every new file.
-      stateFile << "Time,Depth(m),IMU Data, PWM Data\n";
+      stateFile << "Time,Depth(m),IMU Data, PWM Data" << std::endl;
+    }else{
+      stateFile.open(stateFileString, std::ofstream::app);
     }
     /*
     python_cltool_subscription =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "python_cltool_topic", 5,
-            std::bind(&ExecutiveMainLoop::executeDecisionLoop, this,
+            std::bind(&ExecutiveLoop::executeDecisionLoop, this,
                       std::placeholders::_1));*/
+    
   }
-
+  //these callback functions serve as the "read Input node in the loop"
   void depthSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
     //  std::lock_guard<std::mutex> lock(mutex_);
     //std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
-    std::cout << "Got depth ";
+   // std::cout << "Got depth ";
     depth_msg = msg->data;
   }
 
-  void imuSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
+  void imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
     // std::lock_guard<std::mutex> lock(mutex_);
     //std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
-    std::cout << "imu sensor " << std::endl;
+    //std::cout << "imu sensor\n";
     imu_msg = msg->data;
   }
 
-  // Need to think about this and draw it out. Think about using ROS or not
-  // for everything and anything. Need to think about how we should the
-  // standard of creating nodes and reading messages. There are multiple
-  // implementations, but one of them has to be the best.
 /*
   void readInputs() {
     while (loopIsRunning) {
@@ -80,22 +88,46 @@ public:
     while (loopIsRunning) {
       // Get the variables and put it into the state file.
       // timestamped every 0.1 seconds.
-      
+        std::unique_lock<std::mutex> sensorDataLock(sensor_mutex);
+      if(!depth_msg.empty()){
+    //    std::cout << depth_msg << " updateStateLocation" << " \n";
+        stateFile << depth_msg << "\n";
+      }
+      /*
       if (!depth_msg.empty() && !imu_msg.empty()) {
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(UPDATE_WAIT_TIME));
+        std::unique_lock<std::mutex> sensorDataLock(sensor_mutex);
          std::cout << "testing" <<std::endl;
         stateFile << "," << depth_msg << "," << imu_msg;
+        sensorDataLock.unlock();
         // PWM_Object
+      }*/
+      if(stateFile.tellp() > 200){
+        stateFile.flush();
+        stateFile.clear();
+        stateFile.seekp(0);
       }
-      // add Time element
-      // Need to see William's code to put PWM here in the status file.
+      std::this_thread::sleep_for(
+            std::chrono::milliseconds(UPDATE_WAIT_TIME));
+                  // Need to see William's code to put PWM here in the status file.
+      sensorDataLock.unlock();
     }
   }
 
-  void
-  executeDecisionLoop() {
+  void executeDecisionLoop() {
+    std::string ExecuteType;
     while (loopIsRunning) {
+      if(userinput == "end"){
+        std::unique_lock<std::mutex> FileDataLock(sensor_mutex);
+        stateFile << std::endl;
+        FileDataLock.unlock();
+        executeFailCommands();
+        std::cout << "User Interrupted Executive Loop" << std::endl;
+        break;
+      }
+      executeType = "blind_execute";
+      sendThrusterCommands(executeType);
+      std::cin >> userinput;
+
       //Need to see William's python code to move foward.
       /*
       std::cout << "Received Int32MultiArray: ";
@@ -111,9 +143,15 @@ public:
   }
 
   // Sends Commands to Thruster Queue
-  void sendThrusterCommands() {
+  void sendThrusterCommands(std::string typeOfExecute) {
     while (loopIsRunning) {
-
+      if(typeOfExecute == "blind_execute"){
+        std::ofstream logFilePins;
+        CommandComponent commandComponents;
+        commandComponents.thruster_pins = pwm_array.pwm_signals;
+        commandComponents.duration = 5;
+        commandInterpreter->blind_execute(commandComponents, logFilePins);
+      }
       // send it back to William's code.
     }
   }
@@ -123,21 +161,28 @@ public:
   void executeFailCommands() {
     stateFile.close();
     loopIsRunning = false;
+    std::cout << "Shutting down Executive Loop, sensors are still reading." <<std::endl;
   }
 
 private:
-  std::fstream stateFile;
-  std::mutex mutex_;
+rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
+      python_cltool_subscription;
+
+  std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter;
+  std::vector<PwmPin*> thrusterPins(8);
+  std::vector<DigitalPin*> digitalPins(8);
+  std::vector<int32_t> inputPWM;
+  
+  std::ofstream stateFile;
+  std::mutex sensor_mutex;
   std::string depth_msg;
   std::string imu_msg;
-  std::vector<int32_t> inputPWM;
-  rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
-      python_cltool_subscription;
-  std::vector<float> imu_data;
+   std::vector<float> imu_data;
   float depth;
 
-  bool loopIsRunning = true;
+  bool loopIsRunning;
   bool tasksCompleted;
+  std::string userinput;
 
   std::string getCurrentDateTime() {
     time_t now = time(0);
@@ -150,7 +195,7 @@ private:
 
 class SensorsData : public rclcpp::Node {
 public:
-  SensorsData(std::shared_ptr<ExecutiveMainLoop> mainLoopNode)
+  SensorsData(std::shared_ptr<ExecutiveLoop> mainLoopObject)
       : Node("sensorsNode") {
     callbackDepth = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -161,19 +206,20 @@ public:
     depthOptions.callback_group = callbackDepth;
     auto imuOptions = rclcpp::SubscriptionOptions();
     imuOptions.callback_group = callbackIMU;
+    std::cout << "Creating sensors subscriptions\n";
 
     depth_sensor_subscription_ =
         this->create_subscription<std_msgs::msg::String>(
             "depthSensorData", rclcpp::QoS(5),
-            std::bind(&ExecutiveMainLoop::depthSensorCallback, mainLoopNode,
+            std::bind(&ExecutiveLoop::depthSensorCallback, mainLoopObject,
                       std::placeholders::_1),
             depthOptions);
 
     // Priority
     // Need to input IMU initialization with ROS.
-    imu_subscription_ = this->create_subscription<std_msgs::msg::String>(
-        "imuSensorData", rclcpp::QoS(5),
-        std::bind(&ExecutiveMainLoop::imuSensorCallback, mainLoopNode,
+    imu_subscription_ = this->create_subscription<sensor_msgs::msg::Imu>(
+        "imu_topic", rclcpp::QoS(5),
+        std::bind(&ExecutiveLoop::imuSensorCallback, mainLoopObject,
                   std::placeholders::_1),
         imuOptions);
   }
@@ -191,40 +237,37 @@ int main(int argc, char *argv[]) {
   //  setup Robot during initialization.
   // std::cout << "Checking" << std::endl;
   rclcpp::init(argc, argv);
-  // ExecutiveMainLoop
-  auto mainLoopNode = std::make_shared<ExecutiveMainLoop>();
   SetupRobot initStateandConfig = SetupRobot();
-  // ExecutiveMainLoop mainLoopNode = ExecutiveMainLoop(argc, argv);
+  // ExecutiveLoop
+  std::shared_ptr<ExecutiveLoop> mainLoopObject = std::make_shared<ExecutiveLoop>();
+  std::shared_ptr<SensorsData> sensorsROScallback = std::make_shared<SensorsData>(mainLoopObject);
+  // ExecutiveLoop mainLoopObject = ExecutiveLoop(argc, argv);
   // records false if run has not completed yet.
   bool runStatus = false;
   // these threads functions will have loops that go on for ever
   // these functions will have wait functions just in case with a queue
   // system.
 
-  // std::jthread ReadInputsThread(&ExecutiveMainLoop::ReadInputs,
-  // mainLoopNode); Creates a new thread for each node. Need to check if it does
+  // std::jthread ReadInputsThread(&ExecutiveLoop::ReadInputs,
+  // mainLoopObject); Creates a new thread for each node. Need to check if it does
 
-  /*
-  //auto ReadInputsNode = rclcpp::Node::make_shared("ReadInputsNode");
-  executeThreads.add_node(executemainloopThread);
-  executeThreads.spin();*/
-  // rclcpp::shutdown();
-  // rclcpp::spin(ReadInputsNode);
 
-  std::jthread UpdateStateThread(&ExecutiveMainLoop::updateState, mainLoopNode);
+  std::jthread UpdateStateThread(&ExecutiveLoop::updateState, mainLoopObject);
 
-  std::jthread ExecutiveDecisionLoopThread(&ExecutiveMainLoop::executeDecisionLoop, mainLoopNode);
+  std::jthread ExecutiveDecisionLoopThread(&ExecutiveLoop::executeDecisionLoop, mainLoopObject);
     // Note: We can join these two threads above and bottom if Raspberry PI
     // really does not like multithreading.
-  std::jthread SendThrusterCommandsThread(&ExecutiveMainLoop::sendThrusterCommands, mainLoopNode);
-  std::cout << "User defined threads has ran sucessfully" << std::endl;
+    //This is now the case ^.
+ // std::jthread SendThrusterCommandsThread(&ExecutiveLoop::sendThrusterCommands, mainLoopObject);
+ // std::cout << "User defined threads has ran sucessfully" << std::endl;
   
   rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
-  auto sensorNode = std::make_shared<SensorsData>(mainLoopNode);
+ // auto sensorNode = std::make_shared<SensorsData>(sensorsROScallback);
 
-  SensorsExecutor.add_node(sensorNode);
-  //SensorsExecutor.add_node(mainLoopNode);
+  SensorsExecutor.add_node(sensorsROScallback);
+  //SensorsExecutor.add_node(mainLoopObject);
   SensorsExecutor.spin();
+  std::cout << "ROS2 runnning" << std::endl;
 
   rclcpp::shutdown();
   std::cout << "ROS2 exited normally without issue." << std::endl;

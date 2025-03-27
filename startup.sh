@@ -6,5 +6,5 @@ source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 colcon build
 
-ros2 run executive_main_loop ExecutiveLoop
+ros2 run executive_main_loop ExecutiveExecutable
 
