@@ -7,3 +7,9 @@
 [submodule "yaml-cpp"]
 	path = lib/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
+[submodule "Propulsion_2024"]
+	path = lib/Propulsion_2024_CPP
+	url = https://github.com/Cyclone-Robosub/Propulsion_2024_CPP.git
+[submodule "lib/Propulsion"]
+	path = lib/Propulsion
+	url = https://github.com/Cyclone-Robosub/Propulsion_2024_CPP.git
