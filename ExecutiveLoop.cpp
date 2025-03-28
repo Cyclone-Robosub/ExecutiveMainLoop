@@ -44,12 +44,7 @@ public:
     }else{
       stateFile.open(stateFileString, std::ofstream::app);
     }
-    /*
-    python_cltool_subscription =
-        this->create_subscription<std_msgs::msg::Int32MultiArray>(
-            "python_cltool_topic", 5,
-            std::bind(&ExecutiveLoop::executeDecisionLoop, this,
-                      std::placeholders::_1));*/
+    
     
   }
   //these callback functions serve as the "read Input node in the loop"
@@ -62,9 +57,20 @@ public:
 
   void imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
     // std::lock_guard<std::mutex> lock(mutex_);
-    //std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
+    std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME - 40));
     //std::cout << "imu sensor\n";
-    imu_msg = msg->data;
+    imu_msg = msg.data;
+  }
+  void pythonCltoolCallback(const std_msgs::msg::Int32MultiArray::SharedPtr msg){
+    std::cout << "Received Int32MultiArray: ";
+      int i = 0;
+      std::lock_guard<std::mutex> pwm_lock(pwm_mutex);
+      for (int32_t value : msg->data) {
+        inputPWM[i] = value;
+        i++;
+      }
+      i = 0;
+      std::cout << std::endl;
   }
 
 /*
@@ -89,27 +95,35 @@ public:
       // Get the variables and put it into the state file.
       // timestamped every 0.1 seconds.
         std::unique_lock<std::mutex> sensorDataLock(sensor_mutex);
+        std::unique_lock<std::mutex> pwmValuesLock(pwm_mutex);
+        //try ownslock for future testing
+        
       if(!depth_msg.empty()){
     //    std::cout << depth_msg << " updateStateLocation" << " \n";
-        stateFile << depth_msg << "\n";
+        stateFile << depth_msg << ",";
       }
-      /*
+      
       if (!depth_msg.empty() && !imu_msg.empty()) {
-        std::unique_lock<std::mutex> sensorDataLock(sensor_mutex);
          std::cout << "testing" <<std::endl;
         stateFile << "," << depth_msg << "," << imu_msg;
-        sensorDataLock.unlock();
         // PWM_Object
-      }*/
+      }
+      stateFile << ",[";
+        for(auto i : inputPWM){
+          stateFile << i << ",";
+        }
+        stateFile << "],";
+       sensorDataLock.unlock();
+       pwmValuesLock.unlock();
       if(stateFile.tellp() > 200){
         stateFile.flush();
         stateFile.clear();
         stateFile.seekp(0);
+
       }
       std::this_thread::sleep_for(
             std::chrono::milliseconds(UPDATE_WAIT_TIME));
                   // Need to see William's code to put PWM here in the status file.
-      sensorDataLock.unlock();
     }
   }
 
@@ -117,9 +131,6 @@ public:
     std::string ExecuteType;
     while (loopIsRunning) {
       if(userinput == "end"){
-        std::unique_lock<std::mutex> FileDataLock(sensor_mutex);
-        stateFile << std::endl;
-        FileDataLock.unlock();
         executeFailCommands();
         std::cout << "User Interrupted Executive Loop" << std::endl;
         break;
@@ -129,22 +140,13 @@ public:
       std::cin >> userinput;
 
       //Need to see William's python code to move foward.
-      /*
-      std::cout << "Received Int32MultiArray: ";
-      int i = 0;
-      for (int32_t value : msg->data) {
-        //inputPWM[i] = value;
-        i++;
-      }
-      i = 0;
-      std::cout << std::endl;*/
+      
     }
     // if all decisions/tasks are done, make tasksCompleted true;
   }
 
   // Sends Commands to Thruster Queue
   void sendThrusterCommands(std::string typeOfExecute) {
-    while (loopIsRunning) {
       if(typeOfExecute == "blind_execute"){
         std::ofstream logFilePins;
         CommandComponent commandComponents;
@@ -153,15 +155,21 @@ public:
         commandInterpreter->blind_execute(commandComponents, logFilePins);
       }
       // send it back to William's code.
-    }
   }
 
   bool returnStatus() { return loopIsRunning; }
   bool returntasksCompleted() { return tasksCompleted; }
   void executeFailCommands() {
+    std::lock_guard<std::mutex> stateFileLock(sensor_mutex);
+    stateFile << std::endl;
     stateFile.close();
     loopIsRunning = false;
     std::cout << "Shutting down Executive Loop, sensors are still reading." <<std::endl;
+  }
+  void ShutdownRobot(){
+    if(FuncFailCommExecuted){
+      //shutdown opreations
+    }
   }
 
 private:
@@ -171,10 +179,11 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
   std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter;
   std::vector<PwmPin*> thrusterPins(8);
   std::vector<DigitalPin*> digitalPins(8);
-  std::vector<int32_t> inputPWM;
+  std::vector<int32_t> inputPWM(8);
   
   std::ofstream stateFile;
   std::mutex sensor_mutex;
+  std::mutex pwm_mutex;
   std::string depth_msg;
   std::string imu_msg;
    std::vector<float> imu_data;
@@ -201,7 +210,9 @@ public:
         rclcpp::CallbackGroupType::MutuallyExclusive);
     callbackIMU = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
-
+      
+    auto commmandOptions = rclcpp::SubscriptionOptions();
+    commandOptions.callgackgroup = callbackIMU;
     auto depthOptions = rclcpp::SubscriptionOptions();
     depthOptions.callback_group = callbackDepth;
     auto imuOptions = rclcpp::SubscriptionOptions();
@@ -222,20 +233,28 @@ public:
         std::bind(&ExecutiveLoop::imuSensorCallback, mainLoopObject,
                   std::placeholders::_1),
         imuOptions);
+    pythonCltool_subscription =
+        this->create_subscription<std_msgs::msg::Int32MultiArray>(
+            "python_cltool_topic", 10,
+            std::bind(&ExecutiveLoop::pythonCltoolCallback, this,
+                      std::placeholders::_1),
+                    commandOptions);
   }
+
 
 private:
   rclcpp::CallbackGroup::SharedPtr callbackDepth;
   rclcpp::CallbackGroup::SharedPtr callbackIMU;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr
       depth_sensor_subscription_;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr imu_subscription_;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription_;
+  rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr pythonCltool_subscription;
 };
 
 int main(int argc, char *argv[]) {
   // setup time.
   //  setup Robot during initialization.
-  // std::cout << "Checking" << std::endl;
+  
   rclcpp::init(argc, argv);
   SetupRobot initStateandConfig = SetupRobot();
   // ExecutiveLoop

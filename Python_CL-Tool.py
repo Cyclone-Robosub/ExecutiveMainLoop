@@ -112,14 +112,14 @@ class Thrust_Control:
         self.plant = Plant()
         # Define PWM pins for each thruster
         self.thrusters = [
-            3,
-            2,
-            5,
-            4,
-            18,
-            20,
-            19,
-            21]
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0]
         #test
         self.publishCommandObject.publish_array(self.thrusters)
    # def testsendArray(self, publishCommandObject):
