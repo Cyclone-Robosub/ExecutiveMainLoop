@@ -64,9 +64,11 @@ public:
   void pythonCltoolCallback(const std_msgs::msg::Int32MultiArray::SharedPtr msg){
     std::cout << "Received Int32MultiArray: ";
       int i = 0;
+      int setvalue;
       std::lock_guard<std::mutex> pwm_lock(pwm_mutex);
       for (int32_t value : msg->data) {
-        inputPWM[i] = value;
+        setvalue = (int)value;
+        inputPWM[i] = setvalue;
         i++;
       }
       i = 0;
@@ -97,15 +99,14 @@ public:
         std::unique_lock<std::mutex> sensorDataLock(sensor_mutex);
         std::unique_lock<std::mutex> pwmValuesLock(pwm_mutex);
         //try ownslock for future testing
-        
+      stateFile << getCurrentDateTime();
       if(!depth_msg.empty()){
     //    std::cout << depth_msg << " updateStateLocation" << " \n";
-        stateFile << depth_msg << ",";
+        stateFile << "," depth_msg;
       }
-      
-      if (!depth_msg.empty() && !imu_msg.empty()) {
-         std::cout << "testing" <<std::endl;
-        stateFile << "," << depth_msg << "," << imu_msg;
+      if (!imu_msg.empty()) {
+         std::cout << "imu msg testing" <<std::endl;
+        stateFile << "," << imu_msg;
         // PWM_Object
       }
       stateFile << ",[";
@@ -150,7 +151,10 @@ public:
       if(typeOfExecute == "blind_execute"){
         std::ofstream logFilePins;
         CommandComponent commandComponents;
+        pwm_array our_pwm_array;
+        our_pwm_array.pwmsignals = inputPWM;
         commandComponents.thruster_pins = pwm_array.pwm_signals;
+        //setup ROS topic for duration
         commandComponents.duration = 5;
         commandInterpreter->blind_execute(commandComponents, logFilePins);
       }
@@ -179,7 +183,7 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
   std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter;
   std::vector<PwmPin*> thrusterPins(8);
   std::vector<DigitalPin*> digitalPins(8);
-  std::vector<int32_t> inputPWM(8);
+  std::vector<int> inputPWM(8);
   
   std::ofstream stateFile;
   std::mutex sensor_mutex;
@@ -252,12 +256,12 @@ private:
 };
 
 int main(int argc, char *argv[]) {
-  // setup time.
+  // setup performance and time benchmarks.
   //  setup Robot during initialization.
   
   rclcpp::init(argc, argv);
   SetupRobot initStateandConfig = SetupRobot();
-  // ExecutiveLoop
+  // ExecutiveLoop Think about object by reference or value passing
   std::shared_ptr<ExecutiveLoop> mainLoopObject = std::make_shared<ExecutiveLoop>();
   std::shared_ptr<SensorsData> sensorsROScallback = std::make_shared<SensorsData>(mainLoopObject);
   // ExecutiveLoop mainLoopObject = ExecutiveLoop(argc, argv);
@@ -278,7 +282,7 @@ int main(int argc, char *argv[]) {
     // really does not like multithreading.
     //This is now the case ^.
  // std::jthread SendThrusterCommandsThread(&ExecutiveLoop::sendThrusterCommands, mainLoopObject);
- // std::cout << "User defined threads has ran sucessfully" << std::endl;
+  std::cout << "User defined threads has ran sucessfully" << std::endl;
   
   rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
  // auto sensorNode = std::make_shared<SensorsData>(sensorsROScallback);
@@ -289,7 +293,7 @@ int main(int argc, char *argv[]) {
   std::cout << "ROS2 runnning" << std::endl;
 
   rclcpp::shutdown();
-  std::cout << "ROS2 exited normally without issue." << std::endl;
+  std::cout << "ROS2 exited." << std::endl;
   /*
     ReadInputsThread.join();
     UpdateStateThread.join();
