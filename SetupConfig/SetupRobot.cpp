@@ -2,7 +2,6 @@
 #include <iostream>
 #include <string>
 #include <yaml-cpp/yaml.h>
-#include "inertial_sense_ros2.cpp"
 namespace fs = std::filesystem;
 class SetupRobot {
 public:
@@ -24,24 +23,6 @@ public:
   }
   void setupIMUwithROS(){
     std::cout << "Found InitIMU.yaml" << std::endl;
-    std::string IMUyamlconfig = "topic: \"inertialsense\"\n"
-                       "port: [/dev/ttyACM0, /dev/ttyACM1, /dev/ttyACM2]\n"
-                       "baudrate: 921600\n"
-                       "\n"
-                       "ins:\n"
-                       "  navigation_dt_ms: 16                          # EKF update period.  uINS-3: 4  default, 1 max.  Use `msg/ins.../period` to reduce INS output data rate."
-                       "\n"
-                       "sensors:\n"
-                       "  messages:  \n"
-                       "    pimu:             # Publish preintegrated IMU delta theta and delta velocity\n"
-                       "      topic: \"pimu\"\n"
-                       "      enable: true\n"
-                       "      period: 1\n";
-      YAML::Node config = YAML::Load(IMUyamlconfig);
-      if(config.IsDefined()){
-      InertialSenseROS IMUROS(config);
-      IMUROS.initalize();
-  }  
 }
   
   private:

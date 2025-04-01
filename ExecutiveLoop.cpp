@@ -11,7 +11,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/int32_multi_array.hpp"
 #include "std_msgs/msg/string.hpp"
-//#include "inertial_sense_ros.h"
+#include "inertial_sense_ros.h"
 #include <yaml-cpp/yaml.h>
 #include "lib/Propulsion/lib/Command_Interpreter.h"
 #include "lib/Propulsion/lib/Command.h"
@@ -32,7 +32,7 @@ public:
     loopIsRunning = true;
     tasksCompleted = false;
     commandInterpreter = std::make_unique<Command_Interpreter_RPi5>(thrusterPins, digitalPins);
-    commandInterpreter->initlizePins();
+    commandInterpreter->initializePins();
     fs::path currentPath = fs::current_path();
     fs::path stateFilePath = currentPath.parent_path();
     std::string stateFileString = std::string(currentPath) + "/state.csv";
@@ -102,7 +102,7 @@ public:
       stateFile << getCurrentDateTime();
       if(!depth_msg.empty()){
     //    std::cout << depth_msg << " updateStateLocation" << " \n";
-        stateFile << "," depth_msg;
+        stateFile << "," << depth_msg;
       }
       if (!imu_msg.empty()) {
          std::cout << "imu msg testing" <<std::endl;
@@ -129,7 +129,7 @@ public:
   }
 
   void executeDecisionLoop() {
-    std::string ExecuteType;
+    std::string executeType;
     while (loopIsRunning) {
       if(userinput == "end"){
         executeFailCommands();
@@ -152,10 +152,10 @@ public:
         std::ofstream logFilePins;
         CommandComponent commandComponents;
         pwm_array our_pwm_array;
-        our_pwm_array.pwmsignals = inputPWM;
-        commandComponents.thruster_pins = pwm_array.pwm_signals;
+        our_pwm_array.pwm_signals = inputPWM;
+        commandComponents.thruster_pwms = pwm_array.pwm_signals;
         //setup ROS topic for duration
-        commandComponents.duration = 5;
+        commandComponents.duration = std::chrono::milliseconds(50);
         commandInterpreter->blind_execute(commandComponents, logFilePins);
       }
       // send it back to William's code.
@@ -170,20 +170,21 @@ public:
     loopIsRunning = false;
     std::cout << "Shutting down Executive Loop, sensors are still reading." <<std::endl;
   }
+  /*
   void ShutdownRobot(){
     if(FuncFailCommExecuted){
       //shutdown opreations
     }
-  }
+  }*/
 
 private:
 rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
       python_cltool_subscription;
 
   std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter;
-  std::vector<PwmPin*> thrusterPins(8);
-  std::vector<DigitalPin*> digitalPins(8);
-  std::vector<int> inputPWM(8);
+  std::vector<PwmPin*> thrusterPins;
+  std::vector<DigitalPin*> digitalPins;
+  std::vector<int> inputPWM;
   
   std::ofstream stateFile;
   std::mutex sensor_mutex;

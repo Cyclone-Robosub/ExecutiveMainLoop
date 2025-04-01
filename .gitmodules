@@ -10,9 +10,3 @@
 [submodule "Propulsion"]
 	path = lib/Propulsion
 	url = https://github.com/Cyclone-Robosub/Propulsion_2024_CPP.git
-[submodule "libusb"]
-	path = lib/libusb
-	url = https://github.com/libusb/libusb.git
-[submodule "lib/libusb"]
-	path = lib/libusb
-	url = https://github.com/libusb/libusb.git
