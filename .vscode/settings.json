@@ -108,5 +108,5 @@
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "ros.distro": "jazzy",
-    "C_Cpp.clang_format_fallbackStyle": "Google"
+    "C_Cpp.clang_format_fallbackStyle": "Google",
 }

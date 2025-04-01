@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string>
 #include <yaml-cpp/yaml.h>
-#include <inertial_sense_ros2.cpp>
+#include "inertial_sense_ros2.cpp"
 namespace fs = std::filesystem;
 class SetupRobot {
 public:

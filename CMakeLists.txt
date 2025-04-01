@@ -8,8 +8,9 @@ add_subdirectory(ros2_ws/src/inertial-sense-sdk/ROS/ros2)
 include_directories(ros2_ws)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-
-add_executable(ExecutiveExecutable ExecutiveLoop.cpp)
+set(EXPORT_COMPILE_COMMANDS True)
+add_executable(ExecutiveExecutable ExecutiveLoop.cpp
+      SetupConfig/SetupRobot.cpp)
 # GTest start
 # For Windows: Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
