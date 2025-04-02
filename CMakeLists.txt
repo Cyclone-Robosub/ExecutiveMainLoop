@@ -4,7 +4,6 @@ project(executive_main_loop)
 add_subdirectory(lib/gtest)
 add_subdirectory(lib/yaml-cpp)
 add_subdirectory(lib/Propulsion)
-add_subdirectory(ros2_ws/src/inertial-sense-sdk)
 add_subdirectory(ros2_ws/src/inertial-sense-sdk/ROS/ros2)
 include_directories(ros2_ws)
 
@@ -12,6 +11,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(EXPORT_COMPILE_COMMANDS True)
 add_executable(ExecutiveExecutable ExecutiveLoop.cpp
+          ros2_ws/src/inertial-sense-sdk/ROS/ros2/src/inertial_sense_ros2.cpp
       )
 # GTest start
 # For Windows: Prevent overriding the parent project's compiler/linker settings
