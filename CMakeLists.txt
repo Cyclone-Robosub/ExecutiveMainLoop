@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(executive_main_loop)
 
-add_subdirectory(lib/gtest)
-add_subdirectory(lib/yaml-cpp)
+#add_subdirectory(lib/gtest)
+#add_subdirectory(lib/yaml-cpp)
 add_subdirectory(lib/Propulsion)
 add_subdirectory(ros2_ws/src/inertial-sense-sdk/ROS/ros2)
 include_directories(ros2_ws)
