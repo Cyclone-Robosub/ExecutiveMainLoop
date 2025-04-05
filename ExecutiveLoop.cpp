@@ -11,7 +11,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/int32_multi_array.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "inertial_sense_ros.h"
 #include <yaml-cpp/yaml.h>
 #include "lib/Propulsion/lib/Command_Interpreter.h"
 #include "lib/Propulsion/lib/Command.h"
@@ -28,7 +27,7 @@ public:
   // Maybe we could code each function to setup on its own.
   // The functions run assuming that the inital first iteration
   // of the loop starts stage by stage with no wait.
-  ExecutiveLoop() : Node("executive_main_node") {
+  ExecutiveLoop(std::unique_ptr<CycloneIMU_ROS> imu_ros_obj) : Node("executive_main_node") {
     loopIsRunning = true;
     tasksCompleted = false;
     commandInterpreter = std::make_unique<Command_Interpreter_RPi5>(thrusterPins, digitalPins);
@@ -44,8 +43,7 @@ public:
     }else{
       stateFile.open(stateFileString, std::ofstream::app);
     }
-    
-    
+     IMU_ROS_obj = std::move(imu_ros_obj);
   }
   //these callback functions serve as the "read Input node in the loop"
   void depthSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
@@ -54,13 +52,13 @@ public:
    // std::cout << "Got depth ";
     depth_msg = msg->data;
   }
-
+/*
   void imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
     // std::lock_guard<std::mutex> lock(mutex_);
     std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME - 40));
     //std::cout << "imu sensor\n";
     imu_msg = msg.data;
-  }
+  }*/
   void pythonCltoolCallback(const std_msgs::msg::Int32MultiArray::SharedPtr msg){
     std::cout << "Received Int32MultiArray: ";
       int i = 0;
@@ -108,6 +106,9 @@ public:
          std::cout << "imu msg testing" <<std::endl;
         stateFile << "," << imu_msg;
         // PWM_Object
+      }
+      if(IMU_ROS_obj->started){
+        stateFile << angular_velocity_x << "," << linear_acceleration_x << ",";
       }
       stateFile << ",[";
         for(auto i : inputPWM){
@@ -180,6 +181,8 @@ public:
 private:
 rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
       python_cltool_subscription;
+  
+  std::unique_ptr<CycloneIMU_ROS> IMU_ROS_obj;
 
   std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter;
   std::vector<PwmPin*> thrusterPins;
@@ -233,11 +236,12 @@ public:
 
     // Priority
     // Need to input IMU initialization with ROS.
+    /*
     imu_subscription_ = this->create_subscription<sensor_msgs::msg::Imu>(
         "imu_topic", rclcpp::QoS(5),
         std::bind(&ExecutiveLoop::imuSensorCallback, mainLoopObject,
                   std::placeholders::_1),
-        imuOptions);
+        imuOptions);*/
     pythonCltool_subscription =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "python_cltool_topic", 10,
@@ -259,11 +263,12 @@ private:
 int main(int argc, char *argv[]) {
   // setup performance and time benchmarks.
   //  setup Robot during initialization.
-  
   rclcpp::init(argc, argv);
   SetupRobot initStateandConfig = SetupRobot();
+  std::unique_ptr<CycloneIMU_ROS> IMU_ROS_obj = initStateandConfig.acquireROSobject();
   // ExecutiveLoop Think about object by reference or value passing
-  std::shared_ptr<ExecutiveLoop> mainLoopObject = std::make_shared<ExecutiveLoop>();
+  std::cout << "Executive Main Loop" <<std::endl;
+  std::shared_ptr<ExecutiveLoop> mainLoopObject = std::make_shared<ExecutiveLoop>(std::move(CycloneIMU_ROS));
   std::shared_ptr<SensorsData> sensorsROScallback = std::make_shared<SensorsData>(mainLoopObject);
   // ExecutiveLoop mainLoopObject = ExecutiveLoop(argc, argv);
   // records false if run has not completed yet.
