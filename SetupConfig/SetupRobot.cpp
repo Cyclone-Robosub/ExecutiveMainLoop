@@ -2,13 +2,11 @@
 #include <iostream>
 #include <string>
 #include <yaml-cpp/yaml.h>
-#include "rclcpp/rclcpp/rclcpp.hpp"
-#include "rclcpp/rclcpp/timer.hpp"
-#include "rclcpp/rclcpp/time.hpp"
-#include "rclcpp/rclcpp/publisher.hpp"
-#include "std_msgs/std_msgs/msg/string.hpp"
+#include "rclcpp/rclcpp.hpp"
+
+#include "std_msgs/msg/string.hpp"
 #include "sensor_msgs/msg/imu.hpp"
-#include "/ROS/ros2/src/CycloneIMU_ROS.hpp"
+
 namespace fs = std::filesystem;
 class SetupRobot {
 public:
@@ -18,7 +16,7 @@ public:
     fs::path currentPaths = fs::current_path();
     fs::path parentPaths = currentPaths.parent_path();
     if (std::filesystem::exists(std::string(currentPaths) + "/SetupConfig/InitIMU.yaml")) {
-      setupIMUwithROS();
+     // setupIMUwithROS();
     } else {
       std::cerr << "Cannot find InitIMU.yaml file in desired location"
                 << std::endl;
@@ -28,14 +26,16 @@ public:
     }
     
   }
+  /*
   void setupIMUwithROS(){
     std::cout << "Found InitIMU.yaml" << std::endl;
     IMU_ROS_obj = std::make_unique<CycloneIMU_ROS>();
-}
+}*/
 //Needs exception handling.
+/*
   std::unique_ptr<CycloneIMU_ROS> acquireROSobject(){
     return IMU_ROS_obj;
-  }
+  }*/
   private:
-  std::unique_ptr<CycloneIMU_ROS> IMU_ROS_obj;
+  
 };

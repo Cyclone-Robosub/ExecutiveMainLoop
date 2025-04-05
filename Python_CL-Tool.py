@@ -51,13 +51,20 @@ class Plant:
         sin45 = math.sin(math.pi / 4)
         self.thruster_directions = [
             [  0,     0,    1  ],
+
+            [  0,     0,   -1  ],
+
             [  0,     0,    1  ],
-            [  0,     0,    1  ],
-            [  0,     0,    1  ],
+
+            [  0,     0,   -1  ],
+
             [-sin45, -sin45,  0  ],
+
+            [ sin45, -sin45,  0  ],
+
             [-sin45,  sin45,  0  ],
-            [-sin45,  sin45,  0  ],
-            [-sin45, -sin45,  0  ]]
+
+            [ sin45, sin45,   0  ]]
 
         # Thruster torques
         self.thruster_torques = [self.cross_product(self.thruster_positions[i], self.thruster_directions[i]) for i in range(8)]

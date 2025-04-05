@@ -12,8 +12,11 @@
 #include "std_msgs/msg/int32_multi_array.hpp"
 #include "std_msgs/msg/string.hpp"
 #include <yaml-cpp/yaml.h>
-#include "lib/Propulsion/lib/Command_Interpreter.h"
-#include "lib/Propulsion/lib/Command.h"
+#include "Command_Interpreter.h"
+
+
+
+#include "sensor_msgs/msg/imu.hpp"
 
 using namespace std::literals;
 namespace fs = std::filesystem;
@@ -27,7 +30,7 @@ public:
   // Maybe we could code each function to setup on its own.
   // The functions run assuming that the inital first iteration
   // of the loop starts stage by stage with no wait.
-  ExecutiveLoop(std::unique_ptr<CycloneIMU_ROS> imu_ros_obj) : Node("executive_main_node") {
+  ExecutiveLoop() : Node("executive_main_node") {
     loopIsRunning = true;
     tasksCompleted = false;
     commandInterpreter = std::make_unique<Command_Interpreter_RPi5>(thrusterPins, digitalPins);
@@ -43,7 +46,7 @@ public:
     }else{
       stateFile.open(stateFileString, std::ofstream::app);
     }
-     IMU_ROS_obj = std::move(imu_ros_obj);
+     
   }
   //these callback functions serve as the "read Input node in the loop"
   void depthSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
@@ -52,13 +55,18 @@ public:
    // std::cout << "Got depth ";
     depth_msg = msg->data;
   }
-/*
+
   void imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
     // std::lock_guard<std::mutex> lock(mutex_);
     std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME - 40));
     //std::cout << "imu sensor\n";
-    imu_msg = msg.data;
-  }*/
+    angular_velocity_x = msg.angular_velocity.x;
+    angular_velocity_y = msg.angular_velocity.y;
+    angular_velocity_z = msg.angular_velocity.z;
+    linear_acceleration_x = msg.linear_acceleration.x;
+    linear_acceleration_y = msg.linear_acceleration.y;
+    linear_acceleration_z = msg.linear_acceleration.z;
+  }
   void pythonCltoolCallback(const std_msgs::msg::Int32MultiArray::SharedPtr msg){
     std::cout << "Received Int32MultiArray: ";
       int i = 0;
@@ -66,7 +74,7 @@ public:
       std::lock_guard<std::mutex> pwm_lock(pwm_mutex);
       for (int32_t value : msg->data) {
         setvalue = (int)value;
-        inputPWM[i] = setvalue;
+        our_pwm_array.pwm_signals[i] = setvalue;
         i++;
       }
       i = 0;
@@ -107,9 +115,9 @@ public:
         stateFile << "," << imu_msg;
         // PWM_Object
       }
-      if(IMU_ROS_obj->started){
+      
         stateFile << angular_velocity_x << "," << linear_acceleration_x << ",";
-      }
+      
       stateFile << ",[";
         for(auto i : inputPWM){
           stateFile << i << ",";
@@ -152,9 +160,8 @@ public:
       if(typeOfExecute == "blind_execute"){
         std::ofstream logFilePins;
         CommandComponent commandComponents;
-        pwm_array our_pwm_array;
-        our_pwm_array.pwm_signals = inputPWM;
-        commandComponents.thruster_pwms = pwm_array.pwm_signals;
+       // our_pwm_array.pwm_signals = inputPWM;
+        commandComponents.thruster_pwms = our_pwm_array;
         //setup ROS topic for duration
         commandComponents.duration = std::chrono::milliseconds(50);
         commandInterpreter->blind_execute(commandComponents, logFilePins);
@@ -181,14 +188,20 @@ public:
 private:
 rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
       python_cltool_subscription;
-  
-  std::unique_ptr<CycloneIMU_ROS> IMU_ROS_obj;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_imu_;
+
+  float angular_velocity_x;
+     float angular_velocity_y;
+     float angular_velocity_z;
+     float linear_acceleration_x;
+     float linear_acceleration_y;
+     float linear_acceleration_z;
 
   std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter;
   std::vector<PwmPin*> thrusterPins;
   std::vector<DigitalPin*> digitalPins;
-  std::vector<int> inputPWM;
-  
+  int inputPWM[8] = {};
+  pwm_array our_pwm_array;
   std::ofstream stateFile;
   std::mutex sensor_mutex;
   std::mutex pwm_mutex;
@@ -219,8 +232,8 @@ public:
     callbackIMU = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
       
-    auto commmandOptions = rclcpp::SubscriptionOptions();
-    commandOptions.callgackgroup = callbackIMU;
+    auto commandOptions = rclcpp::SubscriptionOptions();
+    commandOptions.callback_group = callbackIMU;
     auto depthOptions = rclcpp::SubscriptionOptions();
     depthOptions.callback_group = callbackDepth;
     auto imuOptions = rclcpp::SubscriptionOptions();
@@ -236,16 +249,16 @@ public:
 
     // Priority
     // Need to input IMU initialization with ROS.
-    /*
+    
     imu_subscription_ = this->create_subscription<sensor_msgs::msg::Imu>(
-        "imu_topic", rclcpp::QoS(5),
+        "imu", rclcpp::QoS(5),
         std::bind(&ExecutiveLoop::imuSensorCallback, mainLoopObject,
                   std::placeholders::_1),
-        imuOptions);*/
+        imuOptions);
     pythonCltool_subscription =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "python_cltool_topic", 10,
-            std::bind(&ExecutiveLoop::pythonCltoolCallback, this,
+            std::bind(&ExecutiveLoop::pythonCltoolCallback, mainLoopObject,
                       std::placeholders::_1),
                     commandOptions);
   }
@@ -265,10 +278,9 @@ int main(int argc, char *argv[]) {
   //  setup Robot during initialization.
   rclcpp::init(argc, argv);
   SetupRobot initStateandConfig = SetupRobot();
-  std::unique_ptr<CycloneIMU_ROS> IMU_ROS_obj = initStateandConfig.acquireROSobject();
   // ExecutiveLoop Think about object by reference or value passing
   std::cout << "Executive Main Loop" <<std::endl;
-  std::shared_ptr<ExecutiveLoop> mainLoopObject = std::make_shared<ExecutiveLoop>(std::move(CycloneIMU_ROS));
+  std::shared_ptr<ExecutiveLoop> mainLoopObject = std::make_shared<ExecutiveLoop>();
   std::shared_ptr<SensorsData> sensorsROScallback = std::make_shared<SensorsData>(mainLoopObject);
   // ExecutiveLoop mainLoopObject = ExecutiveLoop(argc, argv);
   // records false if run has not completed yet.
