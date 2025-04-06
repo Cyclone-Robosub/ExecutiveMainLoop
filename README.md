@@ -2,13 +2,13 @@
 
 
 ## Set up
-Run only once:
+Run only once to set up ROS on your environment:
 ```
 cd misc
 chmod +x ros2jazzyinstall.sh
 ./ros2jazzyinstall.sh
 ```
-These are the commands the above script runs.
+Note : These are the general commands the above script runs.
 ```
 sudo apt update && sudo apt install curl -y
 sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
@@ -38,19 +38,21 @@ colcon build
 the build need to be repeated for the setup.bash srcipt to generate. Otherwise build has missing env vars.
 
 ## build
-Re run the colcon build (this time only once):
+Run from /ExecutiveMainLoop
 ```
-cd ros2_ws/src
-colcon build
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-cd ../../
-mkdir build && cd build
-cmake -G "Ninja" .. && make
+chmod +x build.sh
+./build.sh
 ```
-replace the last line with `cmake .. && make` if you didn't install ninja
+## Run the robot
+again run from /ExecutiveMainLoop
+```
+chmod +x startup.sh
+./startup.sh
+```
+Note : in the Robot/Rasberry pi the startup.sh should run on startup and build files should already be built on the pi 5.
 
 If you encounter the folowing:
+1.
 ```
 CMake Error: Error: generator Unix Makefiles
 does not match with the genrator used prevously: Ninja
@@ -60,3 +62,9 @@ or vice versa, got to the root of the project, then:
 rm -rf build/*
 ```
 Then rerun the build command.
+
+2.
+```
+WARNING:colcon.colcon_cmake.task.cmake.build:Could not run installation step for package 'InertialSenseSDK' because it has no 'install' target
+```
+This is fine. 

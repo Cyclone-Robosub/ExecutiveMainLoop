@@ -34,8 +34,8 @@ public:
     loopIsRunning = true;
     tasksCompleted = false;
     for(int i = 0; i < 8; i++){
-      thrusterPins.push_back(new HardwarePwmPin(5));
-      digitalPins.push_back(new DigitalPin(5, ActiveHigh));
+      thrusterPins.push_back(new HardwarePwmPin(i));
+      //digitalPins.push_back(new DigitalPin(5, ActiveLow));
     }
     commandInterpreter = std::make_unique<Command_Interpreter_RPi5>(thrusterPins, digitalPins);
     commandInterpreter->initializePins();
