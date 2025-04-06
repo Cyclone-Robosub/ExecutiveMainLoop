@@ -3,7 +3,7 @@ project(executive_main_loop)
 
 #add_subdirectory(lib/gtest)
 #add_subdirectory(lib/yaml-cpp)
-add_subdirectory(lib/Propulsion/pi)
+add_subdirectory(lib/Executive_Propulsion/pi)
 
 
 find_package(std_msgs REQUIRED)
@@ -18,34 +18,35 @@ find_package(nav_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(ament_cmake_gtest REQUIRED)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(EXPORT_COMPILE_COMMANDS True)
-add_executable(ExecutiveExecutable ExecutiveLoop.cpp
-      )
-ament_target_dependencies(ExecutiveExecutable rclcpp std_msgs)
-ament_target_dependencies(ExecutiveExecutable rclcpp std_msgs geometry_msgs nav_msgs diagnostic_msgs sensor_msgs std_srvs)
+
+add_executable(ExecutiveExecutable ExecutiveLoop.cpp)
 install(TARGETS
   ExecutiveExecutable
   DESTINATION lib/${PROJECT_NAME})
-
-ament_package()
+ament_target_dependencies(ExecutiveExecutable rclcpp std_msgs)
+ament_target_dependencies(ExecutiveExecutable rclcpp std_msgs geometry_msgs nav_msgs diagnostic_msgs sensor_msgs std_srvs)
+target_link_libraries(ExecutiveExecutable PropulsionFunctions)
 #target_link_libraries(run_tests yaml-cpp::yaml-cpp)
 
 enable_testing()
-target_link_libraries(ExecutiveExecutable PropulsionFunctions Threads::Threads)
+
 target_include_directories(ExecutiveExecutable PUBLIC
                           "${PROJECT_BINARY_DIR}"
                           "${PROJECT_SOURCE_DIR}/PropulsionFunctions"
                           )
 include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/Propulsion/lib
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/Propulsion/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/pi
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/include
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/libusb/libusb
    
 )
 
-
+ament_package()
 
 find_package(Threads REQUIRED)
 
