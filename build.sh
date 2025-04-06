@@ -10,8 +10,6 @@ colcon build
 . install/setup.bash
 cd ../../
 
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
 colcon build 
 
 
