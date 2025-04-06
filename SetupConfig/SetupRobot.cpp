@@ -20,7 +20,7 @@ public:
     } else {
       std::cerr << "Cannot find InitIMU.yaml file in desired location"
                 << std::endl;
-                std::cout << std::string(currentPaths);
+                std::cout << std::string(currentPaths) << std::endl;
     //  throw std::runtime_error(
       //    "Cannot find Init.yaml file in desired location");
     }

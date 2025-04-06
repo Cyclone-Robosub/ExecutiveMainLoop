@@ -33,6 +33,10 @@ public:
   ExecutiveLoop() : Node("executive_main_node") {
     loopIsRunning = true;
     tasksCompleted = false;
+    for(int i = 0; i < 8; i++){
+      thrusterPins.push_back(new HardwarePwmPin(5));
+      digitalPins.push_back(new DigitalPin(5, ActiveHigh));
+    }
     commandInterpreter = std::make_unique<Command_Interpreter_RPi5>(thrusterPins, digitalPins);
     commandInterpreter->initializePins();
     fs::path currentPath = fs::current_path();
@@ -200,7 +204,7 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
   std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter;
   std::vector<PwmPin*> thrusterPins;
   std::vector<DigitalPin*> digitalPins;
-  int inputPWM[8] = {};
+  int inputPWM[8] = {15, 15, 15, 15, 15, 15, 15, 15};
   pwm_array our_pwm_array;
   std::ofstream stateFile;
   std::mutex sensor_mutex;
@@ -279,7 +283,7 @@ int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);
   SetupRobot initStateandConfig = SetupRobot();
   // ExecutiveLoop Think about object by reference or value passing
-  std::cout << "Executive Main Loop" <<std::endl;
+  std::cout << "Executive Main Loop Object Creation" <<std::endl;
   std::shared_ptr<ExecutiveLoop> mainLoopObject = std::make_shared<ExecutiveLoop>();
   std::shared_ptr<SensorsData> sensorsROScallback = std::make_shared<SensorsData>(mainLoopObject);
   // ExecutiveLoop mainLoopObject = ExecutiveLoop(argc, argv);

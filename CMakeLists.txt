@@ -40,6 +40,7 @@ target_include_directories(ExecutiveExecutable PUBLIC
                           )
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/libusb/libusb
    
 )
