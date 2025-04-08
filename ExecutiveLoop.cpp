@@ -34,8 +34,9 @@ public:
   ExecutiveLoop() : Node("executive_main_node") {
    std::cout << "here  asdfasdf"<<std::endl;
     fs::path currentPath = fs::current_path();
-    fs::path stateFilePath = currentPath.parent_path();
-    std::string stateFileString = std::string(currentPath) + "/state.csv";
+    fs::path stateFilePath = currentPath.parent_path().parent_path();
+    std::string stateFileString = std::string(stateFilePath) + "/state.csv";
+    std::cout << stateFileString << std::endl;
     if (!std::filesystem::exists(stateFileString)) {
       stateFile.open(stateFileString, std::ofstream::app);
 
