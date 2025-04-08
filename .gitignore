@@ -5,5 +5,3 @@ cmake-build-debug
 install
 log
 .DS_Store
-
-.fake
