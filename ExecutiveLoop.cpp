@@ -18,6 +18,7 @@
 
 
 #include "sensor_msgs/msg/imu.hpp"
+#include "sensor_msgs/msg/magneticfield.hpp"
 
 using namespace std::literals;
 namespace fs = std::filesystem;
@@ -77,6 +78,13 @@ public:
     linear_acceleration_x = msg.linear_acceleration.x;
     linear_acceleration_y = msg.linear_acceleration.y;
     linear_acceleration_z = msg.linear_acceleration.z;
+    
+  }
+  void magCallback(const sensor_msgs::msg::MagneticField& msg)
+  {
+    mag_field_x = msg.magnetic_field.x;
+    mag_field_y = msg.magnetic_field.y;
+    mag_field_z = msg.magnetic_field.z;
   }
   void pythonCltoolCallback(const std_msgs::msg::Int32MultiArray::SharedPtr msg){
     std::cout << "Received Int32MultiArray: ";
@@ -207,6 +215,9 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
      float linear_acceleration_y;
      float linear_acceleration_z;
 
+     float mag_field_x;
+      float mag_field_y; float mag_field_z;
+
   std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter;
   std::vector<PwmPin*> thrusterPins;
   std::vector<DigitalPin*> digitalPins;
@@ -242,12 +253,14 @@ public:
         rclcpp::CallbackGroupType::MutuallyExclusive);
       
     auto commandOptions = rclcpp::SubscriptionOptions();
-    commandOptions.callback_group = callbackIMU;
+    commandOptions.callback_group = callbackDepth;
     auto depthOptions = rclcpp::SubscriptionOptions();
     depthOptions.callback_group = callbackDepth;
     auto imuOptions = rclcpp::SubscriptionOptions();
     imuOptions.callback_group = callbackIMU;
     std::cout << "Creating sensors subscriptions\n";
+    auto magOptions = rclcpp::SubscriptionOPtions();
+    magOptions.callback_group = callbackIMU;
 
     depth_sensor_subscription_ =
         this->create_subscription<std_msgs::msg::String>(
@@ -264,6 +277,11 @@ public:
         std::bind(&ExecutiveLoop::imuSensorCallback, mainLoopObject,
                   std::placeholders::_1),
         imuOptions);
+    mag_subscription_ = this->create_subscription<sensor_msgs::msg::MagneticField>(
+        "magtopic", rclcpp::QoS(5),
+        std::bind(&ExecutiveLoop::magSensorCallback, mainLoopObject,
+                  std::placeholders::_1),
+        magOptions);
     pythonCltool_subscription =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "python_cltool_topic", 10,
@@ -279,6 +297,7 @@ private:
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr
       depth_sensor_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription_;
+  rclcpp::Subscription<sensor_msgs::msg::MagneticField>::SharedPtr mag_subscription_;
   rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr pythonCltool_subscription;
 };
 
