@@ -32,14 +32,7 @@ public:
   // The functions run assuming that the inital first iteration
   // of the loop starts stage by stage with no wait.
   ExecutiveLoop() : Node("executive_main_node") {
-    loopIsRunning = true;
-    tasksCompleted = false;
-    for(int i = 0; i < 8; i++){
-      thrusterPins.push_back(new HardwarePwmPin(i));
-      //digitalPins.push_back(new DigitalPin(5, ActiveLow));
-    }
-    commandInterpreter = std::make_unique<Command_Interpreter_RPi5>(thrusterPins, digitalPins);
-    commandInterpreter->initializePins();
+   std::cout << "here  asdfasdf"<<std::endl;
     fs::path currentPath = fs::current_path();
     fs::path stateFilePath = currentPath.parent_path();
     std::string stateFileString = std::string(currentPath) + "/state.csv";
@@ -48,10 +41,20 @@ public:
 
       // Append this for every new file.
       stateFile << "Time,Depth(m),IMU Data, PWM Data" << std::endl;
+      std::cout << "here  asdf"<<std::endl;
     }else{
       stateFile.open(stateFileString, std::ofstream::app);
       std::cout <<"took this route 2"<< std::endl;
     }
+    loopIsRunning = true;
+    tasksCompleted = false;
+    for(int i = 0; i < 8; i++){
+      thrusterPins.push_back(new HardwarePwmPin(i));
+      //digitalPins.push_back(new DigitalPin(5, ActiveLow));
+    }
+    commandInterpreter = std::make_unique<Command_Interpreter_RPi5>(thrusterPins, digitalPins);
+    commandInterpreter->initializePins();
+    
      
   }
   //these callback functions serve as the "read Input node in the loop"
