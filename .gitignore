@@ -1,9 +1,9 @@
-build
 .idea
 cmake-build-debug
 .vscode
-install
 log
 .DS_Store
 
 .fake
+build
+install

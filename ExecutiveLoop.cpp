@@ -103,6 +103,7 @@ public:
 */
   // get a notification here
   void updateState() {
+    std::cout << "UpdateState" << std::endl;
     while (loopIsRunning) {
       // Get the variables and put it into the state file.
       // timestamped every 0.1 seconds.
