@@ -56,8 +56,8 @@ public:
     }
     commandInterpreter = std::make_unique<Command_Interpreter_RPi5>(thrusterPins, digitalPins);
     commandInterpreter->initializePins();
-    
-     
+
+
   }
   //these callback functions serve as the "read Input node in the loop"
   void depthSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
@@ -112,7 +112,7 @@ public:
       // to be the depth. Assuming I have it right. Need to read
       // multithreading with mutex condition and lock pushing to variables. or
       // anyway of setting it
-     
+
     }
   }
 */
@@ -168,7 +168,7 @@ public:
       std::cin >> userinput;
 
       //Need to see William's python code to move foward.
-      
+
     }
     // if all decisions/tasks are done, make tasksCompleted true;
   }
@@ -251,7 +251,7 @@ public:
         rclcpp::CallbackGroupType::MutuallyExclusive);
     callbackIMU = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
-      
+
     auto commandOptions = rclcpp::SubscriptionOptions();
     commandOptions.callback_group = callbackDepth;
     auto depthOptions = rclcpp::SubscriptionOptions();
@@ -271,7 +271,7 @@ public:
 
     // Priority
     // Need to input IMU initialization with ROS.
-    
+
     imu_subscription_ = this->create_subscription<sensor_msgs::msg::Imu>(
         "imu", rclcpp::QoS(5),
         std::bind(&ExecutiveLoop::imuSensorCallback, mainLoopObject,
@@ -329,7 +329,7 @@ int main(int argc, char *argv[]) {
     //This is now the case ^.
  // std::jthread SendThrusterCommandsThread(&ExecutiveLoop::sendThrusterCommands, mainLoopObject);
   std::cout << "User defined threads has ran sucessfully" << std::endl;
-  
+
   rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
  // auto sensorNode = std::make_shared<SensorsData>(sensorsROScallback);
 
