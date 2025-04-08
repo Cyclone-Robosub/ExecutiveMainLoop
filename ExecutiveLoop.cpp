@@ -18,7 +18,7 @@
 
 
 #include "sensor_msgs/msg/imu.hpp"
-#include "sensor_msgs/msg/magneticfield.hpp"
+#include "sensor_msgs/msg/magnetic_field.hpp"
 
 using namespace std::literals;
 namespace fs = std::filesystem;
@@ -260,7 +260,7 @@ public:
     auto imuOptions = rclcpp::SubscriptionOptions();
     imuOptions.callback_group = callbackIMU;
     std::cout << "Creating sensors subscriptions\n";
-    auto magOptions = rclcpp::SubscriptionOPtions();
+    auto magOptions = rclcpp::SubscriptionOptions();
     magOptions.callback_group = callbackIMU;
 
     depth_sensor_subscription_ =
@@ -280,7 +280,7 @@ public:
         imuOptions);
     mag_subscription_ = this->create_subscription<sensor_msgs::msg::MagneticField>(
         "magtopic", rclcpp::QoS(5),
-        std::bind(&ExecutiveLoop::magSensorCallback, mainLoopObject,
+        std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
                   std::placeholders::_1),
         magOptions);
     pythonCltool_subscription =
