@@ -55,7 +55,7 @@ public:
      
   }
   //these callback functions serve as the "read Input node in the loop"
-  void researchSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
+  void depthSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
     //  std::lock_guard<std::mutex> lock(mutex_);
     //std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
    // std::cout << "Got depth ";
@@ -108,7 +108,6 @@ public:
   void updateState() {
     std::cout << "UpdateState" << std::endl;
     while (loopIsRunning) {
-      std::cout << "went inside the update state while loop" << std::endl;
       // Get the variables and put it into the state file.
       // timestamped every 0.1 seconds.
       std::lock_guard<std::mutex> sensorDataLock(sensor_mutex);
@@ -132,8 +131,6 @@ public:
           stateFile << i << ",";
         }
         stateFile << "],";
-       sensorDataLock.unlock();
-       pwmValuesLock.unlock();
       if(stateFile.tellp() > 200){
         stateFile.flush();
         stateFile.clear();
@@ -184,7 +181,7 @@ public:
     std::lock_guard<std::mutex> stateFileLock(sensor_mutex);
     stateFile << std::endl;
     stateFile.close();
-    loopIsRunning = false;
+    //loopIsRunning = false;
     std::cout << "Shutting down Executive Loop, sensors are still reading." <<std::endl;
   }
   /*
@@ -218,8 +215,7 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
   std::string imu_msg;
    std::vector<float> imu_data;
   float depth;
-
-  bool loopIsRunning;
+  bool loopIsRunning = true;
   bool tasksCompleted;
   std::string userinput;
 
