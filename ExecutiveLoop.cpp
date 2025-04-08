@@ -311,6 +311,7 @@ int main(int argc, char *argv[]) {
 
   SensorsExecutor.add_node(sensorsROScallback);
   //SensorsExecutor.add_node(mainLoopObject);
+  std::cout << "ROS2 runnning" << std::endl;
   SensorsExecutor.spin();
   std::cout << "ROS2 runnning" << std::endl;
 
