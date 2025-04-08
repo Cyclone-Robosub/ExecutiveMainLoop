@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <mutex>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <utility>
@@ -49,15 +50,17 @@ public:
       stateFile << "Time,Depth(m),IMU Data, PWM Data" << std::endl;
     }else{
       stateFile.open(stateFileString, std::ofstream::app);
+      std::cout <<"took this route 2"<< std::endl;
     }
      
   }
   //these callback functions serve as the "read Input node in the loop"
-  void depthSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
+  void researchSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
     //  std::lock_guard<std::mutex> lock(mutex_);
     //std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
    // std::cout << "Got depth ";
-    depth_msg = msg->data;
+   std::string research_data = msg->data;
+   depth_msg = msg->data;
   }
 
   void imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
@@ -90,7 +93,7 @@ public:
     while (loopIsRunning) {
       //std::lock_guard<std::mutex> lock(mutex_);
       // Have to check what the msg is saying.
-      // Parse msg data. Put the research data into a vector or variables.
+      // Parse msg data. Put the research data into a vector or var iables.
       // IMU data will probably go into vector.
       // IF needed we can use parameters with ROS if a lot of different types
       // of data. one part of message has to the be imu and the other part has
@@ -105,10 +108,11 @@ public:
   void updateState() {
     std::cout << "UpdateState" << std::endl;
     while (loopIsRunning) {
+      std::cout << "went inside the update state while loop" << std::endl;
       // Get the variables and put it into the state file.
       // timestamped every 0.1 seconds.
-        std::unique_lock<std::mutex> sensorDataLock(sensor_mutex);
-        std::unique_lock<std::mutex> pwmValuesLock(pwm_mutex);
+      std::lock_guard<std::mutex> sensorDataLock(sensor_mutex);
+      //  std::unique_lock<std::mutex> pwmValuesLock(pwm_mutex);
         //try ownslock for future testing
       stateFile << getCurrentDateTime();
       if(!depth_msg.empty()){
