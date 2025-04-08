@@ -138,12 +138,14 @@ public:
       }
       
         stateFile << angular_velocity_x << "," << linear_acceleration_x << ",";
+        stateFile << mag_field_x << ",";
       
       stateFile << ",[";
         for(auto i : inputPWM){
           stateFile << i << ",";
         }
         stateFile << "],";
+        stateFIle << "\n";
       if(stateFile.tellp() > 200){
         stateFile.flush();
         stateFile.clear();
