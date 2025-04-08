@@ -145,7 +145,7 @@ public:
           stateFile << i << ",";
         }
         stateFile << "],";
-        stateFIle << "\n";
+        stateFile << "\n";
       if(stateFile.tellp() > 200){
         stateFile.flush();
         stateFile.clear();
