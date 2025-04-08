@@ -123,11 +123,12 @@ public:
       // Get the variables and put it into the state file.
       // timestamped every 0.1 seconds.
       std::lock_guard<std::mutex> sensorDataLock(sensor_mutex);
-      //  std::unique_lock<std::mutex> pwmValuesLock(pwm_mutex);
+      std::unique_lock<std::mutex> pwmValuesLock(pwm_mutex);
         //try ownslock for future testing
       stateFile << getCurrentDateTime();
       if(!depth_msg.empty()){
     //    std::cout << depth_msg << " updateStateLocation" << " \n";
+        
         stateFile << "," << depth_msg;
       }
       if (!imu_msg.empty()) {
