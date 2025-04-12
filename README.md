@@ -49,27 +49,29 @@ again run from /ExecutiveMainLoop
 chmod +x startup.sh
 ./startup.sh
 ```
-Note : in the Robot/Rasberry pi the startup.sh should run on startup and build files should already be built on the pi 5.
+Note: In the Robot/Rasberry Pi, the startup.sh should run on startup, and the build files should already be built on the Pi 5.
 
-If you encounter the folowing:
-1.
+Tips
+---
+If you encounter the following:
 ```
 CMake Error: Error: generator Unix Makefiles
-does not match with the genrator used prevously: Ninja
+does not match with the generator used previously: Ninja
 ```
 or vice versa, got to the root of the project, then:
 ```
 rm -rf build/*
 ```
-Then rerun the build command.
+Then, rerun the build command.
 
-2.
 ```
 WARNING:colcon.colcon_cmake.task.cmake.build:Could not run installation step for package 'InertialSenseSDK' because it has no 'install' target
 ```
-This is fine. 
----
-If you encounter the follow or similar:
+The above error does not affect the final executable.
+
+Non-existing Submodule Paths
+
+If you encounter the following or something similar:
 ```
 git submodule update --init --recursive --remote
 fatal: No url found for submodule path 'lib/Propulsion' in .gitmodules
@@ -83,4 +85,4 @@ Then do:
 ```
 git submodule sync
 ```
-And finally try initing the submodules.
+And finally, try initing the submodules.
