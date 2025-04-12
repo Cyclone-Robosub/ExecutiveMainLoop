@@ -7,7 +7,7 @@ source install/setup.bash
 
 cd ros2_ws/src
 colcon build 
-. install/setup.bash./
+. install/setup.bash
 cd ../../
 
 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug
