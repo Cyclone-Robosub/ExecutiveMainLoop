@@ -4,12 +4,12 @@
 # Source ROS setup files
 source /opt/ros/jazzy/setup.bash
 
-cd ros2_ws/src
-colcon build 
+cd ros2_ws/src 
+colcon build &
 . install/setup.bash
 cd ../../
 
-colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug &
 
 
 
