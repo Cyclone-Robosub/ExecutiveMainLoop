@@ -63,6 +63,10 @@ rm -rf build/*
 ```
 Then rerun the build command.
 
+git submodule update --init --recursive --remote
+fatal: No url found for submodule path 'lib/Propulsion' in .gitmodules
+
+
 2.
 ```
 WARNING:colcon.colcon_cmake.task.cmake.build:Could not run installation step for package 'InertialSenseSDK' because it has no 'install' target
