@@ -137,7 +137,6 @@ public:
          std::cout << "imu msg testing" <<std::endl;
         stateFile << "," << imu_msg;
       }
-      
         stateFile << angular_velocity_x << "," << linear_acceleration_x << ",";
         stateFile << mag_field_x << ",";
       
