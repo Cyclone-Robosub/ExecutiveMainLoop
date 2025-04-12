@@ -1,0 +1,59 @@
+{
+    "configurations": [
+        {
+            "name": "Mac G++ M-Series",
+            "macFrameworkPath": [
+                "/System/Library/Frameworks",
+                "/Library/Frameworks"
+            ],
+            "intelliSenseMode": "macos-gcc-arm",
+            "compilerPath": "/opt/homebrew/bin/g++-14",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "compileCommands": [
+                "./compile_commands.json"
+            ]
+        },
+        {
+            "name": "Windows G++ x86",
+            "intelliSenseMode": "windows-gcc-x86",
+            "compilerPath": "C:\\msys64\\mingw64\\bin\\g++.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "compileCommands": [
+                "./compile_commands.json"
+            ]
+        },
+        {
+            "name": "Linux G++ x86",
+            "intelliSenseMode": "linux-gcc-x86",
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "compileCommands": [
+                "./compile_commands.json"
+            ]
+        },
+        {
+            "name": "Linux G++ aarch64",
+            "intelliSenseMode": "linux-gcc-arm64",
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "compileCommands": [
+                "./compile_commands.json"
+            ]
+        },
+        {
+            "name": "Linux G++ arm",
+            "intelliSenseMode": "linux-gcc-arm",
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "compileCommands": [
+                "./compile_commands.json"
+            ]
+        },
+    ],
+    "version": 4
+}
