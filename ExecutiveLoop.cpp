@@ -94,10 +94,12 @@ public:
       for (int32_t value : msg->data) {
         setvalue = (int)value;
         our_pwm_array.pwm_signals[i] = setvalue;
+        std::cout << setvalue;
         i++;
       }
       i = 0;
       std::cout << std::endl;
+      
   }
 
 /*
@@ -134,14 +136,13 @@ public:
       if (!imu_msg.empty()) {
          std::cout << "imu msg testing" <<std::endl;
         stateFile << "," << imu_msg;
-        // PWM_Object
       }
       
         stateFile << angular_velocity_x << "," << linear_acceleration_x << ",";
         stateFile << mag_field_x << ",";
       
       stateFile << ",[";
-        for(auto i : inputPWM){
+        for(auto i : our_pwm_array.pwm_signals){
           stateFile << i << ",";
         }
         stateFile << "],";
@@ -154,7 +155,7 @@ public:
       }
       std::this_thread::sleep_for(
             std::chrono::milliseconds(UPDATE_WAIT_TIME));
-                  // Need to see William's code to put PWM here in the status file.
+                  //TODO: Need to see William's code to put PWM here in the status file.
     }
   }
 
