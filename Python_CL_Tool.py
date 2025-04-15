@@ -15,15 +15,27 @@ fwd_pulse = int(fwd_pulse_raw * rev_adj)
 frequency = 10
 pwm_file = "pwm_file.csv"
 
+rev_pulse = 1100 * 1000
+stop_pulse = 1500 * 1000
+fwd_pulse_raw = 1900 * 1000 # dont use this one, it's output can't be replicated in reverse
+rev_adj = 1 # thrusters are more powerful in fwd direction
+fwd_pulse = int(fwd_pulse_raw * rev_adj)
+frequency = 10
+pwm_file = "pwm_file.csv"
+
 zero_set = [0 for i in range(8)]
 stop_set = [stop_pulse for i in range(8)]
-fwd_set = [stop_pulse for i in range(4)] + [fwd_pulse for i in range(4)]
-crab_set = [stop_pulse for i in range(4)] + [fwd_pulse, rev_pulse, rev_pulse, fwd_pulse] 
-down_set =  [rev_pulse for i in range(4)] + [stop_pulse for i in range(4)]
-barrell = [rev_pulse, fwd_pulse, rev_pulse, fwd_pulse] + [stop_pulse for i in range(4)]
-summer = [rev_pulse, rev_pulse, fwd_pulse, fwd_pulse ] + [stop_pulse for i in range(4)]
-spin = [stop_pulse for i in range(4)] + [fwd_pulse, rev_pulse, fwd_pulse, rev_pulse]
-torpedo = [rev_pulse, fwd_pulse, rev_pulse, fwd_pulse] + [fwd_pulse for i in range(4)]
+
+fwd_set = [stop_pulse for i in range(4)] + [fwd_pulse, rev_pulse, fwd_pulse, rev_pulse]
+crab_set = [stop_pulse for i in range(4)] + [fwd_pulse, fwd_pulse, rev_pulse, rev_pulse] 
+down_set =  [fwd_pulse, rev_pulse, fwd_pulse, rev_pulse] + [stop_pulse for i in range(4)]
+
+barrell = [fwd_pulse, fwd_pulse, fwd_pulse, fwd_pulse] + [stop_pulse for i in range(4)]
+summer = [rev_pulse, fwd_pulse, fwd_pulse, rev_pulse ] + [stop_pulse for i in range(4)]
+spin_set = [stop_pulse for i in range(4)] + [fwd_pulse for i in range(4)]
+
+torpedo = [fwd_pulse, fwd_pulse, fwd_pulse, fwd_pulse] + [fwd_pulse, rev_pulse, fwd_pulse, rev_pulse]
+
 
 class Publisher(Node):
     def __init__(self):
@@ -128,16 +140,16 @@ class Thrust_Control:
             0,
             0]
         #test
-        self.publishCommandObject.publish_array(self.thrusters)
+        #self.publishCommandObject.publish_array(self.thrusters)
    # def testsendArray(self, publishCommandObject):
        # while True:
          #   publishCommandObject.publish_array(self.thrusters)
         
         # Set default frequency and duty cycle
 
-     #   for thruster in self.thrusters:
-            #thruster.freq(frequency)
-           # thruster.duty_ns(0)
+        for thruster in self.thrusters:
+            thruster.freq(frequency)
+            thruster.duty_ns(0)
         
     def pwm(self, pwm_set):
         
@@ -148,11 +160,10 @@ class Thrust_Control:
         pwm_set = [int(i) for i in pwm_set]
         self.publishCommandObject.publish_array(pwm_set)
 
-        #f = open(pwm_file, 'a')
-       # start = str(time.time_ns())
-       # for i in range(len(pwm_set)):
-         #   self.thrusters[i].duty_ns(pwm_set[i])
-       # end = str(time.time_ns())
+        start = str(time.time_ns())
+        for i in range(len(pwm_set)):
+            self.thrusters[i].duty_ns(pwm_set[i])
+        end = str(time.time_ns())
         
       #  string = start + "," + end + "," + ",".join(map(str, pwm_set)) + "\n"
       #  f.write(string)
@@ -179,14 +190,13 @@ class Thrust_Control:
             
         #with ROS2 send pwm_set array values to a publishing topic.  
         time.sleep(time_s)
-        #self.pwm(stop_set)
+        self.pwm(stop_set)
         self.publishCommand.publish_array(pwm_set)
         
-    def read(self):
-        logf = open(pwm_file, "r")
-        file_contents = logf.read()
-        print(file_contents)
-        logf.close()
+    #def read(self):
+     #   logf = open(pwm_file, "r")
+      #  file_contents = logf.read()
+       ##logf.close()
                 
     def reaction(self, pwm_set, scale=1):
         pwm = [ scale * (i - stop_pulse) + stop_pulse for i in pwm_set]
