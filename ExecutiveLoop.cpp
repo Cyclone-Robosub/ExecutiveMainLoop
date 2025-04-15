@@ -131,9 +131,9 @@ public:
       stateFile << getCurrentDateTime() << ",";
       
     //    std::cout << depth_msg << " updateStateLocation" << " \n";
-        stateFile << depth_and_pressure_msg << ",";
-        stateFile << angular_velocity_x << "," << angular_velocity_y  << "," << angular_velocity_z << "," << linear_acceleration_x << "," << linear_aceelerration_y << "," << linear_acceleration_z << ","; 
-        stateFile << mag_field_x << "," << ;
+        stateFile << depth_msg << ",";
+        stateFile << angular_velocity_x << "," << angular_velocity_y  << "," << angular_velocity_z << "," << linear_acceleration_x << "," << linear_acceleration_y << "," << linear_acceleration_z << ","; 
+        stateFile << mag_field_x << "," << mag_field_y << "," mag_field_z << "," ;
       
       stateFile << ",[";
         for(auto i : our_pwm_array.pwm_signals){
