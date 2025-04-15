@@ -9,6 +9,7 @@ colcon build
 . install/setup.bash
 cd ../../
 
+source install/setup.bash # in order to source it for the executive build
 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug 
 
 
