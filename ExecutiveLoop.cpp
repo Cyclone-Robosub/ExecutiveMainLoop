@@ -24,6 +24,7 @@ using namespace std::literals;
 namespace fs = std::filesystem;
 
 #define UPDATE_WAIT_TIME 95
+#define NULL_SENSOR_VALUE -320000
 
 // start the executive Loop
 class ExecutiveLoop : public rclcpp::Node {
@@ -127,18 +128,12 @@ public:
       std::lock_guard<std::mutex> sensorDataLock(sensor_mutex);
       std::unique_lock<std::mutex> pwmValuesLock(pwm_mutex);
         //try ownslock for future testing
-      stateFile << getCurrentDateTime();
-      if(!depth_msg.empty()){
+      stateFile << getCurrentDateTime() << ",";
+      
     //    std::cout << depth_msg << " updateStateLocation" << " \n";
-        
-        stateFile << "," << depth_msg;
-      }
-      if (!imu_msg.empty()) {
-         std::cout << "imu msg testing" <<std::endl;
-        stateFile << "," << imu_msg;
-      }
-        stateFile << angular_velocity_x << "," << linear_acceleration_x << ",";
-        stateFile << mag_field_x << ",";
+        stateFile << depth_and_pressure_msg << ",";
+        stateFile << angular_velocity_x << "," << angular_velocity_y  << "," << angular_velocity_z << "," << linear_acceleration_x << "," << linear_aceelerration_y << "," << linear_acceleration_z << ","; 
+        stateFile << mag_field_x << "," << ;
       
       stateFile << ",[";
         for(auto i : our_pwm_array.pwm_signals){
@@ -211,15 +206,16 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
       python_cltool_subscription;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_imu_;
 
-  float angular_velocity_x;
-     float angular_velocity_y;
-     float angular_velocity_z;
-     float linear_acceleration_x;
-     float linear_acceleration_y;
-     float linear_acceleration_z;
+  float angular_velocity_x = NULL_SENSOR_VALUE;
+     float angular_velocity_y = NULL_SENSOR_VALUE;
+     float angular_velocity_z = NULL_SENSOR_VALUE;
+     float linear_acceleration_x = NULL_SENSOR_VALUE;
+     float linear_acceleration_y = NULL_SENSOR_VALUE;
+     float linear_acceleration_z = NULL_SENSOR_VALUE;
 
-     float mag_field_x;
-      float mag_field_y; float mag_field_z;
+     float mag_field_x = NULL_SENSOR_VALUE;
+      float mag_field_y = NULL_SENSOR_VALUE; 
+      float mag_field_z = NULL_SENSOR_VALUE;
 
   std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter;
   std::vector<PwmPin*> thrusterPins;
