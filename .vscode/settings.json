@@ -104,7 +104,8 @@
         "expected": "cpp",
         "future": "cpp",
         "shared_mutex": "cpp",
-        "stdfloat": "cpp"
+        "stdfloat": "cpp",
+        "hash_map": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
     "ros.distro": "jazzy",

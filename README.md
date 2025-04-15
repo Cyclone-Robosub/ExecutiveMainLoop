@@ -1,7 +1,7 @@
 # DriverEnvironment
 
-
 ## Set up
+---
 Run only once to set up ROS on your environment:
 ```
 cd misc
@@ -35,9 +35,10 @@ cd ..
 . install/setup.bash
 colcon build
 ```
-the build need to be repeated for the setup.bash srcipt to generate. Otherwise build has missing env vars.
+the build need to be repeated for the setup.bash script to generate. Otherwise build has missing env vars.
 
 ## build
+---
 Run from /ExecutiveMainLoop
 ```
 chmod +x build.sh
@@ -51,7 +52,29 @@ chmod +x startup.sh
 ```
 Note: In the Robot/Rasberry Pi, the startup.sh should run on startup, and the build files should already be built on the Pi 5.
 
-Tips
+## Testing
+---
+building for test:
+```
+colcon build --cmake-args -DBUILD_TESTING=ON
+```
+Run the test:
+```
+colcon test --packages-select executive_main_loop
+```
+Run with detailed test results:
+```
+colcon test --packages-select executive_main_loop --event-handlers console_direct+
+```
+To check test results:
+```
+colcon test-result --all
+```
+To see which test cases failed (if any):
+```
+colcon test-result --all --verbose
+```
+## Tips
 ---
 If you encounter the following:
 ```
