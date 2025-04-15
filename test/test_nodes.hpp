@@ -1,6 +1,6 @@
 /**
  * @file test_nodes.hpp
- * @brief Test fixtures for ExecutiveLoop and SensorsData nodes
+ * @brief Test fixtures for ROS 2 nodes
  * 
  * Provides common initialization for:
  * 1. ROS 2 context creation

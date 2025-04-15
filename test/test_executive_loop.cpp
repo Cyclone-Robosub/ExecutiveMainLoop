@@ -3,7 +3,7 @@
  * @brief Unit test for the ExecutiveLoop node 
  * 
  * This File contains test cases to to verify the function of the SensorData publisher.
- * @author Danny Kwong cwkwong@ucdavis.edu
+ * @author Danny Kwong
  * @date 2025-04-14
  */
 

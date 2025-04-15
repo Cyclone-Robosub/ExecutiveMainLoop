@@ -4,7 +4,7 @@
  * 
  * Initializes and runs all test suites for the Executive Loop system
  * 
- * @author Your Name
+ * @author Danny Kwong
  * @date November 7, 2024
  */
 
