@@ -300,6 +300,7 @@ private:
   rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr pythonCltool_subscription;
 };
 
+#ifndef TESTING_EXCLUDE_MAIN
 int main(int argc, char *argv[]) {
   // setup performance and time benchmarks.
   //  setup Robot during initialization.
@@ -348,3 +349,4 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
+#endif // TESTING_EXCLUDE_MAIN
