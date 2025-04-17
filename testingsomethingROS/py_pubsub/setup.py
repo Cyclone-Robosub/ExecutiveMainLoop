@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'py_Package_CLtool'
+package_name = 'py_pubsub'
 
 setup(
     name=package_name,
@@ -20,7 +20,6 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-                'talker = py_pubsub.publisher_member_function:main',
         ],
-},
+    },
 )
