@@ -6,6 +6,7 @@ from std_msgs.msg import Int32MultiArray
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+import threading
 
 rev_pulse = 1100 * 1000
 stop_pulse = 1500 * 1000
@@ -15,36 +16,25 @@ fwd_pulse = int(fwd_pulse_raw * rev_adj)
 frequency = 10
 pwm_file = "pwm_file.csv"
 
-rev_pulse = 1100 * 1000
-stop_pulse = 1500 * 1000
-fwd_pulse_raw = 1900 * 1000 # dont use this one, it's output can't be replicated in reverse
-rev_adj = 1 # thrusters are more powerful in fwd direction
-fwd_pulse = int(fwd_pulse_raw * rev_adj)
-frequency = 10
-pwm_file = "pwm_file.csv"
-
 zero_set = [0 for i in range(8)]
 stop_set = [stop_pulse for i in range(8)]
+fwd_set = [stop_pulse for i in range(4)] + [fwd_pulse for i in range(4)]
+crab_set = [stop_pulse for i in range(4)] + [fwd_pulse, rev_pulse, rev_pulse, fwd_pulse] 
+down_set =  [rev_pulse for i in range(4)] + [stop_pulse for i in range(4)]
+barrell = [rev_pulse, fwd_pulse, rev_pulse, fwd_pulse] + [stop_pulse for i in range(4)]
+summer = [rev_pulse, rev_pulse, fwd_pulse, fwd_pulse ] + [stop_pulse for i in range(4)]
+spin = [stop_pulse for i in range(4)] + [fwd_pulse, rev_pulse, fwd_pulse, rev_pulse]
+torpedo = [rev_pulse, fwd_pulse, rev_pulse, fwd_pulse] + [fwd_pulse for i in range(4)]
 
-fwd_set = [stop_pulse for i in range(4)] + [fwd_pulse, rev_pulse, fwd_pulse, rev_pulse]
-crab_set = [stop_pulse for i in range(4)] + [fwd_pulse, fwd_pulse, rev_pulse, rev_pulse] 
-down_set =  [fwd_pulse, rev_pulse, fwd_pulse, rev_pulse] + [stop_pulse for i in range(4)]
-
-barrell = [fwd_pulse, fwd_pulse, fwd_pulse, fwd_pulse] + [stop_pulse for i in range(4)]
-summer = [rev_pulse, fwd_pulse, fwd_pulse, rev_pulse ] + [stop_pulse for i in range(4)]
-spin_set = [stop_pulse for i in range(4)] + [fwd_pulse for i in range(4)]
-
-torpedo = [fwd_pulse, fwd_pulse, fwd_pulse, fwd_pulse] + [fwd_pulse, rev_pulse, fwd_pulse, rev_pulse]
-
-
-class Publisher(Node):
+class PublisherPython(Node):
     def __init__(self):
         super().__init__('python_cltool_node')
-        self.commandPublisher = self.create_publisher(Int32MultiArray,'python_cltool_topic', 10)
+        self.commandPublisher = self.create_publisher(Int32MultiArray,'python_Manual_cltool_topic', 10)
     def publish_array(self, pwm_array):
         msg = Int32MultiArray()
         msg.data = pwm_array
         self.commandPublisher.publish(msg)
+        print(msg.data)
         
 class Plant:
     def __init__(self):
@@ -63,20 +53,13 @@ class Plant:
         sin45 = math.sin(math.pi / 4)
         self.thruster_directions = [
             [  0,     0,    1  ],
-
-            [  0,     0,   -1  ],
-
             [  0,     0,    1  ],
-
-            [  0,     0,   -1  ],
-
+            [  0,     0,    1  ],
+            [  0,     0,    1  ],
             [-sin45, -sin45,  0  ],
-
-            [ sin45, -sin45,  0  ],
-
             [-sin45,  sin45,  0  ],
-
-            [ sin45, sin45,   0  ]]
+            [-sin45,  sin45,  0  ],
+            [-sin45, -sin45,  0  ]]
 
         # Thruster torques
         self.thruster_torques = [self.cross_product(self.thruster_positions[i], self.thruster_directions[i]) for i in range(8)]
@@ -126,45 +109,67 @@ class Plant:
 
 class Thrust_Control:
     
-    def __init__(self, frequency=10):
-        self.publishCommandObject = Publisher()
+    def __init__(self):
         self.plant = Plant()
         # Define PWM pins for each thruster
         self.thrusters = [
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0,
-            0]
-        #test
-        #self.publishCommandObject.publish_array(self.thrusters)
-   # def testsendArray(self, publishCommandObject):
-       # while True:
-         #   publishCommandObject.publish_array(self.thrusters)
+            3,
+            2,
+            5,
+            4,
+            18,
+            20,
+            19,
+            21]
+        rclpy.init()
+        self.arraysomething = [
+            3,
+            2,
+            5,
+            4,
+            18,
+            20,
+            19,
+            21]
+        self.publishCommandObject = PublisherPython()
+        self.ros_thread = threading.Thread(target=self.spin_ros)
+        self.ros_thread.start()
+        print("Ready to input manual commands")
+        print("Please type tcs.exitCLTool() to safely exit manual control.")
+       #self.testSendArray(self.publishCommandObject)
         
         # Set default frequency and duty cycle
 
-        for thruster in self.thrusters:
-            thruster.freq(frequency)
-            thruster.duty_ns(0)
-        
+     #   for thruster in self.thrusters:
+            #thruster.freq(frequency)
+           # thruster.duty_ns(0)
+   # def testSendArray(self, publishCommandObject):
+        #while True:
+           # publishCommandObject.publish_array(self.thrusters)
+    #TODO: Write auto control and exception handling.
+    def exitCLTool(self):
+        print("Shutting down CL Tool")
+        rclpy.shutdown()
+    def spin_ros(self):
+        rclpy.spin(self.publishCommandObject)
     def pwm(self, pwm_set):
         
         if (len(pwm_set) != len(self.thrusters)):
             print("Wrong length for pwm set\n")
             return
-        
+        print("pwm function executed.")
         pwm_set = [int(i) for i in pwm_set]
-        self.publishCommandObject.publish_array(pwm_set)
 
+        #f = open(pwm_file, 'a')
+       # start = str(time.time_ns())
+       # for i in range(len(pwm_set)):
+         #   self.thrusters[i].duty_ns(pwm_set[i])
+       # end = str(time.time_ns())
         start = str(time.time_ns())
-        for i in range(len(pwm_set)):
-            self.thrusters[i].duty_ns(pwm_set[i])
+        # Assuming you have a PWM control library, you would set the duty cycle here
+        # For example: self.thrusters[i].duty_ns(pwm_set[i])
         end = str(time.time_ns())
-        
+        self.publishCommandObject.publish_array(pwm_set)
       #  string = start + "," + end + "," + ",".join(map(str, pwm_set)) + "\n"
       #  f.write(string)
       #  print(string)
@@ -182,38 +187,34 @@ class Thrust_Control:
         #    new_pwm = [(new_pwm[i] - stop_pulse) * rev_adj**signs[i] + stop_pulse for i in range(len(new_pwm))]
         
         return new_pwm
-
     
     def timed_pwm(self, time_s, pwm_set, scale = 1):
         if scale != 1:
             pwm_set = self.scaled_pwm(pwm_set, scale)
-            
+        print("Waiting for timer to complete....")
         #with ROS2 send pwm_set array values to a publishing topic.  
         time.sleep(time_s)
-        self.pwm(stop_set)
-        self.publishCommand.publish_array(pwm_set)
+        print("Executing timed_pwm function...")
+        #self.pwm(stop_set)
+        self.publishCommandObject.publish_array(pwm_set)
         
-    #def read(self):
-     #   logf = open(pwm_file, "r")
-      #  file_contents = logf.read()
-       ##logf.close()
+    def read(self):
+        logf = open(pwm_file, "r")
+        file_contents = logf.read()
+        print(file_contents)
+        logf.close()
                 
     def reaction(self, pwm_set, scale=1):
         pwm = [ scale * (i - stop_pulse) + stop_pulse for i in pwm_set]
         self.plant.pwm_force(pwm)
+
         
 def main():
-    rclpy.init()
-    tc = Thrust_Control()
-    rospublisher = Publisher()
-    rclpy.spin(rospublisher)
-    tc.pwm(zero_set)
+    print("Type in : tcs = Thrust_Control()")
+    
 
 
 
     
         
 main()
-
-
-

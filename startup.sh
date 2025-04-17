@@ -10,11 +10,10 @@ cd ../../../../
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 cd build/executive_main_loop 
-./ExecutiveExecutable > trashoutput.txt&
-
-
+./ExecutiveExecutable > output.txt&
 cd ../..
-python3 Python_CL-Tool.py &
+
+
 
 
 

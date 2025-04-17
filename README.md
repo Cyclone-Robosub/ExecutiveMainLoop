@@ -109,3 +109,12 @@ Then do:
 git submodule sync
 ```
 And finally, try initing the submodules.
+
+
+NOTES:
+git rm lib/Propulsion
+git rm lib/libusb
+git submodule update --init --recursive --remote
+git submodule sync
+Check for ros2 simulink inside of ros2_ws/src (Check if files are there)
+Check for Executive_Propulsion/Pi/CmakeLists.txt compile problem fixed.

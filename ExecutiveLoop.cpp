@@ -34,7 +34,7 @@ public:
   // The functions run assuming that the inital first iteration
   // of the loop starts stage by stage with no wait.
   ExecutiveLoop() : Node("executive_main_node") {
-   std::cout << "here  asdfasdf"<<std::endl;
+   std::cout << "Constructor Executive Loop"<<std::endl;
     fs::path currentPath = fs::current_path();
     fs::path stateFilePath = currentPath.parent_path().parent_path();
     std::string stateFileString = std::string(stateFilePath) + "/state.csv";
@@ -43,11 +43,11 @@ public:
       stateFile.open(stateFileString, std::ofstream::app);
 
       // Append this for every new file.
-      stateFile << "Time,Depth(m),IMU Data, PWM Data" << std::endl;
-      std::cout << "here  asdf"<<std::endl;
+      stateFile << "Time,Depth(m),Pressure, IMU Data, PWM Data" << std::endl;
+      std::cout << "Created new state file." << std::endl;
     }else{
       stateFile.open(stateFileString, std::ofstream::app);
-      std::cout <<"took this route 2"<< std::endl;
+      std::cout <<"Appending to current state file"<< std::endl;
     }
     loopIsRunning = true;
     tasksCompleted = false;
@@ -71,7 +71,6 @@ public:
 
   void imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
     // std::lock_guard<std::mutex> lock(mutex_);
-    std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME - 40));
     //std::cout << "imu sensor\n";
     angular_velocity_x = msg.angular_velocity.x;
     angular_velocity_y = msg.angular_velocity.y;
@@ -141,7 +140,7 @@ public:
         }
         stateFile << "],";
         stateFile << "\n";
-      if(stateFile.tellp() > 200){
+      if(stateFile.tellp() > 800){
         stateFile.flush();
         stateFile.clear();
         stateFile.seekp(0);
@@ -283,7 +282,7 @@ public:
         magOptions);
     pythonCltool_subscription =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
-            "python_cltool_topic", 10,
+            "python_Manual_cltool_topic", 10,
             std::bind(&ExecutiveLoop::pythonCltoolCallback, mainLoopObject,
                       std::placeholders::_1),
                     commandOptions);
