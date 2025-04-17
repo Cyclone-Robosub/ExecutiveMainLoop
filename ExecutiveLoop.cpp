@@ -62,12 +62,12 @@ public:
 
   }
   //these callback functions serve as the "read Input node in the loop"
-  void depthSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
+  void depthPressureSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
     //  std::lock_guard<std::mutex> lock(mutex_);
     //std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
    // std::cout << "Got depth ";
-   std::string research_data = msg->data;
-   depth_msg = msg->data;
+   depth_pressure_msg = msg->data;
+   
   }
 
   void imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
@@ -225,7 +225,7 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
   std::ofstream stateFile;
   std::mutex sensor_mutex;
   std::mutex pwm_mutex;
-  std::string depth_msg;
+  std::string depth_pressure_msg;
   std::string imu_msg;
    std::vector<float> imu_data;
   float depth;
@@ -246,27 +246,27 @@ class SensorsData : public rclcpp::Node {
 public:
   SensorsData(std::shared_ptr<ExecutiveLoop> mainLoopObject)
       : Node("sensorsNode") {
-    callbackDepth = this->create_callback_group(
+    callbackDepthPressure = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
     callbackIMU = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
 
     auto commandOptions = rclcpp::SubscriptionOptions();
-    commandOptions.callback_group = callbackDepth;
-    auto depthOptions = rclcpp::SubscriptionOptions();
-    depthOptions.callback_group = callbackDepth;
+    commandOptions.callback_group = callbackDepthPressure;
+    auto depthPressureOptions = rclcpp::SubscriptionOptions();
+    depthPressureOptions.callback_group = callbackDepthPressure;
     auto imuOptions = rclcpp::SubscriptionOptions();
     imuOptions.callback_group = callbackIMU;
     std::cout << "Creating sensors subscriptions\n";
     auto magOptions = rclcpp::SubscriptionOptions();
     magOptions.callback_group = callbackIMU;
 
-    depth_sensor_subscription_ =
+    depth_pressure_sensor_subscription_ =
         this->create_subscription<std_msgs::msg::String>(
-            "depthSensorData", rclcpp::QoS(5),
-            std::bind(&ExecutiveLoop::depthSensorCallback, mainLoopObject,
+            "depthPressureSensorData", rclcpp::QoS(5),
+            std::bind(&ExecutiveLoop::depthPressureSensorCallback, mainLoopObject,
                       std::placeholders::_1),
-            depthOptions);
+            depthPressureOptions);
 
     // Priority
     // Need to input IMU initialization with ROS.
@@ -294,7 +294,7 @@ private:
   rclcpp::CallbackGroup::SharedPtr callbackDepth;
   rclcpp::CallbackGroup::SharedPtr callbackIMU;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr
-      depth_sensor_subscription_;
+      depth_pressure_sensor_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription_;
   rclcpp::Subscription<sensor_msgs::msg::MagneticField>::SharedPtr mag_subscription_;
   rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr pythonCltool_subscription;
