@@ -1,14 +1,14 @@
 # DriverEnvironment
 
-
 ## Set up
-Run only once:
+---
+Run only once to set up ROS on your environment:
 ```
 cd misc
 chmod +x ros2jazzyinstall.sh
 ./ros2jazzyinstall.sh
 ```
-These are the commands the above script runs.
+Note : These are the general commands the above script runs.
 ```
 sudo apt update && sudo apt install curl -y
 sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
@@ -35,28 +35,86 @@ cd ..
 . install/setup.bash
 colcon build
 ```
-the build need to be repeated for the setup.bash srcipt to generate. Otherwise build has missing env vars.
+the build need to be repeated for the setup.bash script to generate. Otherwise build has missing env vars.
 
 ## build
-Re run the colcon build (this time only once):
+---
+Run from /ExecutiveMainLoop
 ```
-cd ros2_ws/src
-colcon build
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-cd ../../
-mkdir build && cd build
-cmake -G "Ninja" .. && make
+chmod +x build.sh
+./build.sh
 ```
-replace the last line with `cmake .. && make` if you didn't install ninja
+## Run the robot
+again run from /ExecutiveMainLoop
+```
+chmod +x startup.sh
+./startup.sh
+```
+Note: In the Robot/Rasberry Pi, the startup.sh should run on startup, and the build files should already be built on the Pi 5.
 
-If you encounter the folowing:
+## Testing
+---
+building for test:
+```
+colcon build --cmake-args -DBUILD_TESTING=ON
+```
+Run the test:
+```
+colcon test --packages-select executive_main_loop
+```
+Run with detailed test results:
+```
+colcon test --packages-select executive_main_loop --event-handlers console_direct+
+```
+To check test results:
+```
+colcon test-result --all
+```
+To see which test cases failed (if any):
+```
+colcon test-result --all --verbose
+```
+## Tips
+---
+If you encounter the following:
 ```
 CMake Error: Error: generator Unix Makefiles
-does not match with the genrator used prevously: Ninja
+does not match with the generator used previously: Ninja
 ```
 or vice versa, got to the root of the project, then:
 ```
 rm -rf build/*
 ```
-Then rerun the build command.
+Then, rerun the build command.
+
+```
+WARNING:colcon.colcon_cmake.task.cmake.build:Could not run installation step for package 'InertialSenseSDK' because it has no 'install' target
+```
+The above error does not affect the final executable.
+
+Non-existing Submodule Paths
+
+If you encounter the following or something similar:
+```
+git submodule update --init --recursive --remote
+fatal: No url found for submodule path 'lib/Propulsion' in .gitmodules
+```
+or any other submodule, do:
+```
+git rm lib/Propulsion
+```
+or the submodule path in question.
+Then do:
+```
+git submodule sync
+```
+And finally, try initing the submodules.
+
+
+NOTES:
+git rm lib/Propulsion
+git rm lib/libusb
+git submodule update --init --recursive --remote
+git submodule sync
+Check for ros2 simulink inside of ros2_ws/src (Check if files are there)
+Check for Executive_Propulsion/Pi/CmakeLists.txt compile problem fixed.

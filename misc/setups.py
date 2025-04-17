@@ -1,9 +1,9 @@
 #Created by Tanishq Dwivedi
 
-#Create Python Package with ROS to command robot
+#Create Python Package with ROS for reasearch_cyclone topic
 from setuptools import setup
 
-package_name = 'python_commander'
+package_name = 'research_cyclone'
 
 setup(
     name=package_name,
@@ -17,12 +17,12 @@ setup(
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='Cyclone RoboSub UC Davis',
-    description='Python Commander Package',
+    description='Research Cyclone Data Package',
     license='TODO',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'python_commander = python_commander.main:main',
+            'research_node = research_cyclone.main:main',
         ],
     },
 )

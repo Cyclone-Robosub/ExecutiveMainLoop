@@ -1,7 +1,3 @@
-[submodule "inertial-sense-sdk"]
-	path = ros2_ws/src/inertial-sense-sdk
-	url = https://github.com/inertialsense/inertial-sense-sdk
-	branch = main
 [submodule "gtest"]
 	path = lib/gtest
 	url = https://github.com/google/googletest
@@ -9,4 +5,10 @@
 [submodule "yaml-cpp"]
 	path = lib/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
-	branch = master
+[submodule "Executive_Propulsion"]
+	path = lib/Executive_Propulsion
+	url = https://github.com/Cyclone-Robosub/Executive_Propulsion.git
+[submodule "inertial-sense-sdk"]
+	path = ros2_ws/src/inertial-sense-sdk
+	url = https://github.com/Cyclone-Robosub/inertial-sense-sdk.git
+

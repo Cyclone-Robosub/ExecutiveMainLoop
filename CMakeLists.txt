@@ -1,41 +1,101 @@
 cmake_minimum_required(VERSION 3.20)
 project(executive_main_loop)
 
-add_subdirectory(lib/gtest)
+# Add dependency locations
 add_subdirectory(lib/yaml-cpp)
+add_subdirectory(lib/Executive_Propulsion/pi)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
-
-add_executable(ExecutiveLoop main.cpp)
-  
-# GTest start
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-
-target_link_libraries(ExecutiveLoop gtest gtest_main)
-
-enable_testing()
+# Find required packages
+find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(yaml-cpp REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
-ament_target_dependencies(ExecutiveLoop rclcpp std_msgs)
-install(TARGETS
-  ExecutiveLoop
-  DESTINATION lib/${PROJECT_NAME})
+find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 
+# Compiler settings
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(EXPORT_COMPILE_COMMANDS True)
+
+# Main executable
+add_executable(ExecutiveExecutable 
+  ExecutiveLoop.cpp
+  SetupConfig/SetupRobot.cpp
+)
+install(TARGETS ExecutiveExecutable DESTINATION lib/${PROJECT_NAME})
+
+# Dependencies for main executable
+ament_target_dependencies(ExecutiveExecutable
+  rclcpp
+  std_msgs
+  geometry_msgs
+  nav_msgs
+  diagnostic_msgs
+  sensor_msgs
+  std_srvs
+)
 ament_package()
+target_link_libraries(ExecutiveExecutable 
+  PropulsionFunctions
+  yaml-cpp
+)
 
+# Include directories
+target_include_directories(ExecutiveExecutable PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/SetupConfig
+  ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
+  ${CMAKE_CURRENT_SOURCE_DIR}/PropulsionFunctions
+)
+
+include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion
+)
+
+# Testing configuration
+if(BUILD_TESTING)
+  # Add test executable with test directory files
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(run_Executive_tests test/test_executive_loop.cpp
+    test/test_main.cpp
+    test/test_nodes.hpp
+    test/test_sensor_data.cpp)
+   
+
+  # Testing definitions and includes
+  target_compile_definitions(run_Executive_tests PRIVATE TESTING_EXCLUDE_MAIN)
+  target_include_directories(run_Executive_tests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/gtest/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/test
+  )
+
+  # Dependencies and linking
+  ament_target_dependencies(run_Executive_tests
+    rclcpp
+    std_msgs
+    sensor_msgs
+    geometry_msgs
+  )
+  target_link_libraries(run_Executive_tests
+    gtest
+    gtest_main
+    pthread
+    
+    PropulsionFunctions
+    yaml-cpp
+  )
+
+  # Install and discover tests
+  install(TARGETS run_Executive_tests DESTINATION lib/${PROJECT_NAME})
+endif()
+
+# Final configuration
+enable_testing()
 find_package(Threads REQUIRED)
-target_link_libraries(ExecutiveLoop Threads::Threads)
-
-
-#target_link_libraries(run_tests yaml-cpp::yaml-cpp)
-
-
-#Gtest end
-
-
-
-
-# GTest end
