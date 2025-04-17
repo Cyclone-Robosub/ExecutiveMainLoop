@@ -23,7 +23,8 @@
 using namespace std::literals;
 namespace fs = std::filesystem;
 
-#define UPDATE_WAIT_TIME 95
+#define UPDATE_WAIT_TIME 5
+#define IMU_SENSOR_WAIT_TIME 2
 #define NULL_SENSOR_VALUE -320000
 
 // start the executive Loop
