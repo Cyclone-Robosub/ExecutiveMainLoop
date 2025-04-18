@@ -26,6 +26,7 @@ namespace fs = std::filesystem;
 #define UPDATE_WAIT_TIME 5
 #define IMU_SENSOR_WAIT_TIME 2
 #define NULL_SENSOR_VALUE -320000
+#define FAULTY_SENSOR_VALUE -40404
 
 // start the executive Loop
 class ExecutiveLoop : public rclcpp::Node {
