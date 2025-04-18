@@ -2,9 +2,10 @@
 # Change directory to src
 # Build the package
 # Source ROS setup files
+cd ../
 source /opt/ros/jazzy/setup.bash
 
-cd ../ros2_ws/src 
+cd ros2_ws/src 
 colcon build 
 . install/setup.bash
 cd ../../
