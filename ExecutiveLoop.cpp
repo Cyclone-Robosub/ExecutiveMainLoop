@@ -132,7 +132,7 @@ public:
       stateFile << getCurrentDateTime() << ",";
       
     //    std::cout << depth_msg << " updateStateLocation" << " \n";
-        stateFile << depth_msg << ",";
+        stateFile << depth_pressure_msg << ",";
         stateFile << angular_velocity_x << "," << angular_velocity_y  << "," << angular_velocity_z << "," << linear_acceleration_x << "," << linear_acceleration_y << "," << linear_acceleration_z << ","; 
         stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z << "," ;
       
@@ -292,7 +292,7 @@ public:
 
 
 private:
-  rclcpp::CallbackGroup::SharedPtr callbackDepth;
+  rclcpp::CallbackGroup::SharedPtr callbackDepthPressure;
   rclcpp::CallbackGroup::SharedPtr callbackIMU;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr
       depth_pressure_sensor_subscription_;
