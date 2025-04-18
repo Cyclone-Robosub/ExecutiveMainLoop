@@ -11,6 +11,6 @@
 [submodule "inertial-sense-sdk"]
 	path = ros2_ws/src/inertial-sense-sdk
 	url = https://github.com/Cyclone-Robosub/inertial-sense-sdk.git
-[submodule "lib/Research"]
+[submodule "Research"]
 	path = lib/Research
 	url = https://github.com/Cyclone-Robosub/Research_Cyclone.git
