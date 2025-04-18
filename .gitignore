@@ -438,3 +438,5 @@ cython_debug/
 .pypirc
 
 __pycache__
+ros2_ws/src/log/
+log/
