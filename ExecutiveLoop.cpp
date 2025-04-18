@@ -226,7 +226,7 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
   std::ofstream stateFile;
   std::mutex sensor_mutex;
   std::mutex pwm_mutex;
-  std::string depth_pressure_msg;
+  std::string depth_pressure_msg ="Depth Sensor Not Started Yet";
   std::string imu_msg;
    std::vector<float> imu_data;
   float depth;
