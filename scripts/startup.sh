@@ -8,9 +8,6 @@ cd build/inertial_sense_ros2
 ./inertial_sense_ros2_node > rosstuff.txt &
 cd ../../../../
 
-cd lib/Research
-./startuppy.sh &
-cd ../../
 
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash

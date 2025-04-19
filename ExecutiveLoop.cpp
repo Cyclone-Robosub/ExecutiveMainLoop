@@ -132,9 +132,9 @@ public:
       stateFile << getCurrentDateTime() << ",";
       
     //    std::cout << depth_msg << " updateStateLocation" << " \n";
-        stateFile << depth_pressure_msg << ",";
+        stateFile << depth_pressure_msg << ", IMU:";
         stateFile << angular_velocity_x << "," << angular_velocity_y  << "," << angular_velocity_z << "," << linear_acceleration_x << "," << linear_acceleration_y << "," << linear_acceleration_z << ","; 
-        stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z << "," ;
+        stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z << ", PWM :[" ;
       
       stateFile << ",[";
         for(auto i : our_pwm_array.pwm_signals){
@@ -164,7 +164,6 @@ public:
       }
       executeType = "blind_execute";
       sendThrusterCommands(executeType);
-      std::cin >> userinput;
 
       //Need to see William's python code to move foward.
 
