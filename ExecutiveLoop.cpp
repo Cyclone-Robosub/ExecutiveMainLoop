@@ -278,7 +278,7 @@ public:
                   std::placeholders::_1),
         imuOptions);
     mag_subscription_ = this->create_subscription<sensor_msgs::msg::MagneticField>(
-        "magtopic", rclcpp::QoS(5),
+        "mag", rclcpp::QoS(5),
         std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
                   std::placeholders::_1),
         magOptions);
