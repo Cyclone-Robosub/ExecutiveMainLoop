@@ -113,7 +113,6 @@ public:
         }
         i++;
       }
-      i = 0;
       std::cout << std::endl;
   }
 

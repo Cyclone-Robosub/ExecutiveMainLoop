@@ -163,7 +163,7 @@ class Thrust_Control:
             return
         print("pwm function executed.")
         pwm_set = [int(i) for i in pwm_set]
-        pwm_set[8] = -1
+        pwm_set.append(-1)
 
         #f = open(pwm_file, 'a')
        # start = str(time.time_ns())
@@ -200,8 +200,7 @@ class Thrust_Control:
         print("Executing timed_pwm function...")
         #self.pwm(stop_set)
         self.publishCommandObject.publish_array(pwm_set)
-        if scale == 1:
-            pwm_set[8] = time_s
+        pwm_set.append(time_s)
         
     def read(self):
         logf = open(pwm_file, "r")
