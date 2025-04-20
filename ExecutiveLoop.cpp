@@ -147,12 +147,12 @@ public:
         stateFile << angular_velocity_x << "," << angular_velocity_y  << "," << angular_velocity_z << "," << linear_acceleration_x << "," << linear_acceleration_y << "," << linear_acceleration_z << ","; 
         stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z << ", PWM :[" ;
       std::unique_lock<std::mutex> pwmValuesLock(pwm_mutex);
-      stateFile << ",";
         for(auto i : our_pwm_array.pwm_signals){
           stateFile << i << ",";
         }
+        stateFile << ", TIMED PWM:"
+        stateFile << durationMS << ",";
         pwmValuesLock.unlock();
-        stateFile << ",";
         stateFile << "\n";
       if(stateFile.tellp() > 800){
         stateFile.flush();
