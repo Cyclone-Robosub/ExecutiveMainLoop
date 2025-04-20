@@ -102,8 +102,15 @@ public:
       std::lock_guard<std::mutex> pwm_lock(pwm_mutex);
       for (int32_t value : msg->data) {
         setvalue = (int)value;
+        if(i == 8){
+          if(value == -1){
+            durationMS == std::chrono::milliseconds(999999);
+          }else{
+          durationMS = std::chrono::milliseconds(value * 1000);
+          }
+        }else{
         our_pwm_array.pwm_signals[i] = setvalue;
-        std::cout << setvalue;
+        }
         i++;
       }
       i = 0;
@@ -185,7 +192,7 @@ public:
        // our_pwm_array.pwm_signals = inputPWM;
         commandComponents.thruster_pwms = our_pwm_array;
         //setup ROS topic for duration
-        commandComponents.duration = std::chrono::milliseconds(50);
+        commandComponents.duration = durationMS;
         commandInterpreter->blind_execute(commandComponents, logFilePins);
       }
       // send it back to William's code.
@@ -228,6 +235,7 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
   std::vector<DigitalPin*> digitalPins;
   int inputPWM[8] = {15, 15, 15, 15, 15, 15, 15, 15};
   pwm_array our_pwm_array;
+  std::chrono::milliseconds durationMS;
   std::ofstream stateFile;
   std::mutex sensor_mutex;
   std::mutex pwm_mutex;
