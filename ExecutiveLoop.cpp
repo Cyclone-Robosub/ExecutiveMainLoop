@@ -235,7 +235,7 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
   std::string imu_msg;
    std::vector<float> imu_data;
   float depth = NULL_SENSOR_VALUE;
-  float pressure NULL_SENSOR_VALUE;
+  float pressure = NULL_SENSOR_VALUE;
   bool loopIsRunning = true;
   bool tasksCompleted;
   std::string userinput;
