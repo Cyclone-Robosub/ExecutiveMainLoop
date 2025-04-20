@@ -37,6 +37,8 @@ public:
   // of the loop starts stage by stage with no wait.
   ExecutiveLoop() : Node("executive_main_node") {
    std::cout << "Constructor Executive Loop"<<std::endl;
+
+   //State file creation or appending
     fs::path currentPath = fs::current_path();
     fs::path stateFilePath = currentPath.parent_path().parent_path();
     std::string stateFileString = std::string(stateFilePath) + "/state.csv";
@@ -51,9 +53,14 @@ public:
       stateFile.open(stateFileString, std::ofstream::app);
       std::cout <<"Appending to current state file"<< std::endl;
     }
+
+    //Status of Loop
     loopIsRunning = true;
     tasksCompleted = false;
-    for(int i = 0; i < 8; i++){
+
+    //Setup Pins
+    auto PhysicalPins = std::vector<int>{4, 5, 2, 3, 9, 7, 8, 6};
+    for(auto i : PhysicalPins){
       thrusterPins.push_back(new HardwarePwmPin(i));
       //digitalPins.push_back(new DigitalPin(5, ActiveLow));
     }
@@ -101,7 +108,6 @@ public:
       }
       i = 0;
       std::cout << std::endl;
-      
   }
 
 /*
@@ -127,7 +133,6 @@ public:
       // Get the variables and put it into the state file.
       // timestamped every 0.1 seconds.
       std::lock_guard<std::mutex> sensorDataLock(sensor_mutex);
-      std::unique_lock<std::mutex> pwmValuesLock(pwm_mutex);
         //try ownslock for future testing
       stateFile << getCurrentDateTime() << ",";
       
@@ -135,12 +140,13 @@ public:
         stateFile << depth_pressure_msg << ", IMU:";
         stateFile << angular_velocity_x << "," << angular_velocity_y  << "," << angular_velocity_z << "," << linear_acceleration_x << "," << linear_acceleration_y << "," << linear_acceleration_z << ","; 
         stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z << ", PWM :[" ;
-      
-      stateFile << ",[";
+      std::unique_lock<std::mutex> pwmValuesLock(pwm_mutex);
+      stateFile << ",";
         for(auto i : our_pwm_array.pwm_signals){
           stateFile << i << ",";
         }
-        stateFile << "],";
+        pwmValuesLock.unlock();
+        stateFile << ",";
         stateFile << "\n";
       if(stateFile.tellp() > 800){
         stateFile.flush();
@@ -228,7 +234,8 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
   std::string depth_pressure_msg ="Depth Sensor Not Started Yet";
   std::string imu_msg;
    std::vector<float> imu_data;
-  float depth;
+  float depth = NULL_SENSOR_VALUE;
+  float pressure NULL_SENSOR_VALUE;
   bool loopIsRunning = true;
   bool tasksCompleted;
   std::string userinput;
@@ -281,6 +288,13 @@ public:
         std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
                   std::placeholders::_1),
         magOptions);
+        /*
+    did_ins_subscription = 
+    this->create_subscription<sensor_msgs::msg::MagneticField>(
+        "mag", rclcpp::QoS(5),
+        std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
+                  std::placeholders::_1),
+        magOptions);*/
     pythonCltool_subscription =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "python_Manual_cltool_topic", 10,
