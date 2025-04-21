@@ -150,7 +150,7 @@ public:
         for(auto i : our_pwm_array.pwm_signals){
           stateFile << i << ",";
         }
-        stateFile << ", TIMED PWM:"
+        stateFile << ", TIMED PWM:";
         stateFile << durationMS << ",";
         pwmValuesLock.unlock();
         stateFile << "\n";
