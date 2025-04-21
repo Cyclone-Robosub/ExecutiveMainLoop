@@ -8,9 +8,9 @@ cd build/inertial_sense_ros2
 ./inertial_sense_ros2_node > IMUrosstuff.txt &
 cd ../../../../
 
-cd lib/Research
-./startuppy.sh &
-cd ../../
+#cd lib/Research
+#./startuppy.sh &
+#cd ../../
 
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
