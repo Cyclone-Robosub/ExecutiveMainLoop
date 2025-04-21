@@ -249,8 +249,8 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
 
     std::ostringstream oss;
     oss << std::put_time(&local_tm, "%H:%M:%S")
-        << "." << std::setw(3) << std::setfill('0') << ms
-        << "." << std::setw(6) << std::setfill('0') << subns;
+        << ":" << std::setw(3) << std::setfill('0') << ms
+        << ":" << std::setw(6) << std::setfill('0') << subns;
 
     return oss.str();
   }
