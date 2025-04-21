@@ -156,9 +156,10 @@ public:
         for(auto i : our_pwm_array.pwm_signals){
           stateFile << i << ",";
         }
+      stateFile << "],";
         pwmValuesLock.unlock();
         stateFile << "\n";
-      if(stateFile.tellp() > 100){
+      if(stateFile.tellp() > 200){
         stateFile.flush();
         stateFile.clear();
         stateFile.seekp(0);
