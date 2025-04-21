@@ -14,6 +14,8 @@ cmake-build-debug
 
 # Any log files
 *.log
+log
+install
 
 # Apple extended file attributes
 .DS_Store

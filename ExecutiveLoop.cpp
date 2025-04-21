@@ -234,11 +234,25 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
   std::string userinput;
 
   std::string getCurrentDateTime() {
-    time_t now = time(0);
-    tm *localTime = localtime(&now);
-    char buffer[80];
-    strftime(buffer, sizeof(buffer), "%H:%M:%S", localTime);
-    return std::string(buffer);
+    //AI Code from Chat GPT (I am tired and i need a quick fix. Remind Tanishq to actually read through this and learn about it.)
+    using namespace std::chrono;
+
+    auto now = high_resolution_clock::now();
+    auto now_ns = time_point_cast<nanoseconds>(now);
+    auto now_time_t = system_clock::to_time_t(now);
+    std::tm local_tm = *std::localtime(&now_time_t);
+
+    auto duration_since_epoch = now_ns.time_since_epoch();
+    auto ns = duration_cast<nanoseconds>(duration_since_epoch).count() % 1'000'000'000;
+    auto ms = ns / 1'000'000;
+    auto subns = ns % 1'000'000; // Remaining nanoseconds after milliseconds
+
+    std::ostringstream oss;
+    oss << std::put_time(&local_tm, "%H:%M:%S")
+        << "." << std::setw(3) << std::setfill('0') << ms
+        << "." << std::setw(6) << std::setfill('0') << subns;
+
+    return oss.str();
   }
 };
 
