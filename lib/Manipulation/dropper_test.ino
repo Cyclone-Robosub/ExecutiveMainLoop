@@ -16,16 +16,16 @@ void loop() {
         command.trim(); // Remove any whitespace
 
         if (command == "1") {
-            myServo.write(80);
-            Serial.println("Servo moved to 80 degrees");
+            myServo.write(50);
+            Serial.println("Servo moved to state 1");
         } 
         else if (command == "2") {
-            myServo.write(100);
-            Serial.println("Servo moved to 100 degrees");
+            myServo.write(15);
+            Serial.println("Servo moved to state 2");
         } 
         else if (command == "r") {
-            myServo.write(90);
-            Serial.println("Servo moved to 90 degrees");
+            myServo.write(80);
+            Serial.println("Servo moved to rest state");
         } 
         else {
             Serial.println("Invalid command. Use open1, open2, or rest.");

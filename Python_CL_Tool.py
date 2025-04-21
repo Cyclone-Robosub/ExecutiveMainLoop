@@ -6,6 +6,7 @@ from std_msgs.msg import Int32MultiArray
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+import serial
 import threading
 
 rev_pulse = 1100 * 1000
@@ -212,7 +213,11 @@ class Thrust_Control:
         pwm = [ scale * (i - stop_pulse) + stop_pulse for i in pwm_set]
         self.plant.pwm_force(pwm)
 
-        
+class Manipulation_Control:
+    def __init__(self):
+        self.ser = serial.Serial('/dev/serial/by-id/usb-Arduino__www.arduino.cc__0043_3433132363535180A231-if00', 9600, timeout=0.9)
+    def setDropperState(self, state):
+        self.ser.write(state.encode() + ".")
 def main():
     print("Type in : tcs = Thrust_Control()")
     
