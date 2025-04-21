@@ -79,7 +79,7 @@ public:
   }
 
   void imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
-    // std::lock_guard<std::mutex> lock(mutex_);
+     std::lock_guard<std::mutex> CallBacklock(imu_mutex);
     //std::cout << "imu sensor\n";
     angular_velocity_x = msg.angular_velocity.x;
     angular_velocity_y = msg.angular_velocity.y;
@@ -139,22 +139,26 @@ public:
       // Get the variables and put it into the state file.
       // timestamped every 0.1 seconds.
       std::lock_guard<std::mutex> sensorDataLock(sensor_mutex);
-        //try ownslock for future testing
+      // try ownslock for future testing
       stateFile << getCurrentDateTime() << ",";
       
     //    std::cout << depth_msg << " updateStateLocation" << " \n";
-        stateFile << depth_pressure_msg << ", IMU:";
-        stateFile << angular_velocity_x << "," << angular_velocity_y  << "," << angular_velocity_z << "," << linear_acceleration_x << "," << linear_acceleration_y << "," << linear_acceleration_z << ","; 
-        stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z << ", PWM :[" ;
+
+      std::unique_lock<std::mutex> IMUlock(imu_mutex);
+      stateFile << depth_pressure_msg << ", IMU:";
+      stateFile << angular_velocity_x << "," << angular_velocity_y << ","
+                << angular_velocity_z << "," << linear_acceleration_x << ","
+                << linear_acceleration_y << "," << linear_acceleration_z << ",";
+      IMUlock.unlock();
+      stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z
+                << ", PWM :[";
       std::unique_lock<std::mutex> pwmValuesLock(pwm_mutex);
         for(auto i : our_pwm_array.pwm_signals){
           stateFile << i << ",";
         }
-        stateFile << ", TIMED PWM:";
-        stateFile << durationMS << ",";
         pwmValuesLock.unlock();
         stateFile << "\n";
-      if(stateFile.tellp() > 800){
+      if(stateFile.tellp() > 100){
         stateFile.flush();
         stateFile.clear();
         stateFile.seekp(0);
@@ -232,15 +236,15 @@ rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
   std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter;
   std::vector<PwmPin*> thrusterPins;
   std::vector<DigitalPin*> digitalPins;
-  int inputPWM[8] = {15, 15, 15, 15, 15, 15, 15, 15};
   pwm_array our_pwm_array;
   std::chrono::milliseconds durationMS;
   std::ofstream stateFile;
   std::mutex sensor_mutex;
   std::mutex pwm_mutex;
+  std::mutex imu_mutex;
   std::string depth_pressure_msg ="Depth Sensor Not Started Yet";
   std::string imu_msg;
-   std::vector<float> imu_data;
+  std::vector<float> imu_data;
   float depth = NULL_SENSOR_VALUE;
   float pressure = NULL_SENSOR_VALUE;
   bool loopIsRunning = true;
