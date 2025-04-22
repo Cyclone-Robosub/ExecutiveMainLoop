@@ -87,7 +87,7 @@ public:
     linear_acceleration_x = msg.linear_acceleration.x;
     linear_acceleration_y = msg.linear_acceleration.y;
     linear_acceleration_z = msg.linear_acceleration.z;
-    std::cout << "linear : " << linear_accleration_x << std::endl;
+    std::cout << "linear : " << linear_acceleration_x << std::endl;
   }
   void magCallback(const sensor_msgs::msg::MagneticField& msg)
   {
