@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 project(executive_main_loop)
 
 # Add dependency locations
-add_subdirectory(lib/gtest)
+# SHould be provided by cmake_amend_gtest
+# add_subdirectory(lib/gtest)
 add_subdirectory(lib/yaml-cpp)
 add_subdirectory(lib/Executive_Propulsion/pi)
 
