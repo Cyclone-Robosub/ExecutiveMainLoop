@@ -41,7 +41,6 @@ ament_target_dependencies(ExecutiveExecutable
 )
 ament_package()
 target_link_libraries(ExecutiveExecutable 
-  PropulsionFunctions
   yaml-cpp
 )
 
@@ -50,7 +49,6 @@ target_include_directories(ExecutiveExecutable PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/SetupConfig
   ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
-  ${CMAKE_CURRENT_SOURCE_DIR}/PropulsionFunctions
 )
 add_library(some_target_sources)
 include_directories(
@@ -88,7 +86,6 @@ if(BUILD_TESTING)
     gtest_main
     pthread
     
-    PropulsionFunctions
     yaml-cpp
   )
 
