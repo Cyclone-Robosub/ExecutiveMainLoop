@@ -52,7 +52,7 @@ target_include_directories(ExecutiveExecutable PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
   ${CMAKE_CURRENT_SOURCE_DIR}/PropulsionFunctions
 )
-
+add_library(some_target_sources)
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion
