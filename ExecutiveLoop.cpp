@@ -79,7 +79,7 @@ public:
   }
 
   void imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
-     std::unqiue_lock<std::mutex> CallBacklock(imu_mutex);
+     std::unique_lock<std::mutex> CallBacklock(imu_mutex);
     //std::cout << "imu sensor\n";
     angular_velocity_x = msg.angular_velocity.x;
     angular_velocity_y = msg.angular_velocity.y;
