@@ -2,10 +2,20 @@ cmake_minimum_required(VERSION 3.20)
 project(executive_main_loop)
 
 # Add dependency locations
+
 # SHould be provided by cmake_amend_gtest
 # add_subdirectory(lib/gtest)
 add_subdirectory(lib/yaml-cpp)
 add_subdirectory(lib/Executive_Propulsion/pi)
+
+# Option to mock RPi (wiringPi replacement)
+# To use MOCK_RPI, use the flag -DMOCK_RPI=ON at build
+option(MOCK_RPI "Use mock RPi functions (no wiringPi)" OFF)
+
+# If mocking RPi, pass macro to propulsion lib
+if(MOCK_RPI)
+  target_compile_definitions(PropulsionFunctions PRIVATE MOCK_RPI)
+endif()
 
 # Find required packages
 find_package(std_msgs REQUIRED)
@@ -62,16 +72,15 @@ include_directories(
 
 # Testing configuration
 if(BUILD_TESTING)
-  # Add test executable with test directory files
-  add_executable(run_tests
-    test/test_executive_loop.cpp
+  ament_add_gtest(run_tests
     test/test_main.cpp
-    test/test_nodes.hpp
-    test/test_sensor_data.cpp 
+    test/test_executive_loop.cpp
+    test/test_sensor_data.cpp
   )
 
   # Testing definitions and includes
   target_compile_definitions(run_tests PRIVATE TESTING_EXCLUDE_MAIN)
+
   target_include_directories(run_tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/gtest/include
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -85,16 +94,14 @@ if(BUILD_TESTING)
     sensor_msgs
     geometry_msgs
   )
+
   target_link_libraries(run_tests
-    gtest
-    gtest_main
     PropulsionFunctions
     yaml-cpp
   )
 
   # Install and discover tests
   install(TARGETS run_tests DESTINATION lib/${PROJECT_NAME})
-  ament_add_gtest(run_tests)
 endif()
 
 # Final configuration
