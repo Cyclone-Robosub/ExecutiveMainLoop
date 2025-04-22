@@ -79,7 +79,7 @@ public:
   }
 
   void imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
-     std::lock_guard<std::mutex> CallBacklock(imu_mutex);
+     std::unqiue_lock<std::mutex> CallBacklock(imu_mutex);
     //std::cout << "imu sensor\n";
     angular_velocity_x = msg.angular_velocity.x;
     angular_velocity_y = msg.angular_velocity.y;
@@ -88,6 +88,7 @@ public:
     linear_acceleration_y = msg.linear_acceleration.y;
     linear_acceleration_z = msg.linear_acceleration.z;
     std::cout << "linear : " << linear_acceleration_x << std::endl;
+    CallBacklock.unlock();
   }
   void magCallback(const sensor_msgs::msg::MagneticField& msg)
   {
