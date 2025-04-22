@@ -79,6 +79,7 @@ public:
   }
 
   void imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
+
      std::lock_guard<std::mutex> CallBacklock(imu_mutex);
     //std::cout << "imu sensor\n";
     angular_velocity_x = msg.angular_velocity.x;
@@ -87,6 +88,7 @@ public:
     linear_acceleration_x = msg.linear_acceleration.x;
     linear_acceleration_y = msg.linear_acceleration.y;
     linear_acceleration_z = msg.linear_acceleration.z;
+
   }
   void magCallback(const sensor_msgs::msg::MagneticField& msg)
   {
@@ -331,6 +333,7 @@ int main(int argc, char *argv[]) {
   //  setup Robot during initialization.
   rclcpp::init(argc, argv);
   SetupRobot initStateandConfig = SetupRobot();
+  
   // ExecutiveLoop Think about object by reference or value passing
   std::cout << "Executive Main Loop Object Creation" <<std::endl;
   std::shared_ptr<ExecutiveLoop> mainLoopObject = std::make_shared<ExecutiveLoop>();
