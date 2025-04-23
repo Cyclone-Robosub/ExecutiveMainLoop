@@ -268,6 +268,8 @@ public:
           std::unique_lock<std::mutex> statusThruster(thruster_mutex);
           isRunningThrusterCommand = false;
           statusThruster.unlock();
+        }else{
+          std::cout << "Nothing" << std::endl;
         }
       }
     }
