@@ -285,7 +285,7 @@ public:
           // setup ROS topic for duration
           commandComponent.duration = currentPWMandDuration.second;
           commandInterpreter_ptr->blind_execute(commandComponent, logFilePins);
-
+          Thruster_cond_change.notify_all();
           // completed
           isRunningThrusterCommand = false;
           statusThruster.unlock();
