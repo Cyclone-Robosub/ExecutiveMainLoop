@@ -39,6 +39,15 @@ public:
   // of the loop starts stage by stage with no wait.
   ExecutiveLoop() : Node("executive_main_node") {
     std::cout << "Constructor Executive Loop" << std::endl;
+    pwm_array zero_set_array;
+    for (int i = 0; i < 8; i++) {
+      zero_set_array.pwm_signals[i] = 0;
+    }
+    std::pair<pwm_array, std::chrono::milliseconds> zero_set_pair(
+        zero_set_array, std::chrono::milliseconds(99999999));
+    currentPWMandDuration_ptr =
+        std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
+            zero_set_pair);
 
     // State file creation or appending
     fs::path currentPath = fs::current_path();
