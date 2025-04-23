@@ -160,6 +160,7 @@ class Thrust_Control:
         self.ros_thread = threading.Thread(target=self.spin_ros)
         self.ros_thread.start()
         self.publishCommandDurationObject.publish_manual_switch(True)
+        self.publishCommandDurationObject.publish_manual_override(False)
         print("Ready to input manual commands")
         print("Please type tcs.exitCLTool() to safely exit manual control.\n")
        #self.testSendArray(self.publishCommandObject)
