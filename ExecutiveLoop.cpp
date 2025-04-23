@@ -219,6 +219,7 @@ public:
       std::cout << "User Interrupted Executive Loop" << std::endl;
       break;
     }*/
+      if(isManualEnabled){
       if (isManualOverride) {
         override();
       }
@@ -260,6 +261,7 @@ public:
         thrusterCommandLock.unlock();
         pwmValuesLock.unlock();
       }
+    }
     }
     // Need to see William's python code to move foward.
   }

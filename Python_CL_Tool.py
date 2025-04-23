@@ -54,6 +54,7 @@ class PublisherPython(Node):
         msg = Bool()
         msg.data = isManualEnabled
         self.ManualToggleSwitch.publish(msg)
+        print("Switched onto manual control")
       #  print(msg.data)
     def publish_manual_override(self, isMistakeMade):
         msg = Bool()
@@ -160,7 +161,6 @@ class Thrust_Control:
         self.ros_thread = threading.Thread(target=self.spin_ros)
         self.ros_thread.start()
         self.publishCommandDurationObject.publish_manual_switch(True)
-        self.publishCommandDurationObject.publish_manual_override(True)
         print("Ready to input manual commands")
         print("Please type tcs.exitCLTool() to safely exit manual control.\n")
        #self.testSendArray(self.publishCommandObject)
