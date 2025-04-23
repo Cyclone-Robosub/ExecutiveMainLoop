@@ -225,6 +225,7 @@ public:
         if(!isQueuePWMEmpty){
         currentPWMandDuration = ManualPWMQueue.front();
         std::cout << "Getting current PWM command" << std::endl;
+        isRunningThrusterCommand = true;
         ManualPWMQueue.pop();
         }else{
           std::cout << "Waiting for current PWM command" << std::endl;
@@ -251,12 +252,13 @@ public:
       std::ofstream logFilePins;
       CommandComponent commandComponent;
       // our_pwm_array.pwm_signals = inputPWM;
-      if(currentPWMandDuration != nullptr){
+      if(isRunningThrusterCommand){
       commandComponent.thruster_pwms = currentPWMandDuration.first;
       // setup ROS topic for duration
       commandComponent.duration = currentPWMandDuration.second;
       commandInterpreter_ptr->blind_execute(commandComponent
 , logFilePins);
+        isRunningThrusterCommand = false;
       }
     }
   }
@@ -283,6 +285,7 @@ public:
 private:
   bool isManualEnabled;
   bool isManualOverride = false;
+  bool isRunningThrusterCommand = false;
 
       float angular_velocity_x = NULL_SENSOR_VALUE;
   float angular_velocity_y = NULL_SENSOR_VALUE;
