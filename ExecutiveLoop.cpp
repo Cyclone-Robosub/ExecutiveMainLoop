@@ -220,7 +220,6 @@ public:
         std::cout << "User Interrupted Executive Loop" << std::endl;
         break;
       }*/
-      std::cout << "manual" << std::endl;
         if(isManualOverride){
           commandInterpreter_ptr->interruptBlind_Execute();
         }
@@ -237,6 +236,9 @@ public:
           std::cout << "Waiting for current PWM command" << std::endl;
           PWM_cond_change.wait(pwmValuesLock, [=]{ return !isQueuePWMEmpty; });
           std::cout << "Got current PWM command" << std::endl;
+          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
+          isRunningThrusterCommand = true;
+          statusThruster.unlock();
           currentPWMandDuration = ManualPWMQueue.front();
           ManualPWMQueue.pop();
         }
