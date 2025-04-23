@@ -80,7 +80,9 @@ public:
     isManualEnabled = msg->data;
     if(isManualEnabled)
     {
-      std::cout << "Manual Enabled" << std::endl;
+      std::cout << "Manual Control Enabled" << std::endl;
+    }else{
+      std::cout << "Manual Control Disabled" << std::endl;
     }
   }
   void ManualOverrideCallback(const std_msgs::msg::Bool::SharedPtr msg){
