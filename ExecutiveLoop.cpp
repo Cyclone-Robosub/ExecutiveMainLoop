@@ -290,7 +290,7 @@ public:
   }*/
 
 private:
-  bool isManualEnabled;
+  bool isManualEnabled = false;
   bool isManualOverride = false;
   bool isRunningThrusterCommand = false;
   std::mutex thruster_mutex;
