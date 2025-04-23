@@ -4,23 +4,20 @@
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <queue>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <utility>
-#include <queue>
 
 #include "Command_Interpreter.h"
 #include "SetupConfig/SetupRobot.cpp"
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/int32_multi_array.hpp"
-#include "std_msgs/msg/string.hpp"
-#include "std_msgs/msg/int64.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "std_msgs/msg/int32_multi_array.hpp"
+#include "std_msgs/msg/int64.hpp"
+#include "std_msgs/msg/string.hpp"
 #include <yaml-cpp/yaml.h>
-#include "Command_Interpreter.h"
-
-
 
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/magnetic_field.hpp"
@@ -33,7 +30,6 @@ namespace fs = std::filesystem;
 #define NULL_SENSOR_VALUE -320000
 #define FAULTY_SENSOR_VALUE -40404
 
-
 // start the executive Loop
 class ExecutiveLoop : public rclcpp::Node {
 public:
@@ -42,9 +38,9 @@ public:
   // The functions run assuming that the inital first iteration
   // of the loop starts stage by stage with no wait.
   ExecutiveLoop() : Node("executive_main_node") {
-   std::cout << "Constructor Executive Loop"<<std::endl;
+    std::cout << "Constructor Executive Loop" << std::endl;
 
-   //State file creation or appending
+    // State file creation or appending
     fs::path currentPath = fs::current_path();
     fs::path stateFilePath = currentPath.parent_path().parent_path();
     std::string stateFileString = std::string(stateFilePath) + "/state.csv";
@@ -75,24 +71,23 @@ public:
     commandInterpreter_ptr->initializePins();
   }
   // these callback functions serve as the "read Input node in the loop
-  
-  void ManualControlCallback(const std_msgs::msg::Bool::SharedPtr msg){
+
+  void ManualControlCallback(const std_msgs::msg::Bool::SharedPtr msg) {
     isManualEnabled = msg->data;
-    if(isManualEnabled)
-    {
+    if (isManualEnabled) {
       std::cout << "Manual Control Enabled" << std::endl;
-    }else{
+    } else {
       std::cout << "Manual Control Disabled" << std::endl;
     }
   }
-  void ManualOverrideCallback(const std_msgs::msg::Bool::SharedPtr msg){
+  void ManualOverrideCallback(const std_msgs::msg::Bool::SharedPtr msg) {
     isManualOverride = msg->data;
-    if(isManualOverride)
-    {
-    std::lock_guard<std::mutex> QueueLock(Queue_pwm_mutex);
-    std::queue<std::pair<pwm_array, std::chrono::milliseconds>> empty;
-    std::swap(ManualPWMQueue, empty);
-      std::cout << "Manual Command Current Override -> Deleted Queue" << std::endl;
+    if (isManualOverride) {
+      std::lock_guard<std::mutex> QueueLock(Queue_pwm_mutex);
+      std::queue<std::pair<pwm_array, std::chrono::milliseconds>> empty;
+      std::swap(ManualPWMQueue, empty);
+      std::cout << "Manual Command Current Override -> Deleted Queue"
+                << std::endl;
     }
   }
   void depthPressureSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
@@ -123,59 +118,63 @@ public:
     int i = 0;
     int setvalue;
     std::lock_guard<std::mutex> pwm_lock(Queue_pwm_mutex);
-   // pwm_array receivedArray;
+    // pwm_array receivedArray;
     for (int32_t value : msg->data) {
       setvalue = (int)value;
       given_array.pwm_signals[i] = setvalue;
       std::cout << given_array.pwm_signals[i];
-      i++;
+      ++i;
     }
+    AllowDurationSync = true;
     std::cout << std::endl;
     PWM_cond_change.notify_all();
   }
-  void durationCallback(const std_msgs::msg::Int64::SharedPtr msg){
-    std::unique_lock<std::mutex> duration_lock(Queue_pwm_mutex , std::defer_lock);
-    if (!duration_lock.try_lock()){
-        PWM_cond_change.wait(duration_lock);
+  void durationCallback(const std_msgs::msg::Int64::SharedPtr msg) {
+    std::unique_lock<std::mutex> duration_lock(Queue_pwm_mutex,
+                                               std::defer_lock);
+    if (!duration_lock.try_lock()) {
+      PWM_cond_change.wait(duration_lock, [this]{return AllowDurationSync;});
     }
     std::cout << "Getting duration" << std::endl;
     auto duration_int_pwm = msg->data;
     std::chrono::milliseconds durationMS;
-   // duration_int_pwm = std::stoi(duration_pwm);
-    switch(duration_int_pwm){
-      case -1:
-        durationMS = std::chrono::milliseconds(9999999999);
-        break;
-      default:
-        durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
-        break;
+    // duration_int_pwm = std::stoi(duration_pwm);
+    switch (duration_int_pwm) {
+    case -1:
+      durationMS = std::chrono::milliseconds(9999999999);
+      break;
+    default:
+      durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
+      break;
     }
     ManualPWMQueue.push(std::make_pair(given_array, durationMS));
+    sizeQueue++;
     std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
     duration_lock.unlock();
+    AllowDurationSync = false;
   }
-      /*
-        void readInputs() {
-          while (loopIsRunning) {
-            //std::lock_guard<std::mutex> lock(mutex_);
-            // Have to check what the msg is saying.
-            // Parse msg data. Put the research data into a vector or var
-        iables.
-            // IMU data will probably go into vector.
-            // IF needed we can use parameters with ROS if a lot of different
-        types
-            // of data. one part of message has to the be imu and the other part
-        has
-            // to be the depth. Assuming I have it right. Need to read
-            // multithreading with mutex condition and lock pushing to
-        variables. or
-            // anyway of setting it
+  /*
+    void readInputs() {
+      while (loopIsRunning) {
+        //std::lock_guard<std::mutex> lock(mutex_);
+        // Have to check what the msg is saying.
+        // Parse msg data. Put the research data into a vector or var
+    iables.
+        // IMU data will probably go into vector.
+        // IF needed we can use parameters with ROS if a lot of different
+    types
+        // of data. one part of message has to the be imu and the other part
+    has
+        // to be the depth. Assuming I have it right. Need to read
+        // multithreading with mutex condition and lock pushing to
+    variables. or
+        // anyway of setting it
 
-          }
-        }
-      */
-      // get a notification here
-      void updateState() {
+      }
+    }
+  */
+  // get a notification here
+  void updateState() {
     std::cout << "UpdateState" << std::endl;
     while (loopIsRunning) {
       // Get the variables and put it into the state file.
@@ -194,12 +193,12 @@ public:
       IMUlock.unlock();
       stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z
                 << ", PWM :[";
-     //std::unique_lock<std::mutex> pwmValuesLock(Queue_pwm_mutex);
+      // std::unique_lock<std::mutex> pwmValuesLock(Queue_pwm_mutex);
       for (auto i : currentPWMandDuration.first.pwm_signals) {
         stateFile << i << ",";
       }
       stateFile << "],";
-      //pwmValuesLock.unlock();
+      // pwmValuesLock.unlock();
       stateFile << "\n";
       if (stateFile.tellp() > 200) {
         stateFile.flush();
@@ -213,39 +212,40 @@ public:
 
   void executeDecisionLoop() {
     while (loopIsRunning) {
-      //Control Loop from Simulink
-      if(isManualEnabled){
+      // Control Loop from Simulink
+      if (isManualEnabled) {
         /*if (userinput == "end") {
         executeFailCommands();
         std::cout << "User Interrupted Executive Loop" << std::endl;
         break;
       }*/
-        if(isManualOverride){
+        if (isManualOverride) {
           commandInterpreter_ptr->interruptBlind_Execute();
         }
         typeOfExecute = "blind_execute";
         std::unique_lock<std::mutex> pwmValuesLock(Queue_pwm_mutex);
-        if(ManualPWMQueue.size() != 0){
-        currentPWMandDuration = ManualPWMQueue.front();
-        std::cout << "Getting current PWM command" << std::endl;
-        std::unique_lock<std::mutex> statusThruster(thruster_mutex);
-        isRunningThrusterCommand = true;
-        statusThruster.unlock();
-        ManualPWMQueue.pop();
-        }else{
+        if (ManualPWMQueue.size() != 0) {
+          currentPWMandDuration = ManualPWMQueue.front();
+          std::cout << "Getting current PWM command" << std::endl;
+          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
+          isRunningThrusterCommand = true;
+          statusThruster.unlock();
+          ManualPWMQueue.pop();
+          sizeQueue--;
+        } else {
           std::cout << "Waiting for current PWM command" << std::endl;
-          /*
-          PWM_cond_change.wait(pwmValuesLock, [=]{ return !isQueuePWMEmpty; });
+          
+          PWM_cond_change.wait(pwmValuesLock, [this]{ return !(sizeQueue == 0); });
           std::cout << "Got current PWM command" << std::endl;
           std::unique_lock<std::mutex> statusThruster(thruster_mutex);
           isRunningThrusterCommand = true;
           statusThruster.unlock();
           currentPWMandDuration = ManualPWMQueue.front();
-          ManualPWMQueue.pop();*/
+          ManualPWMQueue.pop();
+          sizeQueue--;
         }
         pwmValuesLock.unlock();
-      }else{
-
+      } else {
       }
 
       // Need to see William's python code to move foward.
@@ -255,23 +255,22 @@ public:
 
   // Sends Commands to Thruster Queue
   void sendThrusterCommand() {
-    while(loopIsRunning){
-    if (typeOfExecute == "blind_execute") {
-      std::ofstream logFilePins;
-      CommandComponent commandComponent;
-      // our_pwm_array.pwm_signals = inputPWM;
-      if(isRunningThrusterCommand){
-      commandComponent.thruster_pwms = currentPWMandDuration.first;
-      // setup ROS topic for duration
-      commandComponent.duration = currentPWMandDuration.second;
-      commandInterpreter_ptr->blind_execute(commandComponent
-, logFilePins);
-        std::unique_lock<std::mutex> statusThruster(thruster_mutex);
-        isRunningThrusterCommand = false;
-        statusThruster.unlock();
+    while (loopIsRunning) {
+      if (typeOfExecute == "blind_execute") {
+        std::ofstream logFilePins;
+        CommandComponent commandComponent;
+        // our_pwm_array.pwm_signals = inputPWM;
+        if (isRunningThrusterCommand) {
+          commandComponent.thruster_pwms = currentPWMandDuration.first;
+          // setup ROS topic for duration
+          commandComponent.duration = currentPWMandDuration.second;
+          commandInterpreter_ptr->blind_execute(commandComponent, logFilePins);
+          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
+          isRunningThrusterCommand = false;
+          statusThruster.unlock();
+        }
       }
     }
-  }
     // send it back to William's code.
   }
 
@@ -296,9 +295,11 @@ private:
   bool isManualEnabled = false;
   bool isManualOverride = false;
   bool isRunningThrusterCommand = false;
+  bool AllowDurationSync = false;
   std::mutex thruster_mutex;
+  unsigned int sizeQueue = 0;
 
-      float angular_velocity_x = NULL_SENSOR_VALUE;
+  float angular_velocity_x = NULL_SENSOR_VALUE;
   float angular_velocity_y = NULL_SENSOR_VALUE;
   float angular_velocity_z = NULL_SENSOR_VALUE;
   float linear_acceleration_x = NULL_SENSOR_VALUE;
@@ -309,7 +310,6 @@ private:
   float mag_field_y = NULL_SENSOR_VALUE;
   float mag_field_z = NULL_SENSOR_VALUE;
 
-
   std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr;
   std::vector<PwmPin *> thrusterPins;
   std::vector<DigitalPin *> digitalPins;
@@ -317,7 +317,7 @@ private:
   std::queue<std::pair<pwm_array, std::chrono::milliseconds>> ManualPWMQueue;
   pwm_array given_array;
   std::pair<pwm_array, std::chrono::milliseconds> currentPWMandDuration;
-  bool isQueuePWMEmpty = true;
+  // bool isQueuePWMEmpty = true;
   std::ofstream stateFile;
   std::mutex sensor_mutex;
   std::mutex Queue_pwm_mutex;
@@ -352,7 +352,8 @@ public:
         rclcpp::CallbackGroupType::MutuallyExclusive);
     callbackIMU = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
-    callbackClTool = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    callbackClTool = this->create_callback_group(
+        rclcpp::CallbackGroupType::MutuallyExclusive);
 
     auto commandOptions = rclcpp::SubscriptionOptions();
     commandOptions.callback_group = callbackClTool;
@@ -369,7 +370,6 @@ public:
     ManualToggleOptions.callback_group = callbackClTool;
     auto ManualOverride = rclcpp::SubscriptionOptions();
     ManualOverride.callback_group = callbackClTool;
-
 
     depth_pressure_sensor_subscription_ =
         this->create_subscription<std_msgs::msg::String>(
@@ -392,38 +392,34 @@ public:
             std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
                       std::placeholders::_1),
             magOptions);
-        /*
-    did_ins_subscription =
-    this->create_subscription<sensor_msgs::msg::MagneticField>(
-        "mag", rclcpp::QoS(5),
-        std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
+    /*
+did_ins_subscription =
+this->create_subscription<sensor_msgs::msg::MagneticField>(
+    "mag", rclcpp::QoS(5),
+    std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
+              std::placeholders::_1),
+    magOptions);*/
+    CLTool_subscription_ =
+        this->create_subscription<std_msgs::msg::Int32MultiArray>(
+            "array_Cltool_topic", rclcpp::QoS(10),
+            std::bind(&ExecutiveLoop::PWMArrayCallback, mainLoopObject,
+                      std::placeholders::_1),
+            commandOptions);
+    duration_subscription_ = this->create_subscription<std_msgs::msg::Int64>(
+        "duration_Cltool_topic", rclcpp::QoS(10),
+        std::bind(&ExecutiveLoop::durationCallback, mainLoopObject,
                   std::placeholders::_1),
-        magOptions);*/
-        CLTool_subscription_ =
-            this->create_subscription< std_msgs::msg::Int32MultiArray>(
-                "array_Cltool_topic", rclcpp::QoS(10),
-                std::bind(&ExecutiveLoop::PWMArrayCallback, mainLoopObject,
-                          std::placeholders::_1),
-                commandOptions);
-            duration_subscription_ =
-            this->create_subscription<std_msgs::msg::Int64>(
-                "duration_Cltool_topic", rclcpp::QoS(10),
-                std::bind(&ExecutiveLoop::durationCallback, mainLoopObject,
-                          std::placeholders::_1),
-                durationOptions);
-        Manual_Control_sub = 
-        this->create_subscription<std_msgs::msg::Bool>(
-                "manual_toggle_switch", rclcpp::QoS(10),
-                std::bind(&ExecutiveLoop::ManualControlCallback, mainLoopObject,
-                          std::placeholders::_1),
-                ManualToggleOptions);
-        Manual_Override_sub = 
-        this->create_subscription<std_msgs::msg::Bool>(
-                "manualOverride", rclcpp::QoS(4),
-                std::bind(&ExecutiveLoop::ManualOverrideCallback, mainLoopObject,
-                          std::placeholders::_1),
-                ManualOverride);
-
+        durationOptions);
+    Manual_Control_sub = this->create_subscription<std_msgs::msg::Bool>(
+        "manual_toggle_switch", rclcpp::QoS(10),
+        std::bind(&ExecutiveLoop::ManualControlCallback, mainLoopObject,
+                  std::placeholders::_1),
+        ManualToggleOptions);
+    Manual_Override_sub = this->create_subscription<std_msgs::msg::Bool>(
+        "manualOverride", rclcpp::QoS(4),
+        std::bind(&ExecutiveLoop::ManualOverrideCallback, mainLoopObject,
+                  std::placeholders::_1),
+        ManualOverride);
   }
 
 private:
@@ -437,14 +433,9 @@ private:
       mag_subscription_;
   rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
       CLTool_subscription_;
-      rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr
-      Manual_Control_sub;
-      rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr
-      Manual_Override_sub;
-    rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr
-      duration_subscription_;
-
-
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr Manual_Control_sub;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr Manual_Override_sub;
+  rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr duration_subscription_;
 };
 
 #ifndef TESTING_EXCLUDE_MAIN
@@ -475,7 +466,8 @@ int main(int argc, char *argv[]) {
 
   std::jthread ExecutiveDecisionLoopThread(&ExecutiveLoop::executeDecisionLoop,
                                            mainLoopObject);
-  std::jthread SendThrusterCommandThread(&ExecutiveLoop::sendThrusterCommand, mainLoopObject);
+  std::jthread SendThrusterCommandThread(&ExecutiveLoop::sendThrusterCommand,
+                                         mainLoopObject);
   // Note: We can join these two threads above and bottom if Raspberry PI
   // really does not like multithreading.
   // This is now the case ^.
