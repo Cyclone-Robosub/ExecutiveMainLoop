@@ -214,12 +214,14 @@ public:
   void executeDecisionLoop() {
     while (loopIsRunning) {
       //Control Loop from Simulink
+      std::cout << "executeD" << std::endl;
       if(isManualEnabled){
         /*if (userinput == "end") {
         executeFailCommands();
         std::cout << "User Interrupted Executive Loop" << std::endl;
         break;
       }*/
+      std::cout << "manual" << std::endl;
         if(isManualOverride){
           commandInterpreter_ptr->interruptBlind_Execute();
         }
