@@ -225,7 +225,9 @@ public:
         if(!isQueuePWMEmpty){
         currentPWMandDuration = ManualPWMQueue.front();
         std::cout << "Getting current PWM command" << std::endl;
+        std::unique_lock<std::mutex> statusThruster(thruster_mutex);
         isRunningThrusterCommand = true;
+        statusThruster.unlock();
         ManualPWMQueue.pop();
         }else{
           std::cout << "Waiting for current PWM command" << std::endl;
@@ -258,7 +260,9 @@ public:
       commandComponent.duration = currentPWMandDuration.second;
       commandInterpreter_ptr->blind_execute(commandComponent
 , logFilePins);
+        std::unique_lock<std::mutex> statusThruster(thruster_mutex);
         isRunningThrusterCommand = false;
+        statusThruster.unlock();
       }
     }
   }
@@ -286,6 +290,7 @@ private:
   bool isManualEnabled;
   bool isManualOverride = false;
   bool isRunningThrusterCommand = false;
+  std::mutex thruster_mutex;
 
       float angular_velocity_x = NULL_SENSOR_VALUE;
   float angular_velocity_y = NULL_SENSOR_VALUE;
