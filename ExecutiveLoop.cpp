@@ -225,7 +225,7 @@ public:
         }
         typeOfExecute = "blind_execute";
         std::unique_lock<std::mutex> pwmValuesLock(Queue_pwm_mutex);
-        if(!isQueuePWMEmpty){
+        if(ManualPWMQueue.size() != 0){
         currentPWMandDuration = ManualPWMQueue.front();
         std::cout << "Getting current PWM command" << std::endl;
         std::unique_lock<std::mutex> statusThruster(thruster_mutex);
