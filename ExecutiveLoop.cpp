@@ -133,7 +133,7 @@ public:
     std::unique_lock<std::mutex> duration_lock(Queue_pwm_mutex,
                                                std::defer_lock);
     if (!duration_lock.try_lock()) {
-      PWM_cond_change.wait(duration_lock, [this]{return AllowDurationSync;});
+      PWM_cond_change.wait(duration_lock, [this] { return AllowDurationSync; });
     }
     std::cout << "Getting duration" << std::endl;
     auto duration_int_pwm = msg->data;
@@ -150,8 +150,8 @@ public:
     ManualPWMQueue.push(std::make_pair(given_array, durationMS));
     sizeQueue++;
     std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
-    duration_lock.unlock();
     AllowDurationSync = false;
+    duration_lock.unlock();
   }
   /*
     void readInputs() {
@@ -213,44 +213,59 @@ public:
   void executeDecisionLoop() {
     while (loopIsRunning) {
       // Control Loop from Simulink
-      if (isManualEnabled) {
-        /*if (userinput == "end") {
-        executeFailCommands();
-        std::cout << "User Interrupted Executive Loop" << std::endl;
-        break;
-      }*/
-        if (isManualOverride) {
-          commandInterpreter_ptr->interruptBlind_Execute();
-        }
-        typeOfExecute = "blind_execute";
-        std::unique_lock<std::mutex> pwmValuesLock(Queue_pwm_mutex);
-        if (sizeQueue > 0) {
-          currentPWMandDuration = ManualPWMQueue.front();
-          std::cout << "Getting current PWM command" << std::endl;
-          for (auto i : currentPWMandDuration.first.pwm_signals) {
-            std::cout << i << ",";
-          }
-          std::cout << std::endl;
-          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
-          isRunningThrusterCommand = true;
-          statusThruster.unlock();
-          ManualPWMQueue.pop();
-          sizeQueue--;
-        } else {
-          std::cout << "Waiting for current PWM command" << std::endl;
-          
-          PWM_cond_change.wait(pwmValuesLock, [this]{ return !(sizeQueue == 0); });
-          std::cout << "Got current PWM command" << std::endl;
-          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
-          isRunningThrusterCommand = true;
-          statusThruster.unlock();
-          currentPWMandDuration = ManualPWMQueue.front();
-          ManualPWMQueue.pop();
-          sizeQueue--;
-        }
-        pwmValuesLock.unlock();
-      } else {
+      /*if (userinput == "end") {
+      executeFailCommands();
+      std::cout << "User Interrupted Executive Loop" << std::endl;
+      break;
+    }*/
+      if (isManualOverride) {
+        commandInterpreter_ptr->interruptBlind_Execute();
       }
+      typeOfExecute = "blind_execute";
+      std::unique_lock<std::mutex> pwmValuesLock(Queue_pwm_mutex,
+                                                 std::defer_lock);
+      if (sizeQueue > 0 && !isRunningThrusterCommand) {
+        currentPWMandDuration = ManualPWMQueue.front();
+        std::cout << "Getting current PWM command" << std::endl;
+        for (auto i : currentPWMandDuration.first.pwm_signals) {
+          std::cout << i << ",";
+        }
+        std::cout << std::endl;
+        std::unique_lock<std::mutex> statusThruster(thruster_mutex);
+        isRunningThrusterCommand = true;
+        statusThruster.unlock();
+        ManualPWMQueue.pop();
+        sizeQueue--;
+      } else if (!isRunningThrusterCommand) {
+        std::cout << "waiting for Thruster Command to finsh" << std::endl;
+        std::unique_lock<std::mutex> statusThruster(thruster_mutex,
+                                                    std::defer_lock);
+        if (statusThruster.try_lock()) {
+          Thruster_cond_change.wait(
+              statusThruster, [this] { return !(isRunningThrusterCommand); });
+        }
+        std::cout << "Finished Thruster Command" << std::endl;
+        currentPWMandDuration = ManualPWMQueue.front();
+        isRunningThrusterCommand = true;
+        ManualPWMQueue.pop();
+        sizeQueue--;
+        statusThruster.unlock();
+
+      } else {
+        std::cout << "Waiting for current PWM command" << std::endl;
+        if (pwmValuesLock.try_lock()) {
+          PWM_cond_change.wait(pwmValuesLock,
+                               [this] { return !(sizeQueue == 0); });
+        }
+        std::cout << "Got current PWM command" << std::endl;
+        std::unique_lock<std::mutex> statusThruster(thruster_mutex);
+        isRunningThrusterCommand = true;
+        statusThruster.unlock();
+        currentPWMandDuration = ManualPWMQueue.front();
+        ManualPWMQueue.pop();
+        sizeQueue--;
+      }
+      pwmValuesLock.unlock();
 
       // Need to see William's python code to move foward.
     }
@@ -265,11 +280,13 @@ public:
         CommandComponent commandComponent;
         // our_pwm_array.pwm_signals = inputPWM;
         if (isRunningThrusterCommand) {
+          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
           commandComponent.thruster_pwms = currentPWMandDuration.first;
           // setup ROS topic for duration
           commandComponent.duration = currentPWMandDuration.second;
           commandInterpreter_ptr->blind_execute(commandComponent, logFilePins);
-          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
+
+          // completed
           isRunningThrusterCommand = false;
           statusThruster.unlock();
         }
@@ -328,6 +345,7 @@ private:
   std::mutex imu_mutex;
   std::mutex ThrusterCommand_mutex;
   std::condition_variable PWM_cond_change;
+  std::condition_variable Thruster_cond_change;
   std::string depth_pressure_msg = "Depth Sensor Not Started Yet";
   std::string imu_msg;
   std::vector<float> imu_data;
@@ -356,8 +374,8 @@ public:
         rclcpp::CallbackGroupType::MutuallyExclusive);
     callbackIMU = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
-    callbackClTool = this->create_callback_group(
-        rclcpp::CallbackGroupType::Reentrant);
+    callbackClTool =
+        this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
     auto commandOptions = rclcpp::SubscriptionOptions();
     commandOptions.callback_group = callbackClTool;
