@@ -227,6 +227,10 @@ public:
         if (sizeQueue > 0) {
           currentPWMandDuration = ManualPWMQueue.front();
           std::cout << "Getting current PWM command" << std::endl;
+          for (auto i : currentPWMandDuration.first.pwm_signals) {
+            std::cout << i << ",";
+          }
+          std::endl;
           std::unique_lock<std::mutex> statusThruster(thruster_mutex);
           isRunningThrusterCommand = true;
           statusThruster.unlock();
