@@ -1,21 +1,18 @@
 cmake_minimum_required(VERSION 3.20)
 project(executive_main_loop)
 
-# Add dependency locations
-
-# SHould be provided by cmake_amend_gtest
-# add_subdirectory(lib/gtest)
-add_subdirectory(lib/yaml-cpp)
-add_subdirectory(lib/Executive_Propulsion/pi)
-
 # Option to mock RPi (wiringPi replacement)
-# To use MOCK_RPI, use the flag -DMOCK_RPI=ON at build
 option(MOCK_RPI "Use mock RPi functions (no wiringPi)" OFF)
 
-# If mocking RPi, pass macro to propulsion lib
-if(MOCK_RPI)
-  target_compile_definitions(PropulsionFunctions PRIVATE MOCK_RPI)
-endif()
+# Pass MOCK_RPI to subdirectory
+set(MOCK_RPI ${MOCK_RPI} CACHE BOOL "Use mock RPi functions (no wiringPi)" FORCE)
+add_compile_definitions($<$<BOOL:MOCK_RPI>:MOCK_RPI>)
+
+# Add dependencies
+# Should be provided by cmake_amend_gtest
+# add_subdirectory(lib/gtest)
+add_subdirectory(lib/yaml-cpp)
+add_subdirectory(lib/Executive_Propulsion)
 
 # Find required packages
 find_package(std_msgs REQUIRED)
@@ -53,7 +50,6 @@ ament_target_dependencies(ExecutiveExecutable
   std_srvs
 )
 target_link_libraries(ExecutiveExecutable 
-  PropulsionFunctions
   yaml-cpp
 )
 
@@ -62,7 +58,6 @@ target_include_directories(ExecutiveExecutable PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/SetupConfig
   ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
-  ${CMAKE_CURRENT_SOURCE_DIR}/PropulsionFunctions
 )
 
 include_directories(
@@ -96,7 +91,6 @@ if(BUILD_TESTING)
   )
 
   target_link_libraries(run_tests
-    PropulsionFunctions
     yaml-cpp
   )
 
