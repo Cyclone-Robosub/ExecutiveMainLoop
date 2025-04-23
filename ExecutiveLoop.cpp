@@ -230,7 +230,7 @@ public:
           for (auto i : currentPWMandDuration.first.pwm_signals) {
             std::cout << i << ",";
           }
-          std::endl;
+          std::cout << std::endl;
           std::unique_lock<std::mutex> statusThruster(thruster_mutex);
           isRunningThrusterCommand = true;
           statusThruster.unlock();
