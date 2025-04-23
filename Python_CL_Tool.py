@@ -38,7 +38,10 @@ class PublisherPython(Node):
         self.commandPublisher = self.create_publisher(Int32MultiArray,'array_Cltool_topic', 10)
         self.durationPublisher = self.create_publisher(Int64, 'duration_Cltool_topic', 10)
         self.ManualToggleSwitch = self.create_publisher(Bool, 'manual_toggle_switch', 3)
-        self.ManualToggleSwitch.publish(True)
+        msgstart = Bool()
+        msgstart.data = True
+        self.ManualToggleSwitch.publish(msgstart)
+        print("Switched onto manual control")
         self.ManualOverride = self.create_publisher(Bool,
         'manualOverride', 4)
 
