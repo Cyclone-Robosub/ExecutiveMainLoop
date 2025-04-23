@@ -129,7 +129,7 @@ public:
       i++;
     }
     std::cout << std::endl;
-    PWM_cond_change.notify_one();
+    PWM_cond_change.notify_all();
   }
   void durationCallback(const std_msgs::msg::Int64::SharedPtr msg){
     std::unique_lock<std::mutex> duration_lock(Queue_pwm_mutex);
