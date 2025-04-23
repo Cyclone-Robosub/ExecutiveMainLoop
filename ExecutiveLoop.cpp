@@ -236,7 +236,9 @@ public:
           } else {
             isCurrentCommandTimedPWM = true;
           }
-          currentPWMandDuration_ptr = std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(ManualPWMQueue.front());
+          currentPWMandDuration_ptr =
+              std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
+                  ManualPWMQueue.front());
           isRunningThrusterCommand = true;
           ManualPWMQueue.pop();
           thrusterCommandLock.unlock();
@@ -250,7 +252,9 @@ public:
         } else {
           isCurrentCommandTimedPWM = true;
         }
-        currentPWMandDuration_ptr = std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(ManualPWMQueue.front());
+        currentPWMandDuration_ptr =
+            std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
+                ManualPWMQueue.front());
         isRunningThrusterCommand = true;
         ManualPWMQueue.pop();
         thrusterCommandLock.unlock();
@@ -261,113 +265,116 @@ public:
   }
   // if all decisions/tasks are done, make tasksCompleted true;
 
-
   // Sends Commands to Thruster Queue
   void sendThrusterCommand() {
-  while (loopIsRunning) {
-    if (typeOfExecute == "blind_execute") {
-      std::ofstream logFilePins;
-      CommandComponent commandComponent;
-      // our_pwm_array.pwm_signals = inputPWM;
-      if (isRunningThrusterCommand) {
-        std::unique_lock<std::mutex> statusThruster(thruster_mutex);
-        commandComponent.thruster_pwms = currentPWMandDuration_ptr->first;
-        // setup ROS topic for duration
-        commandComponent.duration = currentPWMandDuration_ptr->second;
-        commandInterpreter_ptr->blind_execute(commandComponent, logFilePins);
-        // Thruster_cond_change.notify_all();
-        // completed
-        isRunningThrusterCommand = false;
-        statusThruster.unlock();
+    while (loopIsRunning) {
+      if (typeOfExecute == "blind_execute") {
+        std::ofstream logFilePins;
+        CommandComponent commandComponent;
+        // our_pwm_array.pwm_signals = inputPWM;
+        if (isRunningThrusterCommand) {
+          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
+          commandComponent.thruster_pwms = currentPWMandDuration_ptr->first;
+          // setup ROS topic for duration
+          commandComponent.duration = currentPWMandDuration_ptr->second;
+          commandInterpreter_ptr->blind_execute(commandComponent, logFilePins);
+          // Thruster_cond_change.notify_all();
+          // completed
+          isRunningThrusterCommand = false;
+          statusThruster.unlock();
+        }
       }
     }
+    // send it back to William's code.
   }
-  // send it back to William's code.
-}
 
-bool returnStatus() { return loopIsRunning; }
-bool returntasksCompleted() { return tasksCompleted; }
-void executeFailCommands() {
-  std::lock_guard<std::mutex> stateFileLock(sensor_mutex);
-  stateFile << std::endl;
-  stateFile.close();
-  // loopIsRunning = false;
-  std::cout << "Shutting down Executive Loop, sensors are still reading."
-            << std::endl;
-}
-/*
-void ShutdownRobot(){
-  if(FuncFailCommExecuted){
-    //shutdown opreations
+  bool returnStatus() { return loopIsRunning; }
+  bool returntasksCompleted() { return tasksCompleted; }
+  void executeFailCommands() {
+    std::lock_guard<std::mutex> stateFileLock(sensor_mutex);
+    stateFile << std::endl;
+    stateFile.close();
+    // loopIsRunning = false;
+    std::cout << "Shutting down Executive Loop, sensors are still reading."
+              << std::endl;
   }
-}*/
+  /*
+  void ShutdownRobot(){
+    if(FuncFailCommExecuted){
+      //shutdown opreations
+    }
+  }*/
 
 private:
-bool isManualEnabled = false;
-bool isManualOverride = false;
-bool isRunningThrusterCommand = false;
-bool isCurrentCommandTimedPWM = false;
-bool AllowDurationSync = false;
-std::mutex thruster_mutex;
-std::mutex array_duration_sync_mutex;
-unsigned int sizeQueue = 0;
+  bool isManualEnabled = false;
+  bool isManualOverride = false;
+  bool isRunningThrusterCommand = false;
+  bool isCurrentCommandTimedPWM = false;
+  bool AllowDurationSync = false;
+  std::mutex thruster_mutex;
+  std::mutex array_duration_sync_mutex;
+  unsigned int sizeQueue = 0;
 
-float angular_velocity_x = NULL_SENSOR_VALUE;
-float angular_velocity_y = NULL_SENSOR_VALUE;
-float angular_velocity_z = NULL_SENSOR_VALUE;
-float linear_acceleration_x = NULL_SENSOR_VALUE;
-float linear_acceleration_y = NULL_SENSOR_VALUE;
-float linear_acceleration_z = NULL_SENSOR_VALUE;
+  float angular_velocity_x = NULL_SENSOR_VALUE;
+  float angular_velocity_y = NULL_SENSOR_VALUE;
+  float angular_velocity_z = NULL_SENSOR_VALUE;
+  float linear_acceleration_x = NULL_SENSOR_VALUE;
+  float linear_acceleration_y = NULL_SENSOR_VALUE;
+  float linear_acceleration_z = NULL_SENSOR_VALUE;
 
-float mag_field_x = NULL_SENSOR_VALUE;
-float mag_field_y = NULL_SENSOR_VALUE;
-float mag_field_z = NULL_SENSOR_VALUE;
+  float mag_field_x = NULL_SENSOR_VALUE;
+  float mag_field_y = NULL_SENSOR_VALUE;
+  float mag_field_z = NULL_SENSOR_VALUE;
 
-std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr;
-std::vector<PwmPin *> thrusterPins;
-std::vector<DigitalPin *> digitalPins;
-pwm_array our_pwm_array;
-std::queue<std::pair<pwm_array, std::chrono::milliseconds>> ManualPWMQueue;
+  std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr;
+  std::vector<PwmPin *> thrusterPins;
+  std::vector<DigitalPin *> digitalPins;
+  pwm_array our_pwm_array;
+  std::queue<std::pair<pwm_array, std::chrono::milliseconds>> ManualPWMQueue;
 
-pwm_array given_array;
-std::shared_ptr<std::pair<pwm_array, std::chrono::milliseconds>>
-    currentPWMandDuration_ptr;
-// bool isQueuePWMEmpty = true;
-std::ofstream stateFile;
-std::mutex sensor_mutex;
-std::mutex Queue_pwm_mutex;
-std::mutex imu_mutex;
-std::mutex ThrusterCommand_mutex;
-std::mutex current_PWM_duration_mutex;
-std::condition_variable PWM_cond_change;
-std::condition_variable Thruster_cond_change;
-std::string depth_pressure_msg = "Depth Sensor Not Started Yet";
-std::string imu_msg;
-std::vector<float> imu_data;
-float depth = NULL_SENSOR_VALUE;
-float pressure = NULL_SENSOR_VALUE;
-bool loopIsRunning;
-bool tasksCompleted;
-std::string userinput;
-int duration_int_pwm;
-std::string typeOfExecute;
+  pwm_array given_array;
+  std::shared_ptr<std::pair<pwm_array, std::chrono::milliseconds>>
+      currentPWMandDuration_ptr;
+  // bool isQueuePWMEmpty = true;
+  std::ofstream stateFile;
+  std::mutex sensor_mutex;
+  std::mutex Queue_pwm_mutex;
+  std::mutex imu_mutex;
+  std::mutex ThrusterCommand_mutex;
+  std::mutex current_PWM_duration_mutex;
+  std::condition_variable PWM_cond_change;
+  std::condition_variable Thruster_cond_change;
+  std::string depth_pressure_msg = "Depth Sensor Not Started Yet";
+  std::string imu_msg;
+  std::vector<float> imu_data;
+  float depth = NULL_SENSOR_VALUE;
+  float pressure = NULL_SENSOR_VALUE;
+  bool loopIsRunning;
+  bool tasksCompleted;
+  std::string userinput;
+  int duration_int_pwm;
+  std::string typeOfExecute;
 
-std::string getCurrentDateTime() {
-  time_t now = time(0);
-  tm *localTime = localtime(&now);
-  char buffer[80];
-  strftime(buffer, sizeof(buffer), "%H:%M:%S", localTime);
-  return std::string(buffer);
-}
-void override() { commandInterpreter_ptr->interruptBlind_Execute();
-pwm_array zero_set_array;
-for(int i = 0; i < 8; i++){
-  zero_set_array.pwm_signals[i] = 0;
-}
-std::pair<pwm_array, std::chrono::milliseconds> zero_set_pair(zero_set_array, std::chrono::milliseconds(99999999));
-currentPWMandDuration_ptr = std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(zero_set_pair); }
-}
-;
+  std::string getCurrentDateTime() {
+    time_t now = time(0);
+    tm *localTime = localtime(&now);
+    char buffer[80];
+    strftime(buffer, sizeof(buffer), "%H:%M:%S", localTime);
+    return std::string(buffer);
+  }
+  void override() {
+    commandInterpreter_ptr->interruptBlind_Execute();
+    pwm_array zero_set_array;
+    for (int i = 0; i < 8; i++) {
+      zero_set_array.pwm_signals[i] = 0;
+    }
+    std::pair<pwm_array, std::chrono::milliseconds> zero_set_pair(
+        zero_set_array, std::chrono::milliseconds(99999999));
+    currentPWMandDuration_ptr =
+        std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
+            zero_set_pair);
+  }
+};
 
 class SensorsData : public rclcpp::Node {
 public:
