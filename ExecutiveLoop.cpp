@@ -78,12 +78,20 @@ public:
   
   void ManualControlCallback(const std_msgs::msg::Bool::SharedPtr msg){
     isManualEnabled = msg->data;
+    if(isManualEnabled)
+    {
+      std::cout << "Manual Enabled" << std::endl;
+    }
   }
   void ManualOverrideCallback(const std_msgs::msg::Bool::SharedPtr msg){
     isManualOverride = msg->data;
     std::unique_lock<std::mutex> QueueLock(Queue_pwm_mutex);
     std::queue<std::pair<pwm_array, std::chrono::milliseconds>> empty;
     std::swap(ManualPWMQueue, empty);
+    if(isManualOverride)
+    {
+      std::cout << "Manual Command Current Override -> Deleted Queue" << std::endl;
+    }
   }
   void depthPressureSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
     //  std::lock_guard<std::mutex> lock(mutex_);
@@ -117,12 +125,15 @@ public:
     for (int32_t value : msg->data) {
       setvalue = (int)value;
       given_array.pwm_signals[i] = setvalue;
+      std::cout << given_array.pwm_signals[i];
       i++;
     }
+    std::cout << std::endl;
     PWM_cond_change.notify_one();
   }
   void durationCallback(const std_msgs::msg::Int64::SharedPtr msg){
     std::unique_lock<std::mutex> duration_lock(Queue_pwm_mutex);
+    std::cout << "Getting duration" << std::endl;
     PWM_cond_change.wait(duration_lock);
     auto duration_int_pwm = msg->data;
     std::chrono::milliseconds durationMS;
@@ -136,6 +147,7 @@ public:
         break;
     }
     ManualPWMQueue.push(std::make_pair(given_array, durationMS));
+    std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
     duration_lock.unlock();
   }
       /*
@@ -179,7 +191,7 @@ public:
       stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z
                 << ", PWM :[";
      //std::unique_lock<std::mutex> pwmValuesLock(Queue_pwm_mutex);
-      for (auto i : our_pwm_array.pwm_signals) {
+      for (auto i : currentPWMandDuration.first.pwm_signals) {
         stateFile << i << ",";
       }
       stateFile << "],";
