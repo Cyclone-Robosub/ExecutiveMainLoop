@@ -102,38 +102,45 @@ public:
     std::lock_guard<std::mutex> pwm_lock(pwm_mutex);
     for (int32_t value : msg->data) {
       setvalue = (int)value;
-      if (i == 8) {
-        if (value == -1) {
-          durationMS == std::chrono::milliseconds(999999);
-        } else {
-          durationMS = std::chrono::milliseconds(value * 1000);
-        }
-      } else {
-        our_pwm_array.pwm_signals[i] = setvalue;
-      }
+      our_pwm_array.pwm_signals[i] = setvalue;
       i++;
     }
-    std::cout << std::endl;
+  }
+  void durationCallback(const std_msgs::msg::String::SharedPtr msg){
+    auto duration_pwm = msg->data;
+    duration_int_pwm = std::stoi(duration_pwm);
+    switch(duration_int_pwm){
+      case -1:
+        durationMS == std::chrono::milliseconds(999999);
+        break;
+      default:
+        durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
+        break;
+    }
   }
 
-  /*
-    void readInputs() {
-      while (loopIsRunning) {
-        //std::lock_guard<std::mutex> lock(mutex_);
-        // Have to check what the msg is saying.
-        // Parse msg data. Put the research data into a vector or var iables.
-        // IMU data will probably go into vector.
-        // IF needed we can use parameters with ROS if a lot of different types
-        // of data. one part of message has to the be imu and the other part has
-        // to be the depth. Assuming I have it right. Need to read
-        // multithreading with mutex condition and lock pushing to variables. or
-        // anyway of setting it
+      /*
+        void readInputs() {
+          while (loopIsRunning) {
+            //std::lock_guard<std::mutex> lock(mutex_);
+            // Have to check what the msg is saying.
+            // Parse msg data. Put the research data into a vector or var
+        iables.
+            // IMU data will probably go into vector.
+            // IF needed we can use parameters with ROS if a lot of different
+        types
+            // of data. one part of message has to the be imu and the other part
+        has
+            // to be the depth. Assuming I have it right. Need to read
+            // multithreading with mutex condition and lock pushing to
+        variables. or
+            // anyway of setting it
 
-      }
-    }
-  */
-  // get a notification here
-  void updateState() {
+          }
+        }
+      */
+      // get a notification here
+      void updateState() {
     std::cout << "UpdateState" << std::endl;
     while (loopIsRunning) {
       // Get the variables and put it into the state file.
@@ -189,12 +196,13 @@ public:
   void sendThrusterCommands(std::string typeOfExecute) {
     if (typeOfExecute == "blind_execute") {
       std::ofstream logFilePins;
-      CommandComponent commandComponents;
+      CommandComponent commandComponent;
       // our_pwm_array.pwm_signals = inputPWM;
-      commandComponents.thruster_pwms = our_pwm_array;
+      commandComponent.thruster_pwms = our_pwm_array;
       // setup ROS topic for duration
-      commandComponents.duration = durationMS;
-      commandInterpreter->blind_execute(commandComponents, logFilePins);
+      commandComponent.duration = durationMS;
+      commandInterpreter->blind_execute(commandComponent
+, logFilePins);
     }
     // send it back to William's code.
   }
@@ -249,6 +257,7 @@ private:
   bool loopIsRunning = true;
   bool tasksCompleted;
   std::string userinput;
+  int duration_int_pwm;
 
   std::string getCurrentDateTime() {
     time_t now = time(0);
@@ -277,6 +286,9 @@ public:
     std::cout << "Creating sensors subscriptions\n";
     auto magOptions = rclcpp::SubscriptionOptions();
     magOptions.callback_group = callbackIMU;
+    auto durationOptions = rclcpp::SubscriptionOptions();
+    durationOptions.callback_group = callbackDepthPressure;
+
 
     depth_pressure_sensor_subscription_ =
         this->create_subscription<std_msgs::msg::String>(
@@ -299,19 +311,22 @@ public:
             std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
                       std::placeholders::_1),
             magOptions);
-    /*
-did_ins_subscription =
-this->create_subscription<sensor_msgs::msg::MagneticField>(
-    "mag", rclcpp::QoS(5),
-    std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
-              std::placeholders::_1),
-    magOptions);*/
-    pythonCltool_subscription =
-        this->create_subscription<std_msgs::msg::Int32MultiArray>(
-            "python_Manual_cltool_topic", 10,
-            std::bind(&ExecutiveLoop::pythonCltoolCallback, mainLoopObject,
-                      std::placeholders::_1),
-            commandOptions);
+    duration_PWM_subscription =
+        this->create_subscription<std_msgs::msg::String>(
+            "duration_Cltool_topic", rclcpp::QoS(10), std::bind(&ExecutiveLoop::durationCallback, mainLoopObject, std::placeholders::_1),durationOptions);
+        /*
+    did_ins_subscription =
+    this->create_subscription<sensor_msgs::msg::MagneticField>(
+        "mag", rclcpp::QoS(5),
+        std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
+                  std::placeholders::_1),
+        magOptions);*/
+        pythonCltool_subscription =
+            this->create_subscription<std_msgs::msg::Int32MultiArray>(
+                "python_Manual_cltool_topic", 10,
+                std::bind(&ExecutiveLoop::pythonCltoolCallback, mainLoopObject,
+                          std::placeholders::_1),
+                commandOptions);
   }
 
 private:
@@ -324,6 +339,8 @@ private:
       mag_subscription_;
   rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
       pythonCltool_subscription;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr
+      duration_PWM_subscription;
 };
 
 #ifndef TESTING_EXCLUDE_MAIN

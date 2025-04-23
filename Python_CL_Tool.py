@@ -34,11 +34,16 @@ class PublisherPython(Node):
     def __init__(self):
         super().__init__('python_cltool_node')
         self.commandPublisher = self.create_publisher(Int32MultiArray,'python_Manual_cltool_topic', 10)
+        self.durationPublisher = self.create_publisher(String, 'duration_Cltool_topic', 10)
     def publish_array(self, pwm_array):
         msg = Int32MultiArray()
         msg.data = pwm_array
         self.commandPublisher.publish(msg)
         print(msg.data)
+    def publish_duration(self, durationSec):
+        msg = String()
+        msg.data = durationSec
+        self.durationPublisher.publish(msg)
         
 class Plant:
     def __init__(self):
@@ -135,7 +140,7 @@ class Thrust_Control:
             20,
             19,
             21]
-        self.publishCommandObject = PublisherPython()
+        self.publishCommandDurationObject = PublisherPython()
         self.ros_thread = threading.Thread(target=self.spin_ros)
         self.ros_thread.start()
         print("Ready to input manual commands")
@@ -155,7 +160,7 @@ class Thrust_Control:
         print("Shutting down CL Tool")
         rclpy.shutdown()
     def spin_ros(self):
-        rclpy.spin(self.publishCommandObject)
+        rclpy.spin(self.publishCommandDurationObject)
     def pwm(self, pwm_set):
         
         if (len(pwm_set) != len(self.thrusters)):
@@ -163,7 +168,6 @@ class Thrust_Control:
             return
         print("pwm function executed.")
         pwm_set = [int(i) for i in pwm_set]
-        pwm_set[-1] = -1
 
         #f = open(pwm_file, 'a')
        # start = str(time.time_ns())
@@ -174,7 +178,8 @@ class Thrust_Control:
         # Assuming you have a PWM control library, you would set the duty cycle here
         # For example: self.thrusters[i].duty_ns(pwm_set[i])
         end = str(time.time_ns())
-        self.publishCommandObject.publish_array(pwm_set)
+        self.publishCommandDurationObject.publish_array(pwm_set)
+        self.publishCommandDurationObject.publish_duration(-1)
       #  string = start + "," + end + "," + ",".join(map(str, pwm_set)) + "\n"
       #  f.write(string)
       #  print(string)
@@ -200,9 +205,11 @@ class Thrust_Control:
         print("Executing timed_pwm function...")
         #self.pwm(stop_set)
         pwm_set[-1] = time_s
-        self.publishCommandObject.publish_array(pwm_set)
-        sleep(time_s - 1)
-        self.publishCommandObject.publish_array(stop_set)
+        self.publishCommandDurationObject.publish_array(pwm_set)
+        self.publishCommandDurationObject.publish_duration(str(time_s))
+        #needs to stop at some point
+        self.publishCommandDurationObject.publish_array(stop_set)
+        self.publishCommandDurationObject.publish_duration(str(-1))
         
     def read(self):
         logf = open(pwm_file, "r")
