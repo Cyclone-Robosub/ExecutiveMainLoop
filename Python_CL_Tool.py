@@ -38,8 +38,10 @@ class PublisherPython(Node):
         self.commandPublisher = self.create_publisher(Int32MultiArray,'array_Cltool_topic', 10)
         self.durationPublisher = self.create_publisher(Int64, 'duration_Cltool_topic', 10)
         self.ManualToggleSwitch = self.create_publisher(Bool, 'manual_toggle_switch', 3)
+        self.ManualToggleSwitch.publish(True)
         self.ManualOverride = self.create_publisher(Bool,
         'manualOverride', 4)
+
     def publish_array(self, pwm_array):
         msg = Int32MultiArray()
         msg.data = pwm_array
@@ -59,7 +61,7 @@ class PublisherPython(Node):
     def publish_manual_override(self, isMistakeMade):
         msg = Bool()
         msg.data = isMistakeMade
-        self.ManualToggleSwitch.publish(msg)
+        self.ManualOverride.publish(msg)
         print(msg.data)
         
 class Plant:
@@ -160,7 +162,6 @@ class Thrust_Control:
         self.publishCommandDurationObject = PublisherPython()
         self.ros_thread = threading.Thread(target=self.spin_ros)
         self.ros_thread.start()
-        self.publishCommandDurationObject.publish_manual_switch(True)
         print("Ready to input manual commands")
         print("Please type tcs.exitCLTool() to safely exit manual control.\n")
        #self.testSendArray(self.publishCommandObject)
