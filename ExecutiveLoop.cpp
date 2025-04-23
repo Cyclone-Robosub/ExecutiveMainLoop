@@ -134,7 +134,7 @@ public:
   void durationCallback(const std_msgs::msg::Int64::SharedPtr msg){
     std::unique_lock<std::mutex> duration_lock(Queue_pwm_mutex);
     std::cout << "Getting duration" << std::endl;
-    PWM_cond_change.wait(duration_lock);
+    //PWM_cond_change.wait(duration_lock);
     auto duration_int_pwm = msg->data;
     std::chrono::milliseconds durationMS;
    // duration_int_pwm = std::stoi(duration_pwm);
