@@ -316,7 +316,7 @@ private:
   std::queue<std::pair<pwm_array, std::chrono::milliseconds>> ManualPWMQueue;
   pwm_array given_array;
   std::pair<pwm_array, std::chrono::milliseconds> currentPWMandDuration;
-  bool isQueuePWMEmpty;
+  bool isQueuePWMEmpty = true;
   std::ofstream stateFile;
   std::mutex sensor_mutex;
   std::mutex Queue_pwm_mutex;
