@@ -357,7 +357,7 @@ public:
     callbackIMU = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
     callbackClTool = this->create_callback_group(
-        rclcpp::CallbackGroupType::MutuallyExclusive);
+        rclcpp::CallbackGroupType::Reentrant);
 
     auto commandOptions = rclcpp::SubscriptionOptions();
     commandOptions.callback_group = callbackClTool;
