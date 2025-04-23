@@ -92,7 +92,6 @@ if(BUILD_TESTING)
     PropulsionFunctions
     yaml-cpp
   )
-
   # Install and discover tests
   install(TARGETS run_Executive_tests DESTINATION lib/${PROJECT_NAME})
 endif()

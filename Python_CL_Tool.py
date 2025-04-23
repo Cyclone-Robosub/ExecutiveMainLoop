@@ -6,6 +6,8 @@ from std_msgs.msg import Int32MultiArray
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+from std_msgs.msg import Bool
+from std_msgs.msg import Int64
 import threading
 
 rev_pulse = 1100 * 1000
@@ -33,17 +35,31 @@ torpedo = [fwd_pulse, fwd_pulse, fwd_pulse, fwd_pulse] + [fwd_pulse, rev_pulse, 
 class PublisherPython(Node):
     def __init__(self):
         super().__init__('python_cltool_node')
-        self.commandPublisher = self.create_publisher(Int32MultiArray,'python_Manual_cltool_topic', 10)
-        self.durationPublisher = self.create_publisher(String, 'duration_Cltool_topic', 10)
+        self.commandPublisher = self.create_publisher(Int32MultiArray,'array_Cltool_topic', 10)
+        self.durationPublisher = self.create_publisher(Int64, 'duration_Cltool_topic', 10)
+        self.ManualToggleSwitch = self.create_publisher(Bool, 'manual_toggle_switch', 3)
+        self.ManualOverride = self.create_publisher(Bool,
+        'manualOverride', 4)
     def publish_array(self, pwm_array):
         msg = Int32MultiArray()
         msg.data = pwm_array
         self.commandPublisher.publish(msg)
         print(msg.data)
     def publish_duration(self, durationSec):
-        msg = String()
+        msg = Int64()
         msg.data = durationSec
         self.durationPublisher.publish(msg)
+        print(msg.data)
+    def publish_manual_switch(self, isManualEnabled):
+        msg = Bool()
+        msg.data = isManualEnabled
+        self.ManualToggleSwitch.publish(msg)
+      #  print(msg.data)
+    def publish_manual_override(self, isMistakeMade):
+        msg = Bool()
+        msg.data = isMistakeMade
+        self.ManualToggleSwitch.publish(msg)
+        print(msg.data)
         
 class Plant:
     def __init__(self):
@@ -143,8 +159,9 @@ class Thrust_Control:
         self.publishCommandDurationObject = PublisherPython()
         self.ros_thread = threading.Thread(target=self.spin_ros)
         self.ros_thread.start()
+        self.publishCommandDurationObject.publish_manual_switch(True)
         print("Ready to input manual commands")
-        print("Please type tcs.exitCLTool() to safely exit manual control.")
+        print("Please type tcs.exitCLTool() to safely exit manual control.\n")
        #self.testSendArray(self.publishCommandObject)
         
         # Set default frequency and duty cycle
@@ -155,14 +172,19 @@ class Thrust_Control:
    # def testSendArray(self, publishCommandObject):
         #while True:
            # publishCommandObject.publish_array(self.thrusters)
+
+    def override(self, durationMS = -1, pwm_set = stop_set,):
+        self.publishCommandDurationObject.publish_manual_override(True)
+        self.publishCommandDurationObject.publish_array(pwm_set)
+        self.publishCommandDurationObject.publish_duration(durationMS)
     #TODO: Write auto control and exception handling.
     def exitCLTool(self):
-        print("Shutting down CL Tool")
+        print("Shutting down CL Tool and Manual Control")
+        self.publishCommandDurationObject.publish_manual_switch(False)
         rclpy.shutdown()
     def spin_ros(self):
         rclpy.spin(self.publishCommandDurationObject)
     def pwm(self, pwm_set):
-        
         if (len(pwm_set) != len(self.thrusters)):
             print("Wrong length for pwm set\n")
             return
@@ -204,12 +226,11 @@ class Thrust_Control:
         #with ROS2 send pwm_set array values to a publishing topic.  
         print("Executing timed_pwm function...")
         #self.pwm(stop_set)
-        pwm_set[-1] = time_s
         self.publishCommandDurationObject.publish_array(pwm_set)
-        self.publishCommandDurationObject.publish_duration(str(time_s))
+        self.publishCommandDurationObject.publish_duration(time_s)
         #needs to stop at some point
         self.publishCommandDurationObject.publish_array(stop_set)
-        self.publishCommandDurationObject.publish_duration(str(-1))
+        self.publishCommandDurationObject.publish_duration(-1)
         
     def read(self):
         logf = open(pwm_file, "r")
