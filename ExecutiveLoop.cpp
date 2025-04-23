@@ -256,7 +256,6 @@ public:
   void sendThrusterCommand() {
     while(loopIsRunning){
     if (typeOfExecute == "blind_execute") {
-      std::cout << "\nblind_execute" << std::endl;
       std::ofstream logFilePins;
       CommandComponent commandComponent;
       // our_pwm_array.pwm_signals = inputPWM;
