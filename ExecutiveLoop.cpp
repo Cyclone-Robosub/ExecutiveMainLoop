@@ -214,7 +214,6 @@ public:
   void executeDecisionLoop() {
     while (loopIsRunning) {
       //Control Loop from Simulink
-      std::cout << "executeD" << std::endl;
       if(isManualEnabled){
         /*if (userinput == "end") {
         executeFailCommands();
@@ -328,7 +327,7 @@ private:
   std::vector<float> imu_data;
   float depth = NULL_SENSOR_VALUE;
   float pressure = NULL_SENSOR_VALUE;
-  bool loopIsRunning = true;
+  bool loopIsRunning;
   bool tasksCompleted;
   std::string userinput;
   int duration_int_pwm;
