@@ -163,7 +163,7 @@ class Thrust_Control:
             return
         print("pwm function executed.")
         pwm_set = [int(i) for i in pwm_set]
-        pwm_set.append(-1)
+        pwm_set[-1] = -1
 
         #f = open(pwm_file, 'a')
        # start = str(time.time_ns())
@@ -199,8 +199,10 @@ class Thrust_Control:
         #with ROS2 send pwm_set array values to a publishing topic.  
         print("Executing timed_pwm function...")
         #self.pwm(stop_set)
-        pwm_set.append(time_s)
+        pwm_set[-1] = time_s
         self.publishCommandObject.publish_array(pwm_set)
+        sleep(time_s - 1)
+        self.publishCommandObject.publish_array(stop_set)
         
     def read(self):
         logf = open(pwm_file, "r")
