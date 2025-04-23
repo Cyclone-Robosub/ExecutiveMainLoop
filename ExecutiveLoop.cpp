@@ -245,17 +245,21 @@ public:
 
   // Sends Commands to Thruster Queue
   void sendThrusterCommand() {
+    while(loopIsRunning){
     if (typeOfExecute == "blind_execute") {
       std::cout << "blind_execute" << std::endl;
       std::ofstream logFilePins;
       CommandComponent commandComponent;
       // our_pwm_array.pwm_signals = inputPWM;
+      if(currentPWMandDuration != nullptr){
       commandComponent.thruster_pwms = currentPWMandDuration.first;
       // setup ROS topic for duration
       commandComponent.duration = currentPWMandDuration.second;
       commandInterpreter_ptr->blind_execute(commandComponent
 , logFilePins);
+      }
     }
+  }
     // send it back to William's code.
   }
 
