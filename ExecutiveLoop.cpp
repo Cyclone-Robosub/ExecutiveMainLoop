@@ -140,7 +140,7 @@ public:
    // duration_int_pwm = std::stoi(duration_pwm);
     switch(duration_int_pwm){
       case -1:
-        durationMS == std::chrono::milliseconds(999999);
+        durationMS = std::chrono::milliseconds(999999);
         break;
       default:
         durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
@@ -224,9 +224,12 @@ public:
         std::unique_lock<std::mutex> pwmValuesLock(Queue_pwm_mutex);
         if(!isQueuePWMEmpty){
         currentPWMandDuration = ManualPWMQueue.front();
+        std::cout << "Getting current PWM command" << std::endl;
         ManualPWMQueue.pop();
         }else{
+          std::cout << "Waiting for current PWM command" << std::endl;
           PWM_cond_change.wait(pwmValuesLock, [=]{ return !isQueuePWMEmpty; });
+          std::cout << "Got current PWM command" << std::endl;
           currentPWMandDuration = ManualPWMQueue.front();
           ManualPWMQueue.pop();
         }
@@ -243,6 +246,7 @@ public:
   // Sends Commands to Thruster Queue
   void sendThrusterCommand() {
     if (typeOfExecute == "blind_execute") {
+      std::cout << "blind_execute" << std::endl;
       std::ofstream logFilePins;
       CommandComponent commandComponent;
       // our_pwm_array.pwm_signals = inputPWM;
@@ -274,7 +278,7 @@ public:
 
 private:
   bool isManualEnabled;
-  bool isManualOverride;
+  bool isManualOverride = false;
 
       float angular_velocity_x = NULL_SENSOR_VALUE;
   float angular_velocity_y = NULL_SENSOR_VALUE;
