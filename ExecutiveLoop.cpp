@@ -87,11 +87,11 @@ public:
   }
   void ManualOverrideCallback(const std_msgs::msg::Bool::SharedPtr msg){
     isManualOverride = msg->data;
-    std::unique_lock<std::mutex> QueueLock(Queue_pwm_mutex);
-    std::queue<std::pair<pwm_array, std::chrono::milliseconds>> empty;
-    std::swap(ManualPWMQueue, empty);
     if(isManualOverride)
     {
+    std::lock_guard<std::mutex> QueueLock(Queue_pwm_mutex);
+    std::queue<std::pair<pwm_array, std::chrono::milliseconds>> empty;
+    std::swap(ManualPWMQueue, empty);
       std::cout << "Manual Command Current Override -> Deleted Queue" << std::endl;
     }
   }
@@ -136,13 +136,13 @@ public:
   void durationCallback(const std_msgs::msg::Int64::SharedPtr msg){
     std::unique_lock<std::mutex> duration_lock(Queue_pwm_mutex);
     std::cout << "Getting duration" << std::endl;
-    //PWM_cond_change.wait(duration_lock);
+    PWM_cond_change.wait(duration_lock);
     auto duration_int_pwm = msg->data;
     std::chrono::milliseconds durationMS;
    // duration_int_pwm = std::stoi(duration_pwm);
     switch(duration_int_pwm){
       case -1:
-        durationMS = std::chrono::milliseconds(999999);
+        durationMS = std::chrono::milliseconds(9999999999);
         break;
       default:
         durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
@@ -220,7 +220,6 @@ public:
       }*/
         if(isManualOverride){
           commandInterpreter_ptr->interruptBlind_Execute();
-          commandInterpreter_ptr.reset();
         }
         typeOfExecute = "blind_execute";
         std::unique_lock<std::mutex> pwmValuesLock(Queue_pwm_mutex);
@@ -252,7 +251,7 @@ public:
   void sendThrusterCommand() {
     while(loopIsRunning){
     if (typeOfExecute == "blind_execute") {
-      std::cout << "blind_execute" << std::endl;
+      std::cout << "\nblind_execute" << std::endl;
       std::ofstream logFilePins;
       CommandComponent commandComponent;
       // our_pwm_array.pwm_signals = inputPWM;
