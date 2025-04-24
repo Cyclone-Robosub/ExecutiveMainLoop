@@ -321,7 +321,7 @@ public:
   void sendThrusterCommand() {
     while (loopIsRunning) {
       if (typeOfExecute == "blind_execute") {
-        std::ofstream logFilePins;
+        std::ofstream logFilePins("PWM_LOGS.txt");
         CommandComponent commandComponent;
         // our_pwm_array.pwm_signals = inputPWM;
         if (isRunningThrusterCommand) {
@@ -331,6 +331,7 @@ public:
           // setup ROS topic for duration
           commandComponent.duration = currentPWMandDuration_ptr->second;
           commandInterpreter_ptr->blind_execute(commandComponent, logFilePins);
+
           std::cout << "Finished Thruster Command" << std::endl;
           // Thruster_cond_change.notify_all();
           // completed
