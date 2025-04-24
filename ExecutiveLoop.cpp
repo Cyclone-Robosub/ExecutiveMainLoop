@@ -138,8 +138,8 @@ public:
     }
     AllowDurationSync = true;
     std::cout << std::endl;
-    pwm_lock.unlock();
     PWM_cond_change.notify_all();
+    pwm_lock.unlock();
   }
   void durationCallback(const std_msgs::msg::Int64::SharedPtr msg) {
     std::unique_lock<std::mutex> duration_lock(array_duration_sync_mutex,
