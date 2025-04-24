@@ -229,6 +229,7 @@ public:
       break;
     }*/
       if(isManualEnabled){
+        
       if (isManualOverride) {
         override();
       }
@@ -412,9 +413,9 @@ public:
     auto magOptions = rclcpp::SubscriptionOptions();
     magOptions.callback_group = callbackIMU;
     auto ManualToggleOptions = rclcpp::SubscriptionOptions();
-    ManualToggleOptions.callback_group = callbackManual;
+    ManualToggleOptions.callback_group = callbackClTool;
     auto ManualOverride = rclcpp::SubscriptionOptions();
-    ManualOverride.callback_group = callbackManual;
+    ManualOverride.callback_group = callbackClTool;
 
     depth_pressure_sensor_subscription_ =
         this->create_subscription<std_msgs::msg::String>(
