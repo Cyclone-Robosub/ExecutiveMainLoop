@@ -98,6 +98,7 @@ public:
       std::swap(ManualPWMQueue, empty);
       std::cout << "Manual Command Current Override -> Deleted Queue"
                 << std::endl;
+      sizeQueue = 0;
     }
   }
   void depthPressureSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
@@ -151,9 +152,11 @@ public:
     switch (duration_int_pwm) {
     case -1:
       durationMS = std::chrono::milliseconds(9999999999);
+      std::cout << "infinite" << std::endl;
       break;
     default:
       durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
+      std::cout << durationMS << std::endl;
       break;
     }
     std::unique_lock<std::mutex> Queue_sync_lock(Queue_pwm_mutex);
@@ -161,9 +164,8 @@ public:
     sizeQueue++;
     Queue_sync_lock.unlock();
     std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
-    std::unique_lock<std::mutex> pwm_lock_Duration(array_duration_sync_mutex);
+    std::lock_guard<std::mutex> pwm_lock_Duration(array_duration_sync_mutex);
     AllowDurationSync = false;
-    pwm_lock_Duration.unlock();
   }
   /*
     void readInputs() {
@@ -206,17 +208,12 @@ public:
       stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z
                 << ", PWM :[";
 
-      std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex,
-                                                 std::defer_lock);
-      if (pwmValuesLock.try_lock()) {
-        for (auto i : currentPWMandDuration_ptr->first.pwm_signals) {
-          stateFile << i << ",";
-        }
-        stateFile << "],";
-        // lock automatically releases when pwmValuesLock goes out of scope
-      } else {
-        std::cout << "Could not acquire lock on current_PWM_duration_mutex\n";
+      std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
+      for (auto i : currentPWMandDuration_ptr->first.pwm_signals) {
+        stateFile << i << ",";
       }
+      stateFile << "],";
+      pwmValuesLock.unlock();
       stateFile << "\n";
       if (stateFile.tellp() > 200) {
         stateFile.flush();
