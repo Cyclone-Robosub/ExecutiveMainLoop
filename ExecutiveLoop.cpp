@@ -168,7 +168,6 @@ public:
     sizeQueue++;
     AllowDurationSync = false;
     PWM_cond_change.notify_all();
-    Queue_sync_lock.unlock();
     std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
   }
   /*
@@ -280,7 +279,6 @@ public:
             thrusterCommandLock.unlock();
             ManualPWMQueue.pop();
             sizeQueue--;
-            QueuepwmValuesLock.unlock();
           }
           // Add comment here below and above.
         } else {
@@ -303,7 +301,6 @@ public:
           thrusterCommandLock.unlock();
           ManualPWMQueue.pop();
           sizeQueue--;
-          QueuepwmValuesLock.unlock();
         }
       }
     }
