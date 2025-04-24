@@ -164,8 +164,9 @@ public:
     sizeQueue++;
     Queue_sync_lock.unlock();
     std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
-    std::lock_guard<std::mutex> pwm_lock_Duration(array_duration_sync_mutex);
+    std::unique_lock<std::mutex> pwm_lock_Duration(array_duration_sync_mutex);
     AllowDurationSync = false;
+    pwm_lock_Duration.unlock();
   }
   /*
     void readInputs() {
@@ -418,7 +419,7 @@ public:
     callbackIMU = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
     callbackClTool =
-        this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+        this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
     callbackManual = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
 
@@ -434,9 +435,9 @@ public:
     auto magOptions = rclcpp::SubscriptionOptions();
     magOptions.callback_group = callbackIMU;
     auto ManualToggleOptions = rclcpp::SubscriptionOptions();
-    ManualToggleOptions.callback_group = callbackClTool;
+    ManualToggleOptions.callback_group = callbackManual;
     auto ManualOverride = rclcpp::SubscriptionOptions();
-    ManualOverride.callback_group = callbackClTool;
+    ManualOverride.callback_group = callbackManual;
 
     depth_pressure_sensor_subscription_ =
         this->create_subscription<std_msgs::msg::String>(
