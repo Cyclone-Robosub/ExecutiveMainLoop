@@ -45,10 +45,11 @@ public:
     }
     std::pair<pwm_array, std::chrono::milliseconds> zero_set_pair(
         zero_set_array, std::chrono::milliseconds(99999999));
+    std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
     currentPWMandDuration_ptr =
         std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
             zero_set_pair);
-
+            pwmValuesLock.unlock();
     // State file creation or appending
     fs::path currentPath = fs::current_path();
     fs::path stateFilePath = currentPath.parent_path().parent_path();
@@ -248,9 +249,12 @@ public:
           } else {
             isCurrentCommandTimedPWM = true;
           }
+          std::unique_lock<std::mutex> pwmValuesLock(
+              current_PWM_duration_mutex);
           currentPWMandDuration_ptr =
               std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
                   ManualPWMQueue.front());
+                pwmValuesLock.unlock();
           isRunningThrusterCommand = true;
           ManualPWMQueue.pop();
           thrusterCommandLock.unlock();
@@ -264,9 +268,11 @@ public:
         } else {
           isCurrentCommandTimedPWM = true;
         }
+        std::unique_lock<std::mutex> pwmarrayValuesLock(current_PWM_duration_mutex);
         currentPWMandDuration_ptr =
             std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
                 ManualPWMQueue.front());
+                pwmarrayValuesLock.unlock();
         isRunningThrusterCommand = true;
         ManualPWMQueue.pop();
         thrusterCommandLock.unlock();
@@ -383,9 +389,11 @@ private:
     }
     std::pair<pwm_array, std::chrono::milliseconds> zero_set_pair(
         zero_set_array, std::chrono::milliseconds(99999999));
+    std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
     currentPWMandDuration_ptr =
         std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
             zero_set_pair);
+            pwmValuesLock.unlock();
   }
 };
 
