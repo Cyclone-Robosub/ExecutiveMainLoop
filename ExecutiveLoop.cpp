@@ -255,6 +255,7 @@ public:
                                                         std::defer_lock);
         PWM_cond_change.wait(QueuepwmValuesLock,
                              [this] { return !(sizeQueue == 0); });
+        std::cout << "Got the queue lock" << std::endl;
         std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
         std::cout << "Here EXECUTDECISION on Current"
                   << std::endl;
