@@ -258,13 +258,13 @@ public:
           }
         }
         typeOfExecute = "blind_execute";
-        std::cout << "Getting the lock for queue." << std::endl;
+        //std::cout << "Getting the lock for queue." << std::endl;
         std::unique_lock<std::mutex> QueuepwmValuesLock(Queue_pwm_mutex,
                                                         std::defer_lock);
-        std::cout << "Got the queue lock, looking at the queue." << std::endl;
+       // std::cout << "Got the queue lock, looking at the queue." << std::endl;
         PWM_cond_change.wait(QueuepwmValuesLock,
                              [this] { return !(sizeQueue == 0); });
-        std::cout << "Something is in the queue." << std::endl;
+        //std::cout << "Something is in the queue." << std::endl;
         if (!isCurrentCommandTimedPWM) {
           override();
           std::cout << "executor decision Override" << std::endl;
@@ -280,7 +280,7 @@ public:
               std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
                   ManualPWMQueue.front());
           CurrentpwmValuesLock.unlock();
-          std::cout << "2 executor decision is doing its job" << std::endl;
+          std::cout << "1 Executor Decision: Replace PWM" << std::endl;
           std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
           isRunningThrusterCommand = true;
           thrusterCommandLock.unlock();
@@ -289,7 +289,7 @@ public:
         }
         // Add comment here below and above.
         else if (!isRunningThrusterCommand) {
-          std::cout << "1 executor decision is doing its job" << std::endl;
+          std::cout << "2 Executor Decision: Needs a Command" << std::endl;
 
           if (ManualPWMQueue.front().second >=
               std::chrono::milliseconds(9999999)) {
@@ -303,7 +303,7 @@ public:
               std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
                   ManualPWMQueue.front());
           CurrentpwmValuesLock.unlock();
-          std::cout << "3 executor decision is doing its job" << std::endl;
+          std::cout << "3 executor decision: Gave New Command" << std::endl;
           std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
           isRunningThrusterCommand = true;
           thrusterCommandLock.unlock();
