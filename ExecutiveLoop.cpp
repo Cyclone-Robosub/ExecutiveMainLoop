@@ -77,9 +77,10 @@ public:
       thrusterPins.push_back(new HardwarePwmPin(i));
       // digitalPins.push_back(new DigitalPin(5, ActiveLow));
     }
-    commandInterpreter_ptr =
-        std::make_unique<Command_Interpreter_RPi5>(thrusterPins, digitalPins);
+    commandInterpreter_ptr = std::make_unique<Command_Interpreter_RPi5>(
+        thrusterPins, std::vector<DigitalPin *>{});
     commandInterpreter_ptr->initializePins();
+    commandInterpreter_ptr->readPins();
   }
   // these callback functions serve as the "read Input node in the loop
 
@@ -163,7 +164,7 @@ public:
     // duration_int_pwm = std::stoi(duration_pwm);
     switch (duration_int_pwm) {
     case -1:
-      durationMS = std::chrono::milliseconds(99999999999);
+      durationMS = std::chrono::milliseconds(99999999); 
       std::cout << durationMS << std::endl;
       break;
     default:
