@@ -239,6 +239,7 @@ public:
         override();
       }
       typeOfExecute = "blind_execute";
+      std::cout << "Getting the lock" << std::endl;
       std::unique_lock<std::mutex> pwmValuesLock(Queue_pwm_mutex,
                                                  std::defer_lock);
       PWM_cond_change.wait(pwmValuesLock, [this] { return !(sizeQueue == 0); });
