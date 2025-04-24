@@ -38,10 +38,6 @@ class PublisherPython(Node):
         self.commandPublisher = self.create_publisher(Int32MultiArray,'array_Cltool_topic', 10)
         self.durationPublisher = self.create_publisher(Int64, 'duration_Cltool_topic', 10)
         self.ManualToggleSwitch = self.create_publisher(Bool, 'manual_toggle_switch', 3)
-        msgstart = Bool()
-        msgstart.data = True
-        self.ManualToggleSwitch.publish(msgstart)
-        print("Switched onto manual control")
         self.ManualOverride = self.create_publisher(Bool,
         'manualOverride', 4)
 
@@ -165,6 +161,9 @@ class Thrust_Control:
         self.publishCommandDurationObject = PublisherPython()
         self.ros_thread = threading.Thread(target=self.spin_ros)
         self.ros_thread.start()
+        sleep(5)
+        self.publishCommandDurationObject.ManualToggleSwitch(True)
+        sleep(3)
         print("Ready to input manual commands")
         print("Please type tcs.exitCLTool() to safely exit manual control.\n")
        #self.testSendArray(self.publishCommandObject)
