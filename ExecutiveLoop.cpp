@@ -161,7 +161,9 @@ public:
     sizeQueue++;
     Queue_sync_lock.unlock();
     std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
+    std::unique_lock<std::mutex> pwm_lock_Duration(array_duration_sync_mutex);
     AllowDurationSync = false;
+    pwm_lock_Duration.unlock();
   }
   /*
     void readInputs() {
