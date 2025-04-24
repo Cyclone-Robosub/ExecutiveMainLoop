@@ -83,12 +83,15 @@ public:
   // these callback functions serve as the "read Input node in the loop
 
   void ManualControlCallback(const std_msgs::msg::Bool::SharedPtr msg) {
+    std::unique_lock<std::mutex> Manual_Lock(Manual_Mutex);
     isManualEnabled = msg->data;
     if (isManualEnabled) {
       std::cout << "Manual Control Enabled" << std::endl;
-    } else {
+      
+        } else {
       std::cout << "Manual Control Disabled" << std::endl;
     }
+    Change_Manual.notify_all();
   }
   void ManualOverrideCallback(const std_msgs::msg::Bool::SharedPtr msg) {
     isManualOverride = msg->data;
@@ -166,7 +169,8 @@ public:
     std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
     std::unique_lock<std::mutex> pwm_lock_Duration(array_duration_sync_mutex);
     AllowDurationSync = false;
-    pwm_lock_Duration.unlock();
+    
+     pwm_lock_Duration.unlock();
   }
   /*
     void readInputs() {
@@ -235,6 +239,8 @@ public:
       std::cout << "User Interrupted Executive Loop" << std::endl;
       break;
     }*/
+    std::unique_lock<std::mutex> Manual_Lock(Manual_Mutex, std::defer_lock);
+    Change_Manual.wait(Manual_Lock, [this] {return isManualEnabled;});
       if(isManualEnabled){
         std::cout << "Manual Enabled" << std::endl;
       if (isManualOverride) {
@@ -349,6 +355,7 @@ private:
   bool AllowDurationSync = false;
   std::mutex thruster_mutex;
   std::mutex array_duration_sync_mutex;
+  std::mutex Manual_Mutex;
   unsigned int sizeQueue = 0;
 
   float angular_velocity_x = NULL_SENSOR_VALUE;
@@ -380,6 +387,7 @@ private:
   std::mutex current_PWM_duration_mutex;
   std::condition_variable PWM_cond_change;
   std::condition_variable Thruster_cond_change;
+  std::condition_variable Change_Manual;
   std::string depth_pressure_msg = "Depth Sensor Not Started Yet";
   std::string imu_msg;
   std::vector<float> imu_data;
