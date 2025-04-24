@@ -89,7 +89,7 @@ public:
     isManualEnabled = msg->data;
     if (isManualEnabled) {
       std::cout << "Manual Control Enabled" << std::endl;
-      //need to add to here later.
+      // need to add to here later.
 
     } else {
       std::cout << "Manual Control Disabled" << std::endl;
@@ -164,7 +164,7 @@ public:
     // duration_int_pwm = std::stoi(duration_pwm);
     switch (duration_int_pwm) {
     case -1:
-      durationMS = std::chrono::milliseconds(99999999); 
+      durationMS = std::chrono::milliseconds(9999999999);
       std::cout << durationMS << std::endl;
       break;
     default:
@@ -258,14 +258,13 @@ public:
           }
         }
         typeOfExecute = "blind_execute";
-        std::cout << "Getting the lock" << std::endl;
+        std::cout << "Getting the lock for queue." << std::endl;
         std::unique_lock<std::mutex> QueuepwmValuesLock(Queue_pwm_mutex,
                                                         std::defer_lock);
+        std::cout << "Got the queue lock, looking at the queue." << std::endl;
         PWM_cond_change.wait(QueuepwmValuesLock,
                              [this] { return !(sizeQueue == 0); });
-        std::cout << "Got the queue lock, something is in the queue"
-                  << std::endl;
-        std::cout << "Here EXECUTDECISION on Current" << std::endl;
+        std::cout << "Something is in the queue." << std::endl;
         if (!isCurrentCommandTimedPWM) {
           override();
           std::cout << "executor decision Override" << std::endl;
@@ -428,11 +427,12 @@ private:
         zero_set_array.pwm_signals[i] = 0;
       }
       std::pair<pwm_array, std::chrono::milliseconds> zero_set_pair(
-          zero_set_array, std::chrono::milliseconds(99999999));
+          zero_set_array, std::chrono::milliseconds(100));
       std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
       currentPWMandDuration_ptr =
           std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
               zero_set_pair);
+      isCurrentCommandTimedPWM = false;
       pwmValuesLock.unlock();
     }
   }
