@@ -154,8 +154,8 @@ public:
     // duration_int_pwm = std::stoi(duration_pwm);
     switch (duration_int_pwm) {
     case -1:
-      durationMS = std::chrono::milliseconds(9999999999);
-      std::cout << "infinite" << std::endl;
+      durationMS = std::chrono::milliseconds(99999999999);
+      std::cout << durationMS << std::endl;
       break;
     default:
       durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
@@ -277,11 +277,13 @@ public:
             std::cout << "2 executor decision is doing its job" << std::endl;
             isRunningThrusterCommand = true;
             ManualPWMQueue.pop();
+            sizeQueue--;
             thrusterCommandLock.unlock();
           }
           // Add comment here below and above.
         } else {
           std::cout << "1 executor decision is doing its job" << std::endl;
+          
           if (ManualPWMQueue.front().second >=
               std::chrono::milliseconds(9999999)) {
             isCurrentCommandTimedPWM = false;
@@ -297,6 +299,7 @@ public:
           std::cout << "3 executor decision is doing its job" << std::endl;
           isRunningThrusterCommand = true;
           ManualPWMQueue.pop();
+          sizeQueue--;
           thrusterCommandLock.unlock();
         }
       }
