@@ -1,4 +1,5 @@
 #include <chrono>
+#include <condition_variable>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -141,13 +142,13 @@ public:
     }
     AllowDurationSync = true;
     std::cout << std::endl;
-    PWM_cond_change.notify_all();
+    SendToDuration_change.notify_all();
     pwm_lock.unlock();
   }
   void durationCallback(const std_msgs::msg::Int64::SharedPtr msg) {
     std::unique_lock<std::mutex> duration_lock(array_duration_sync_mutex,
                                                std::defer_lock);
-    PWM_cond_change.wait(duration_lock, [this] { return AllowDurationSync; });
+    SendToDuration_change.wait(duration_lock, [this] { return AllowDurationSync; });
     std::cout << "Getting duration" << std::endl;
     auto duration_int_pwm = msg->data;
     std::chrono::milliseconds durationMS;
@@ -165,12 +166,11 @@ public:
     std::unique_lock<std::mutex> Queue_sync_lock(Queue_pwm_mutex);
     ManualPWMQueue.push(std::make_pair(given_array, durationMS));
     sizeQueue++;
-    Queue_sync_lock.unlock();
     PWM_cond_change.notify_all();
+    Queue_sync_lock.unlock();
     std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
     std::unique_lock<std::mutex> pwm_lock_Duration(array_duration_sync_mutex);
     AllowDurationSync = false;
-    pwm_lock_Duration.unlock();
   }
   /*
     void readInputs() {
@@ -239,6 +239,7 @@ public:
       std::cout << "User Interrupted Executive Loop" << std::endl;
       break;
     }*/
+    //test these two lines of code
       std::unique_lock<std::mutex> Manual_Lock(Manual_Mutex, std::defer_lock);
       Change_Manual.wait(Manual_Lock, [this] { return isManualEnabled; });
       if (isManualEnabled) {
@@ -252,7 +253,7 @@ public:
         typeOfExecute = "blind_execute";
         std::cout << "Getting the lock" << std::endl;
         std::unique_lock<std::mutex> QueuepwmValuesLock(Queue_pwm_mutex,
-                                                   std::defer_lock);
+                                                        std::defer_lock);
         PWM_cond_change.wait(QueuepwmValuesLock,
                              [this] { return !(sizeQueue == 0); });
         std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
@@ -283,7 +284,7 @@ public:
           // Add comment here below and above.
         } else {
           std::cout << "1 executor decision is doing its job" << std::endl;
-          
+
           if (ManualPWMQueue.front().second >=
               std::chrono::milliseconds(9999999)) {
             isCurrentCommandTimedPWM = false;
@@ -387,6 +388,7 @@ private:
   std::mutex imu_mutex;
   std::mutex ThrusterCommand_mutex;
   std::mutex current_PWM_duration_mutex;
+  std::condition_variable SendToDuration_change;
   std::condition_variable PWM_cond_change;
   std::condition_variable Thruster_cond_change;
   std::condition_variable Change_Manual;
