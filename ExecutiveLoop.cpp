@@ -166,11 +166,11 @@ public:
     ManualPWMQueue.push(std::make_pair(given_array, durationMS));
     sizeQueue++;
     Queue_sync_lock.unlock();
+    PWM_cond_change.notify_all();
     std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
     std::unique_lock<std::mutex> pwm_lock_Duration(array_duration_sync_mutex);
     AllowDurationSync = false;
-    
-     pwm_lock_Duration.unlock();
+    pwm_lock_Duration.unlock();
   }
   /*
     void readInputs() {
@@ -470,13 +470,13 @@ public:
             std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
                       std::placeholders::_1),
             magOptions);
-    /*
+    
 did_ins_subscription =
 this->create_subscription<sensor_msgs::msg::MagneticField>(
     "mag", rclcpp::QoS(5),
     std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
               std::placeholders::_1),
-    magOptions);*/
+    magOptions);
     CLTool_subscription_ =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "array_Cltool_topic", rclcpp::QoS(10),
