@@ -166,11 +166,10 @@ public:
     std::unique_lock<std::mutex> Queue_sync_lock(Queue_pwm_mutex);
     ManualPWMQueue.push(std::make_pair(given_array, durationMS));
     sizeQueue++;
+    AllowDurationSync = false;
     PWM_cond_change.notify_all();
     Queue_sync_lock.unlock();
     std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
-    std::unique_lock<std::mutex> pwm_lock_Duration(array_duration_sync_mutex);
-    AllowDurationSync = false;
   }
   /*
     void readInputs() {
@@ -257,7 +256,7 @@ public:
         PWM_cond_change.wait(QueuepwmValuesLock,
                              [this] { return !(sizeQueue == 0); });
         std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
-        std::cout << "Here EXECUTDECISION LOOP STARTING AFTER WAIT"
+        std::cout << "Here EXECUTDECISION on Current"
                   << std::endl;
         if (isRunningThrusterCommand) {
           if (!isCurrentCommandTimedPWM) {
@@ -277,9 +276,10 @@ public:
             CurrentpwmValuesLock.unlock();
             std::cout << "2 executor decision is doing its job" << std::endl;
             isRunningThrusterCommand = true;
+            thrusterCommandLock.unlock();
             ManualPWMQueue.pop();
             sizeQueue--;
-            thrusterCommandLock.unlock();
+            QueuepwmValuesLock.unlock();
           }
           // Add comment here below and above.
         } else {
@@ -299,9 +299,10 @@ public:
           CurrentpwmValuesLock.unlock();
           std::cout << "3 executor decision is doing its job" << std::endl;
           isRunningThrusterCommand = true;
+          thrusterCommandLock.unlock();
           ManualPWMQueue.pop();
           sizeQueue--;
-          thrusterCommandLock.unlock();
+          QueuepwmValuesLock.unlock();
         }
       }
     }
@@ -317,7 +318,7 @@ public:
         CommandComponent commandComponent;
         // our_pwm_array.pwm_signals = inputPWM;
         if (isRunningThrusterCommand) {
-          std::cout << "Send Thruster Command is doing its job" << std::endl;
+          std::cout << "Send Thruster Command is doing its job\n" << std::endl;
           std::unique_lock<std::mutex> statusThruster(thruster_mutex);
           commandComponent.thruster_pwms = currentPWMandDuration_ptr->first;
           // setup ROS topic for duration
