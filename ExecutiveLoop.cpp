@@ -278,13 +278,12 @@ public:
             isRunningThrusterCommand = true;
             ManualPWMQueue.pop();
             thrusterCommandLock.unlock();
-            QueuepwmValuesLock.unlock();
           }
           // Add comment here below and above.
         } else {
           std::cout << "1 executor decision is doing its job" << std::endl;
           if (ManualPWMQueue.front().second >=
-              std::chrono::milliseconds(99999999)) {
+              std::chrono::milliseconds(9999999)) {
             isCurrentCommandTimedPWM = false;
           } else {
             isCurrentCommandTimedPWM = true;
@@ -299,7 +298,6 @@ public:
           isRunningThrusterCommand = true;
           ManualPWMQueue.pop();
           thrusterCommandLock.unlock();
-          QueuepwmValuesLock.unlock();
         }
       }
     }
