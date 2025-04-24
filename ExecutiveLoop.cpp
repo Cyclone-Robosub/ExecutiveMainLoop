@@ -204,13 +204,18 @@ public:
       IMUlock.unlock();
       stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z
                 << ", PWM :[";
-                /*
-       std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
-      for (auto i : currentPWMandDuration_ptr->first.pwm_signals) {
-        stateFile << i << ",";
+
+      std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex,
+                                                 std::defer_lock);
+      if (pwmValuesLock.try_lock()) {
+        for (auto i : currentPWMandDuration_ptr->first.pwm_signals) {
+          stateFile << i << ",";
+        }
+        stateFile << "],";
+        // lock automatically releases when pwmValuesLock goes out of scope
+      } else {
+        std::cerr << "Could not acquire lock on current_PWM_duration_mutex\n";
       }
-      stateFile << "],"; 
-       pwmValuesLock.unlock();*/
       stateFile << "\n";
       if (stateFile.tellp() > 200) {
         stateFile.flush();
