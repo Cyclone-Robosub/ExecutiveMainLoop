@@ -238,8 +238,8 @@ public:
       break;
     }*/
     //test these two lines of code
-      std::unique_lock<std::mutex> Manual_Lock(Manual_Mutex, std::defer_lock);
-      Change_Manual.wait(Manual_Lock, [this] { return isManualEnabled; });
+      std::unique_lock<std::mutex> Manual_Lock(Manual_Mutex);
+      //Change_Manual.wait(Manual_Lock, [this] { return isManualEnabled; });
       if (isManualEnabled) {
         std::cout << "Manual Enabled" << std::endl;
         if (isManualOverride) {
