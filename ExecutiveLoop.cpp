@@ -233,7 +233,6 @@ public:
         stateFile.seekp(0);
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
-      // TODO: Need to see William's code to put PWM here in the status file.
     }
   }
 
@@ -302,11 +301,11 @@ public:
           currentPWMandDuration_ptr =
               std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
                   ManualPWMQueue.front());
+          isRunningThrusterCommand = true;
           CurrentpwmValuesLock.unlock();
           std::cout << "3 executor decision: Gave New Command" << std::endl;
-          std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
-          isRunningThrusterCommand = true;
-          thrusterCommandLock.unlock();
+          //std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
+          //thrusterCommandLock.unlock();
           ManualPWMQueue.pop();
           sizeQueue--;
         }
@@ -325,15 +324,18 @@ public:
         // our_pwm_array.pwm_signals = inputPWM;
         if (isRunningThrusterCommand) {
           std::cout << "Send Thruster Command is doing its job\n" << std::endl;
-          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
+          std::unique_lock<std::mutex> CurrentpwmValuesLock(
+              current_PWM_duration_mutex);
           commandComponent.thruster_pwms = currentPWMandDuration_ptr->first;
           // setup ROS topic for duration
           commandComponent.duration = currentPWMandDuration_ptr->second;
+          CurrentpwmValuesLock.unlock();
           commandInterpreter_ptr->blind_execute(commandComponent, logFilePins);
 
           std::cout << "Finished Thruster Command" << std::endl;
           // Thruster_cond_change.notify_all();
           // completed
+          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
           isRunningThrusterCommand = false;
           statusThruster.unlock();
         }
@@ -565,9 +567,7 @@ int main(int argc, char *argv[]) {
                                            mainLoopObject);
   std::jthread SendThrusterCommandThread(&ExecutiveLoop::sendThrusterCommand,
                                          mainLoopObject);
-  // Note: We can join these two threads above and bottom if Raspberry PI
-  // really does not like multithreading.
-  // This is now the case ^.
+ 
   // std::jthread
   // SendThrusterCommandThread(&ExecutiveLoop::sendThrusterCommand,
   // mainLoopObject);
