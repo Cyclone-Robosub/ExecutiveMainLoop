@@ -25,7 +25,7 @@
 using namespace std::literals;
 namespace fs = std::filesystem;
 
-#define UPDATE_WAIT_TIME 5
+#define UPDATE_WAIT_TIME 3
 #define IMU_SENSOR_WAIT_TIME 2
 #define NULL_SENSOR_VALUE -320000
 #define FAULTY_SENSOR_VALUE -40404
@@ -203,12 +203,12 @@ public:
       IMUlock.unlock();
       stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z
                 << ", PWM :[";
-      // std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
+       std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
       for (auto i : currentPWMandDuration_ptr->first.pwm_signals) {
         stateFile << i << ",";
       }
-      stateFile << "],";
-      // pwmValuesLock.unlock();
+      stateFile << "],"; 
+       pwmValuesLock.unlock();
       stateFile << "\n";
       if (stateFile.tellp() > 200) {
         stateFile.flush();
@@ -238,6 +238,7 @@ public:
                                                  std::defer_lock);
       PWM_cond_change.wait(pwmValuesLock, [this] { return !(sizeQueue == 0); });
       std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
+      std::cout << "Here EXECUTDECISION LOOP STARTING AFTER WAIT" << std::endl;
       if (isRunningThrusterCommand) {
         if (!isCurrentCommandTimedPWM) {
           override();

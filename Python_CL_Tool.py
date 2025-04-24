@@ -161,7 +161,7 @@ class Thrust_Control:
         self.publishCommandDurationObject = PublisherPython()
         self.ros_thread = threading.Thread(target=self.spin_ros)
         self.ros_thread.start()
-        sleep(5)
+        sleep(3)
         self.publishCommandDurationObject.publish_manual_switch(True)
         sleep(3)
         print("Ready to input manual commands")
