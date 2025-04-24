@@ -49,7 +49,7 @@ public:
     currentPWMandDuration_ptr =
         std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
             zero_set_pair);
-            pwmValuesLock.unlock();
+    pwmValuesLock.unlock();
     // State file creation or appending
     fs::path currentPath = fs::current_path();
     fs::path stateFilePath = currentPath.parent_path().parent_path();
@@ -87,8 +87,8 @@ public:
     isManualEnabled = msg->data;
     if (isManualEnabled) {
       std::cout << "Manual Control Enabled" << std::endl;
-      
-        } else {
+
+    } else {
       std::cout << "Manual Control Disabled" << std::endl;
     }
     Change_Manual.notify_all();
@@ -239,68 +239,69 @@ public:
       std::cout << "User Interrupted Executive Loop" << std::endl;
       break;
     }*/
-    std::unique_lock<std::mutex> Manual_Lock(Manual_Mutex, std::defer_lock);
-    Change_Manual.wait(Manual_Lock, [this] {return isManualEnabled;});
-      if(isManualEnabled){
+      std::unique_lock<std::mutex> Manual_Lock(Manual_Mutex, std::defer_lock);
+      Change_Manual.wait(Manual_Lock, [this] { return isManualEnabled; });
+      if (isManualEnabled) {
         std::cout << "Manual Enabled" << std::endl;
-      if (isManualOverride) {
-        if(isRunningThrusterCommand){
-        std::cout<< "manual override" << std::endl;
-        override();
+        if (isManualOverride) {
+          if (isRunningThrusterCommand) {
+            std::cout << "manual override" << std::endl;
+            override();
+          }
         }
-      }
-      typeOfExecute = "blind_execute";
-      std::cout << "Getting the lock" << std::endl;
-      std::unique_lock<std::mutex> pwmValuesLock(Queue_pwm_mutex,
-                                                 std::defer_lock);
-      PWM_cond_change.wait(pwmValuesLock, [this] { return !(sizeQueue == 0); });
-      std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
-      std::cout << "Here EXECUTDECISION LOOP STARTING AFTER WAIT" << std::endl;
-      if (isRunningThrusterCommand) {
-        if (!isCurrentCommandTimedPWM) {
-          override();
-          std::cout << "executor decision is doing its job"  << std::endl;
+        typeOfExecute = "blind_execute";
+        std::cout << "Getting the lock" << std::endl;
+        std::unique_lock<std::mutex> QueuepwmValuesLock(Queue_pwm_mutex,
+                                                   std::defer_lock);
+        PWM_cond_change.wait(QueuepwmValuesLock,
+                             [this] { return !(sizeQueue == 0); });
+        std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
+        std::cout << "Here EXECUTDECISION LOOP STARTING AFTER WAIT"
+                  << std::endl;
+        if (isRunningThrusterCommand) {
+          if (!isCurrentCommandTimedPWM) {
+            override();
+            std::cout << "executor decision is doing its job" << std::endl;
+            if (ManualPWMQueue.front().second >=
+                std::chrono::milliseconds(99999999)) {
+              isCurrentCommandTimedPWM = false;
+            } else {
+              isCurrentCommandTimedPWM = true;
+            }
+            std::unique_lock<std::mutex> CurrentpwmValuesLock(
+                current_PWM_duration_mutex);
+            currentPWMandDuration_ptr = std::make_shared<
+                std::pair<pwm_array, std::chrono::milliseconds>>(
+                ManualPWMQueue.front());
+            CurrentpwmValuesLock.unlock();
+            std::cout << "2 executor decision is doing its job" << std::endl;
+            isRunningThrusterCommand = true;
+            ManualPWMQueue.pop();
+            thrusterCommandLock.unlock();
+            QueuepwmValuesLock.unlock();
+          }
+          // Add comment here below and above.
+        } else {
+          std::cout << "1 executor decision is doing its job" << std::endl;
           if (ManualPWMQueue.front().second >=
               std::chrono::milliseconds(99999999)) {
             isCurrentCommandTimedPWM = false;
           } else {
             isCurrentCommandTimedPWM = true;
           }
-          std::unique_lock<std::mutex> pwmValuesLock(
+          std::unique_lock<std::mutex> CurrentpwmValuesLock(
               current_PWM_duration_mutex);
           currentPWMandDuration_ptr =
               std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
                   ManualPWMQueue.front());
-                pwmValuesLock.unlock();
-                std::cout << "2 executor decision is doing its job"
-                          << std::endl;
-                isRunningThrusterCommand = true;
-                ManualPWMQueue.pop();
-                thrusterCommandLock.unlock();
-                pwmValuesLock.unlock();
+          CurrentpwmValuesLock.unlock();
+          std::cout << "3 executor decision is doing its job" << std::endl;
+          isRunningThrusterCommand = true;
+          ManualPWMQueue.pop();
+          thrusterCommandLock.unlock();
+          QueuepwmValuesLock.unlock();
         }
-        // Add comment here below and above.
-      } else {
-        std::cout << "1 executor decision is doing its job" << std::endl;
-        if (ManualPWMQueue.front().second >=
-            std::chrono::milliseconds(99999999)) {
-          isCurrentCommandTimedPWM = false;
-        } else {
-          isCurrentCommandTimedPWM = true;
-        }
-        std::unique_lock<std::mutex> pwmarrayValuesLock(current_PWM_duration_mutex);
-        currentPWMandDuration_ptr =
-            std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
-                ManualPWMQueue.front());
-                pwmarrayValuesLock.unlock();
-                std::cout << "3 executor decision is doing its job"
-                          << std::endl;
-                isRunningThrusterCommand = true;
-                ManualPWMQueue.pop();
-                thrusterCommandLock.unlock();
-                pwmValuesLock.unlock();
       }
-    }
     }
     // Need to see William's python code to move foward.
   }
@@ -418,7 +419,7 @@ private:
     currentPWMandDuration_ptr =
         std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
             zero_set_pair);
-            pwmValuesLock.unlock();
+    pwmValuesLock.unlock();
   }
 };
 
@@ -430,8 +431,10 @@ public:
         rclcpp::CallbackGroupType::MutuallyExclusive);
     callbackIMU = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
-    callbackClTool = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-    callbackManual = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+    callbackClTool =
+        this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+    callbackManual =
+        this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
     auto commandOptions = rclcpp::SubscriptionOptions();
     commandOptions.callback_group = callbackClTool;
@@ -470,13 +473,13 @@ public:
             std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
                       std::placeholders::_1),
             magOptions);
-    
-/*did_ins_subscription =
-this->create_subscription<sensor_msgs::msg::MagneticField>(
-    "mag", rclcpp::QoS(5),
-    std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
-              std::placeholders::_1),
-    magOptions);*/
+
+    /*did_ins_subscription =
+    this->create_subscription<sensor_msgs::msg::MagneticField>(
+        "mag", rclcpp::QoS(5),
+        std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
+                  std::placeholders::_1),
+        magOptions);*/
     CLTool_subscription_ =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "array_Cltool_topic", rclcpp::QoS(10),
