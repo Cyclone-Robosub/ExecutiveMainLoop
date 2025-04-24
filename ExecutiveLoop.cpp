@@ -418,10 +418,8 @@ public:
         rclcpp::CallbackGroupType::MutuallyExclusive);
     callbackIMU = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
-    callbackClTool =
-        this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-    callbackManual = this->create_callback_group(
-        rclcpp::CallbackGroupType::MutuallyExclusive);
+    callbackClTool = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+    callbackManual = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
     auto commandOptions = rclcpp::SubscriptionOptions();
     commandOptions.callback_group = callbackClTool;
