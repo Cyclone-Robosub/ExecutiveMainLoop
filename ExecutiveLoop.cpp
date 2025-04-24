@@ -26,7 +26,7 @@
 using namespace std::literals;
 namespace fs = std::filesystem;
 
-#define UPDATE_WAIT_TIME 3
+#define UPDATE_WAIT_TIME 5
 #define IMU_SENSOR_WAIT_TIME 2
 #define NULL_SENSOR_VALUE -320000
 #define FAULTY_SENSOR_VALUE -40404
@@ -88,9 +88,16 @@ public:
     isManualEnabled = msg->data;
     if (isManualEnabled) {
       std::cout << "Manual Control Enabled" << std::endl;
+      //need to add to here later.
 
     } else {
       std::cout << "Manual Control Disabled" << std::endl;
+      std::lock_guard<std::mutex> QueueLock(Queue_pwm_mutex);
+      std::queue<std::pair<pwm_array, std::chrono::milliseconds>> empty;
+      std::swap(ManualPWMQueue, empty);
+      std::cout << "Manual Command Current Override -> Deleted Queue"
+                << std::endl;
+      sizeQueue = 0;
     }
     Change_Manual.notify_all();
   }
