@@ -162,7 +162,6 @@ public:
     Queue_sync_lock.unlock();
     std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
     AllowDurationSync = false;
-    duration_lock.unlock();
   }
   /*
     void readInputs() {
@@ -214,7 +213,7 @@ public:
         stateFile << "],";
         // lock automatically releases when pwmValuesLock goes out of scope
       } else {
-        std::cerr << "Could not acquire lock on current_PWM_duration_mutex\n";
+        std::cout << "Could not acquire lock on current_PWM_duration_mutex\n";
       }
       stateFile << "\n";
       if (stateFile.tellp() > 200) {
@@ -249,6 +248,7 @@ public:
       if (isRunningThrusterCommand) {
         if (!isCurrentCommandTimedPWM) {
           override();
+          std::cout << "executor decision is doing its job"  << std::endl;
           if (ManualPWMQueue.front().second >=
               std::chrono::milliseconds(99999999)) {
             isCurrentCommandTimedPWM = false;
@@ -261,13 +261,16 @@ public:
               std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
                   ManualPWMQueue.front());
                 pwmValuesLock.unlock();
-          isRunningThrusterCommand = true;
-          ManualPWMQueue.pop();
-          thrusterCommandLock.unlock();
-          pwmValuesLock.unlock();
+                std::cout << "2 executor decision is doing its job"
+                          << std::endl;
+                isRunningThrusterCommand = true;
+                ManualPWMQueue.pop();
+                thrusterCommandLock.unlock();
+                pwmValuesLock.unlock();
         }
         // Add comment here below and above.
       } else {
+        std::cout << "1 executor decision is doing its job" << std::endl;
         if (ManualPWMQueue.front().second >=
             std::chrono::milliseconds(99999999)) {
           isCurrentCommandTimedPWM = false;
@@ -279,10 +282,12 @@ public:
             std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
                 ManualPWMQueue.front());
                 pwmarrayValuesLock.unlock();
-        isRunningThrusterCommand = true;
-        ManualPWMQueue.pop();
-        thrusterCommandLock.unlock();
-        pwmValuesLock.unlock();
+                std::cout << "3 executor decision is doing its job"
+                          << std::endl;
+                isRunningThrusterCommand = true;
+                ManualPWMQueue.pop();
+                thrusterCommandLock.unlock();
+                pwmValuesLock.unlock();
       }
     }
     }
@@ -298,6 +303,7 @@ public:
         CommandComponent commandComponent;
         // our_pwm_array.pwm_signals = inputPWM;
         if (isRunningThrusterCommand) {
+          std::cout << "Send Thruster Command is doing its job" << std::endl;
           std::unique_lock<std::mutex> statusThruster(thruster_mutex);
           commandComponent.thruster_pwms = currentPWMandDuration_ptr->first;
           // setup ROS topic for duration
