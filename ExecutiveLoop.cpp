@@ -319,9 +319,9 @@ public:
 
   // Sends Commands to Thruster Queue
   void sendThrusterCommand() {
+    std::ofstream logFilePins("PWM_LOGS.txt");
     while (loopIsRunning) {
       if (typeOfExecute == "blind_execute") {
-        std::ofstream logFilePins("PWM_LOGS.txt");
         CommandComponent commandComponent;
         // our_pwm_array.pwm_signals = inputPWM;
         if (isRunningThrusterCommand) {
