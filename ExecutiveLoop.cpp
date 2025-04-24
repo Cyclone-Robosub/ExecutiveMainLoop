@@ -471,12 +471,12 @@ public:
                       std::placeholders::_1),
             magOptions);
     
-did_ins_subscription =
+/*did_ins_subscription =
 this->create_subscription<sensor_msgs::msg::MagneticField>(
     "mag", rclcpp::QoS(5),
     std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
               std::placeholders::_1),
-    magOptions);
+    magOptions);*/
     CLTool_subscription_ =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "array_Cltool_topic", rclcpp::QoS(10),
