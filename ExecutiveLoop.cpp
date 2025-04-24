@@ -227,6 +227,7 @@ public:
   }
 
   void executeDecisionLoop() {
+
     while (loopIsRunning) {
       // Control Loop from Simulink
       /*if (userinput == "end") {
@@ -235,9 +236,12 @@ public:
       break;
     }*/
       if(isManualEnabled){
-        
+        std::cout << "Manual Enabled" << std::endl;
       if (isManualOverride) {
+        if(isRunningThrusterCommand){
+        std::cout<< "manual override" << std::endl;
         override();
+        }
       }
       typeOfExecute = "blind_execute";
       std::cout << "Getting the lock" << std::endl;
