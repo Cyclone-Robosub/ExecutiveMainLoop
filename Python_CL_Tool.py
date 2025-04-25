@@ -24,7 +24,7 @@ stop_set = [stop_pulse for i in range(8)]
 fwd_set = [stop_pulse for i in range(4)] + [fwd_pulse, rev_pulse, fwd_pulse, rev_pulse]
 crab_set = [stop_pulse for i in range(4)] + [fwd_pulse, fwd_pulse, rev_pulse, rev_pulse] 
 down_set =  [fwd_pulse, rev_pulse, fwd_pulse, rev_pulse] + [stop_pulse for i in range(4)]
-
+test_set = [1900, 1900, 1100, 1250, 1300, 1464, 1535, 1536]
 barrell = [fwd_pulse, fwd_pulse, fwd_pulse, fwd_pulse] + [stop_pulse for i in range(4)]
 summer = [rev_pulse, fwd_pulse, fwd_pulse, rev_pulse ] + [stop_pulse for i in range(4)]
 spin_set = [stop_pulse for i in range(4)] + [fwd_pulse for i in range(4)]
