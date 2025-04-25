@@ -42,7 +42,7 @@ public:
     std::cout << "Constructor Executive Loop" << std::endl;
     pwm_array zero_set_array;
     for (int i = 0; i < 8; i++) {
-      zero_set_array.pwm_signals[i] = 0;
+      zero_set_array.pwm_signals[i] = 1500;
     }
     std::pair<pwm_array, std::chrono::milliseconds> zero_set_pair(
         zero_set_array, std::chrono::milliseconds(99999999));
@@ -311,7 +311,7 @@ public:
           ManualPWMQueue.pop();
           sizeQueue--;
         }else{
-          
+
         }
       }
     }
