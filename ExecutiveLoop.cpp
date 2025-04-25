@@ -301,13 +301,17 @@ public:
           currentPWMandDuration_ptr =
               std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
                   ManualPWMQueue.front());
+          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
           isRunningThrusterCommand = true;
+          statusThruster.unlock();
           CurrentpwmValuesLock.unlock();
           std::cout << "3 executor decision: Gave New Command" << std::endl;
           //std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
           //thrusterCommandLock.unlock();
           ManualPWMQueue.pop();
           sizeQueue--;
+        }else{
+          
         }
       }
     }
