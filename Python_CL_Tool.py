@@ -176,7 +176,7 @@ class Thrust_Control:
         #while True:
            # publishCommandObject.publish_array(self.thrusters)
 
-    def override(self, durationMS = -1, pwm_set = stop_set,):
+    def override(self, durationMS = -1, pwm_set = stop_set):
         self.publishCommandDurationObject.publish_manual_override(True)
         self.publishCommandDurationObject.publish_array(pwm_set)
         self.publishCommandDurationObject.publish_duration(durationMS)

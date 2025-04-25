@@ -210,9 +210,9 @@ public:
       stateFile << getCurrentDateTime() << ",";
 
       //    std::cout << depth_msg << " updateStateLocation" << " \n";
-
+      stateFile << depth_pressure_msg;
       std::unique_lock<std::mutex> IMUlock(imu_mutex);
-      stateFile << depth_pressure_msg << ", IMU:";
+      stateFile << ", IMU:";
       stateFile << angular_velocity_x << "," << angular_velocity_y << ","
                 << angular_velocity_z << "," << linear_acceleration_x << ","
                 << linear_acceleration_y << "," << linear_acceleration_z << ",";
@@ -339,9 +339,6 @@ public:
           std::cout << "Finished Thruster Command" << std::endl;
           // Thruster_cond_change.notify_all();
           // completed
-          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
-          isRunningThrusterCommand = false;
-          statusThruster.unlock();
         }
       }
     }
@@ -439,6 +436,7 @@ private:
           std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
               zero_set_pair);
       isCurrentCommandTimedPWM = false;
+      isRunningThrusterCommand = false;
       pwmValuesLock.unlock();
     }
   }
