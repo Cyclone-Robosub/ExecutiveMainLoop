@@ -215,7 +215,7 @@ class Thrust_Control:
     def scaled_pwm(self, pwm_set, scale):
         
         
-        new_pwm = [ scale * (i - stop_pulse) + stop_pulse for i in pwm_set]
+        new_pwm = [ int(scale * (i - stop_pulse) + stop_pulse) for i in pwm_set]
         
         #if scale < 0:
         #    signs = [-1 * new_pwm[i] / abs(new_pwm[i]) for i in range(len(new_pwm))]
