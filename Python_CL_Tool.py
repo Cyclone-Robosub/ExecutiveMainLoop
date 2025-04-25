@@ -10,9 +10,9 @@ from std_msgs.msg import Bool
 from std_msgs.msg import Int64
 import threading
 
-rev_pulse = 1100 * 1000
-stop_pulse = 1500 * 1000
-fwd_pulse_raw = 1900 * 1000 # dont use this one, it's output can't be replicated in reverse
+rev_pulse = 1100 * 1
+stop_pulse = 1500 * 1
+fwd_pulse_raw = 1900 * 1 # dont use this one, it's output can't be replicated in reverse
 rev_adj = 1 # thrusters are more powerful in fwd direction
 fwd_pulse = int(fwd_pulse_raw * rev_adj)
 frequency = 10
