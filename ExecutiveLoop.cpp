@@ -43,6 +43,7 @@ public:
 
     //Setting a stop set in the beginnning of startup -> needs to be better.
     //remove thte lock perhaps is a start.
+    /*
     pwm_array zero_set_array;
     for (int i = 0; i < 8; i++) {
       zero_set_array.pwm_signals[i] = 1500;
@@ -53,7 +54,7 @@ public:
     currentPWMandDuration_ptr =
         std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
             zero_set_pair);
-    pwmValuesLock.unlock();
+    pwmValuesLock.unlock();*/
 
 
     // State file creation or appending
@@ -171,6 +172,7 @@ public:
     std::cout << "Getting duration" << std::endl;
     auto duration_int_pwm = msg->data;
     std::chrono::milliseconds durationMS;
+    bool isgivenTimed = false;
     // duration_int_pwm = std::stoi(duration_pwm);
     switch (duration_int_pwm) {
     case -1:
@@ -181,11 +183,21 @@ public:
     default:
     //TIMED PWM
       durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
+      isgivenTimed = true;
       std::cout << durationMS << std::endl;
       break;
     }
     std::unique_lock<std::mutex> Queue_sync_lock(Queue_pwm_mutex);
     ManualPWMQueue.push(std::make_pair(given_array, durationMS));
+    if(isgivenTimed){
+      pwm_array stop_set_array;
+      for (int i = 0; i < 8; i++) {
+        stop_set_array.pwm_signals[i] = 1500;
+      }
+      std::pair<pwm_array, std::chrono::milliseconds> stop_set_pair(
+          stop_set_array, std::chrono::milliseconds(99999999));
+      ManualPWMQueue.push(stop_set_pair);
+    }
     sizeQueue++;
     AllowDurationSync = false;
     PWM_cond_change.notify_all();
@@ -262,6 +274,7 @@ public:
 
       //CHECK CL-TOOL IS CONTROLLING
       if (isManualEnabled) {
+        Manual_Lock.unlock();
      //   std::cout << "Manual Enabled" << std::endl;
         //if typed in CL-Tool was tcs.override()
         if (isManualOverride) {
@@ -351,8 +364,8 @@ public:
           commandComponent.duration = currentPWMandDuration_ptr->second;
           CurrentpwmValuesLock.unlock();
           commandInterpreter_ptr->blind_execute(commandComponent, logFilePins);
-
           std::cout << "Finished Thruster Command\n" << std::endl;
+
           std::unique_lock<std::mutex> statusThruster(thruster_mutex);
           isRunningThrusterCommand = false;
           statusThruster.unlock();
