@@ -40,6 +40,9 @@ public:
   // of the loop starts stage by stage with no wait.
   ExecutiveLoop() : Node("executive_main_node") {
     std::cout << "Constructor Executive Loop" << std::endl;
+
+    //Setting a stop set in the beginnning of startup -> needs to be better.
+    //remove thte lock perhaps is a start.
     pwm_array zero_set_array;
     for (int i = 0; i < 8; i++) {
       zero_set_array.pwm_signals[i] = 1500;
@@ -51,6 +54,8 @@ public:
         std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
             zero_set_pair);
     pwmValuesLock.unlock();
+
+
     // State file creation or appending
     fs::path currentPath = fs::current_path();
     fs::path stateFilePath = currentPath.parent_path().parent_path();
@@ -77,12 +82,15 @@ public:
       thrusterPins.push_back(new HardwarePwmPin(i));
       // digitalPins.push_back(new DigitalPin(5, ActiveLow));
     }
+
+    //Setup the Command Interpreter's pins with the physical pins.
     commandInterpreter_ptr = std::make_unique<Command_Interpreter_RPi5>(
         thrusterPins, std::vector<DigitalPin *>{});
     commandInterpreter_ptr->initializePins();
-    commandInterpreter_ptr->readPins();
+   // commandInterpreter_ptr->readPins();
   }
-  // these callback functions serve as the "read Input node in the loop
+  // these callback functions serve as the "read Input node in the loop"
+  //Feel free to later push these into the Sensors Class, but make sure ExecutiveLoop can still access through memory its needed fields.
 
   void ManualControlCallback(const std_msgs::msg::Bool::SharedPtr msg) {
     std::unique_lock<std::mutex> Manual_Lock(Manual_Mutex);
@@ -136,6 +144,8 @@ public:
     mag_field_y = msg.magnetic_field.y;
     mag_field_z = msg.magnetic_field.z;
   }
+
+  //First get the PWM Array. Then Allow the duration callback to execute and pair the array with the duration. Then push it onto the queue for ExecuteDecision. Notify every time we allow either Duration or Execute to use the queue for chain of execution. 
   void PWMArrayCallback(const std_msgs::msg::Int32MultiArray::SharedPtr msg) {
     std::cout << "Received Int32MultiArray: ";
     int i = 0;
@@ -164,10 +174,12 @@ public:
     // duration_int_pwm = std::stoi(duration_pwm);
     switch (duration_int_pwm) {
     case -1:
+    //PWM
       durationMS = std::chrono::milliseconds(9999999999);
       std::cout << durationMS << std::endl;
       break;
     default:
+    //TIMED PWM
       durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
       std::cout << durationMS << std::endl;
       break;
@@ -199,7 +211,6 @@ public:
       }
     }
   */
-  // get a notification here
   void updateState() {
     std::cout << "UpdateState" << std::endl;
     while (loopIsRunning) {
@@ -248,9 +259,13 @@ public:
       // test these two lines of code
       std::unique_lock<std::mutex> Manual_Lock(Manual_Mutex);
       // Change_Manual.wait(Manual_Lock, [this] { return isManualEnabled; });
+
+      //CHECK CL-TOOL IS CONTROLLING
       if (isManualEnabled) {
      //   std::cout << "Manual Enabled" << std::endl;
+        //if typed in CL-Tool was tcs.override()
         if (isManualOverride) {
+          //if the sendThrusterCommand is currently running or has a task.
           if (isRunningThrusterCommand) {
             std::cout << "manual override" << std::endl;
             override();
@@ -319,7 +334,7 @@ public:
   }
   // if all decisions/tasks are done, make tasksCompleted true;
 
-  // Sends Commands to Thruster Queue
+  // Sends Commands to Thrusters with CommandInterpreter
   void sendThrusterCommand() {
     std::ofstream logFilePins("PWM_LOGS.txt");
     while (loopIsRunning) {
@@ -337,12 +352,15 @@ public:
           commandInterpreter_ptr->blind_execute(commandComponent, logFilePins);
 
           std::cout << "Finished Thruster Command" << std::endl;
+          std::unique_lock<std::mutex> statusThruster(thruster_mutex);
+          isRunningThrusterCommand = false;
+          statusThruster.unlock();
           // Thruster_cond_change.notify_all();
           // completed
         }
       }
     }
-    // send it back to William's code.
+    
   }
 
   bool returnStatus() { return loopIsRunning; }
@@ -363,6 +381,7 @@ public:
   }*/
 
 private:
+  //NOTE: there are going to be a lot of unused variables, please remove in the future.
   bool isManualEnabled = false;
   bool isManualOverride = false;
   bool isRunningThrusterCommand = false;
@@ -422,6 +441,7 @@ private:
     strftime(buffer, sizeof(buffer), "%H:%M:%S", localTime);
     return std::string(buffer);
   }
+  //If a task is currently running, stop this task and set a zero pair to clear everything. Execute Decision Loop should then be able to decide what to do next.
   void override() {
     if (isRunningThrusterCommand) {
       commandInterpreter_ptr->interruptBlind_Execute();
@@ -493,12 +513,13 @@ public:
                       std::placeholders::_1),
             magOptions);
 
+              //Please implement Kory's data as soon as possible
     /*did_ins_subscription =
     this->create_subscription<sensor_msgs::msg::MagneticField>(
         "mag", rclcpp::QoS(5),
-        std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
+        std::bind(&ExecutiveLoop::, mainLoopObject,
                   std::placeholders::_1),
-        magOptions);*/
+        did_ins_Options);*/
     CLTool_subscription_ =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "array_Cltool_topic", rclcpp::QoS(10),
@@ -560,8 +581,8 @@ int main(int argc, char *argv[]) {
   // system.
 
   // std::jthread ReadInputsThread(&ExecutiveLoop::ReadInputs,
-  // mainLoopObject); Creates a new thread for each node. Need to check if it
-  // does
+  // mainLoopObject); 
+  // Creates a new thread for each function.
 
   std::jthread UpdateStateThread(&ExecutiveLoop::updateState, mainLoopObject);
 
