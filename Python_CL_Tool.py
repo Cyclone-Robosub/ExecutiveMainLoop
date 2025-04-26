@@ -187,7 +187,9 @@ class Thrust_Control:
         rclpy.shutdown()
     def spin_ros(self):
         rclpy.spin(self.publishCommandDurationObject)
-    def pwm(self, pwm_set):
+    def pwm(self, pwm_set, scale = 1):
+        if scale != 1:
+            pwm_set = self.scaled_pwm(pwm_set, scale)
         if (len(pwm_set) != len(self.thrusters)):
             print("Wrong length for pwm set\n")
             return

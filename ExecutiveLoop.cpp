@@ -36,9 +36,7 @@ namespace fs = std::filesystem;
 class ExecutiveLoop : public rclcpp::Node {
 public:
   // Setup for all the functions should be done here.
-  // Maybe we could code each function to setup on its own.
-  // The functions run assuming that the inital first iteration
-  // of the loop starts stage by stage with no wait.
+  // Setup everything so that when the threads startup, it can run its tasks.
   ExecutiveLoop() : Node("executive_main_node") {
     std::cout << "Constructor Executive Loop" << std::endl;
 
