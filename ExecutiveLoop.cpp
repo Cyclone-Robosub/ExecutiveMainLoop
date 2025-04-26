@@ -234,17 +234,17 @@ public:
       //    std::cout << depth_msg << " updateStateLocation" << " \n";
       stateFile << depth_pressure_msg;
       std::unique_lock<std::mutex> IMUlock(imu_mutex);
-      stateFile << ", IMU:";
-      stateFile << angular_velocity_x << "," << angular_velocity_y << ","
-                << angular_velocity_z << "," << linear_acceleration_x << ","
-                << linear_acceleration_y << "," << linear_acceleration_z << ",";
+      stateFile << " ";
+      stateFile << angular_velocity_x << ", " << angular_velocity_y << ", "
+                << angular_velocity_z << ", " << linear_acceleration_x << ", "
+                << linear_acceleration_y << ", " << linear_acceleration_z << ", ";
       IMUlock.unlock();
-      stateFile << mag_field_x << "," << mag_field_y << "," << mag_field_z
+      stateFile << mag_field_x << ", " << mag_field_y << ", " << mag_field_z
                 << ", PWM :[";
 
       std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
       for (auto i : currentPWMandDuration_ptr->first.pwm_signals) {
-        stateFile << i << ",";
+        stateFile << i << ", ";
       }
       stateFile << "],";
       pwmValuesLock.unlock();
