@@ -269,6 +269,7 @@ public:
           if (isRunningThrusterCommand) {
             std::cout << "manual override" << std::endl;
             override();
+            isManualOverride = false;
           }
         }
         typeOfExecute = "blind_execute";
@@ -342,7 +343,7 @@ public:
         CommandComponent commandComponent;
         // our_pwm_array.pwm_signals = inputPWM;
         if (isRunningThrusterCommand) {
-          std::cout << "Send Thruster Command is doing its job\n" << std::endl;
+          std::cout << "Send Thruster Command is doing its job" << std::endl;
           std::unique_lock<std::mutex> CurrentpwmValuesLock(
               current_PWM_duration_mutex);
           commandComponent.thruster_pwms = currentPWMandDuration_ptr->first;
@@ -351,7 +352,7 @@ public:
           CurrentpwmValuesLock.unlock();
           commandInterpreter_ptr->blind_execute(commandComponent, logFilePins);
 
-          std::cout << "Finished Thruster Command" << std::endl;
+          std::cout << "Finished Thruster Command\n" << std::endl;
           std::unique_lock<std::mutex> statusThruster(thruster_mutex);
           isRunningThrusterCommand = false;
           statusThruster.unlock();
