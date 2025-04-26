@@ -231,10 +231,10 @@ class Thrust_Control:
         #self.pwm(stop_set)
         self.publishCommandDurationObject.publish_array(pwm_set)
         self.publishCommandDurationObject.publish_duration(time_s)
-        sleep(time_s - (time_s / 2))
+       # sleep(time_s - (time_s / 2))
         #needs to stop at some point
-        self.publishCommandDurationObject.publish_array(stop_set)
-        self.publishCommandDurationObject.publish_duration(-1)
+       # self.publishCommandDurationObject.publish_array(stop_set)
+        #self.publishCommandDurationObject.publish_duration(-1)
         
     def read(self):
         logf = open(pwm_file, "r")
