@@ -74,7 +74,7 @@ public:
     tasksCompleted = false;
 
     // Setup Pins
-    auto PhysicalPins = std::vector<int>{4, 5, 2, 3, 9, 7, 8, 6};
+    auto PhysicalPins = std::vector<int>{2, 3, 4, 5, 6, 7, 8, 9};
     for (auto i : PhysicalPins) {
       thrusterPins.push_back(new HardwarePwmPin(i));
       // digitalPins.push_back(new DigitalPin(5, ActiveLow));
