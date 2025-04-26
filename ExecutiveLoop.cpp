@@ -1,3 +1,4 @@
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <filesystem>
@@ -42,8 +43,6 @@ public:
     std::cout << "Constructor Executive Loop" << std::endl;
 
     //Setting a stop set in the beginnning of startup -> needs to be better.
-    //remove thte lock perhaps is a start.
-    /*
     pwm_array zero_set_array;
     for (int i = 0; i < 8; i++) {
       zero_set_array.pwm_signals[i] = 1500;
@@ -54,8 +53,7 @@ public:
     currentPWMandDuration_ptr =
         std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
             zero_set_pair);
-    pwmValuesLock.unlock();*/
-
+    pwmValuesLock.unlock();
 
     // State file creation or appending
     fs::path currentPath = fs::current_path();
@@ -99,7 +97,6 @@ public:
     if (isManualEnabled) {
       std::cout << "Manual Control Enabled" << std::endl;
       // need to add to here later.
-
     } else {
       std::cout << "Manual Control Disabled" << std::endl;
       std::lock_guard<std::mutex> QueueLock(Queue_pwm_mutex);
@@ -111,7 +108,9 @@ public:
     }
     Change_Manual.notify_all();
   }
+  //This should only clear the queue
   void ManualOverrideCallback(const std_msgs::msg::Bool::SharedPtr msg) {
+    std::unique_lock<std::mutex> Manual_Lock(Manual_Override_mutex);
     isManualOverride = msg->data;
     if (isManualOverride) {
       std::lock_guard<std::mutex> QueueLock(Queue_pwm_mutex);
@@ -274,14 +273,16 @@ public:
 
       //CHECK CL-TOOL IS CONTROLLING
       if (isManualEnabled) {
-        Manual_Lock.unlock();
+      //  Manual_Lock.unlock();
      //   std::cout << "Manual Enabled" << std::endl;
         //if typed in CL-Tool was tcs.override()
         if (isManualOverride) {
+          std::unique_lock<std::mutex> Manual_Override_Lock(Manual_Override_mutex);
           //if the sendThrusterCommand is currently running or has a task.
           if (isRunningThrusterCommand) {
             std::cout << "manual override" << std::endl;
             override();
+            //override was successful; revert back.
             isManualOverride = false;
           }
         }
@@ -293,6 +294,7 @@ public:
         PWM_cond_change.wait(QueuepwmValuesLock,
                              [this] { return !(sizeQueue == 0); });
         //std::cout << "Something is in the queue." << std::endl;
+        //Make sure isCurrnetCommandTimedPWM is only changed by Executive DecisionLoop or else put a mutex on it.
         if (!isCurrentCommandTimedPWM) {
           override();
           std::cout << "executor decision Override" << std::endl;
@@ -318,7 +320,6 @@ public:
         // Add comment here below and above.
         else if (!isRunningThrusterCommand) {
           std::cout << "2 Executor Decision: Needs a Command" << std::endl;
-
           if (ManualPWMQueue.front().second >=
               std::chrono::milliseconds(9999999)) {
             isCurrentCommandTimedPWM = false;
@@ -424,6 +425,8 @@ private:
   std::queue<std::pair<pwm_array, std::chrono::milliseconds>> ManualPWMQueue;
 
   pwm_array given_array;
+
+  //The current PWM and duration ptr will and should always have a value regardless of what Executive DecisionLoop or Send Thrusters want. However, SendThrusters can "finish" a current PWM and duration and will say that it wants a new command, but it can be the same current PWM if ExecutiveDecision decides so. Executive Decision (on its own thread) will see that SendThrusters is not running a command and give it a new current PWM. This is made so that Executive Decision has the chance to give PWM a new Command if the current one is a timedPWM.
   std::shared_ptr<std::pair<pwm_array, std::chrono::milliseconds>>
       currentPWMandDuration_ptr;
   // bool isQueuePWMEmpty = true;
@@ -432,6 +435,7 @@ private:
   std::mutex Queue_pwm_mutex;
   std::mutex imu_mutex;
   std::mutex ThrusterCommand_mutex;
+  std::mutex Manual_Override_mutex;
   std::mutex current_PWM_duration_mutex;
   std::condition_variable SendToDuration_change;
   std::condition_variable PWM_cond_change;
@@ -458,7 +462,9 @@ private:
   //If a task is currently running, stop this task and set a zero pair to clear everything. Execute Decision Loop should then be able to decide what to do next.
   void override() {
     if (isRunningThrusterCommand) {
+      //May have to have a mutex for this ptr.
       commandInterpreter_ptr->interruptBlind_Execute();
+
       pwm_array zero_set_array;
       for (int i = 0; i < 8; i++) {
         zero_set_array.pwm_signals[i] = 0;
@@ -469,9 +475,10 @@ private:
       currentPWMandDuration_ptr =
           std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
               zero_set_pair);
-      isCurrentCommandTimedPWM = false;
-      isRunningThrusterCommand = false;
       pwmValuesLock.unlock();
+      isCurrentCommandTimedPWM = false;
+      std::lock_guard<std::mutex> statusThrusterLock(thruster_mutex);
+      isRunningThrusterCommand = false;
     }
   }
 };
