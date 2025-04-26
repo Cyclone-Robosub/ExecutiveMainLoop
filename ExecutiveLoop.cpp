@@ -186,6 +186,7 @@ public:
     }
     std::unique_lock<std::mutex> Queue_sync_lock(Queue_pwm_mutex);
     ManualPWMQueue.push(std::make_pair(given_array, durationMS));
+    sizeQueue++;
     if(isgivenTimed){
       pwm_array stop_set_array;
       for (int i = 0; i < 8; i++) {
@@ -194,8 +195,8 @@ public:
       std::pair<pwm_array, std::chrono::milliseconds> stop_set_pair(
           stop_set_array, std::chrono::milliseconds(99999999));
       ManualPWMQueue.push(stop_set_pair);
+      sizeQueue++;
     }
-    sizeQueue++;
     AllowDurationSync = false;
     PWM_cond_change.notify_all();
     std::cout << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
