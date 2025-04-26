@@ -1,3 +1,4 @@
+#pragma once
 #include <yaml-cpp/yaml.h>
 
 #include <chrono>
@@ -10,7 +11,7 @@
 #include <thread>
 #include <utility>
 
-#include "Command_Interpreter.h"
+#include "lib/Executive_Propulsion/lib/Command_Interpreter.h"
 #include "SetupConfig/SetupRobot.cpp"
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
@@ -199,6 +200,16 @@ class ExecutiveLoop : public rclcpp::Node {
       //shutdown opreations
     }
   }*/
+    float getAngularVelocityX() const { return angular_velocity_x; }
+    float getAngularVelocityY() const { return angular_velocity_y; }
+    float getAngularVelocityZ() const { return angular_velocity_z; }
+    float getLinearAccelerationX() const { return linear_acceleration_x; }
+    float getLinearAccelerationY() const { return linear_acceleration_y; }
+    float getLinearAccelerationZ() const { return linear_acceleration_z; }
+    float getMagFieldX() const {return mag_field_x;}
+    float getMagFieldY() const {return mag_field_y;}
+    float getMagFieldZ() const {return mag_field_z;}
+    std::string getDepth() const {return depth_msg;}
 
  private:
   rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
@@ -240,119 +251,3 @@ class ExecutiveLoop : public rclcpp::Node {
     return std::string(buffer);
   }
 };
-
-class SensorsData : public rclcpp::Node {
- public:
-  SensorsData(std::shared_ptr<ExecutiveLoop> mainLoopObject)
-      : Node("sensorsNode") {
-    callbackDepth = this->create_callback_group(
-        rclcpp::CallbackGroupType::MutuallyExclusive);
-    callbackIMU = this->create_callback_group(
-        rclcpp::CallbackGroupType::MutuallyExclusive);
-
-    auto commandOptions = rclcpp::SubscriptionOptions();
-    commandOptions.callback_group = callbackDepth;
-    auto depthOptions = rclcpp::SubscriptionOptions();
-    depthOptions.callback_group = callbackDepth;
-    auto imuOptions = rclcpp::SubscriptionOptions();
-    imuOptions.callback_group = callbackIMU;
-    std::cout << "Creating sensors subscriptions\n";
-    auto magOptions = rclcpp::SubscriptionOptions();
-    magOptions.callback_group = callbackIMU;
-
-    depth_sensor_subscription_ =
-        this->create_subscription<std_msgs::msg::String>(
-            "depthSensorData", rclcpp::QoS(5),
-            std::bind(&ExecutiveLoop::depthSensorCallback, mainLoopObject,
-                      std::placeholders::_1),
-            depthOptions);
-
-    // Priority
-    // Need to input IMU initialization with ROS.
-
-    imu_subscription_ = this->create_subscription<sensor_msgs::msg::Imu>(
-        "imu", rclcpp::QoS(5),
-        std::bind(&ExecutiveLoop::imuSensorCallback, mainLoopObject,
-                  std::placeholders::_1),
-        imuOptions);
-    mag_subscription_ =
-        this->create_subscription<sensor_msgs::msg::MagneticField>(
-            "magtopic", rclcpp::QoS(5),
-            std::bind(&ExecutiveLoop::magCallback, mainLoopObject,
-                      std::placeholders::_1),
-            magOptions);
-    pythonCltool_subscription =
-        this->create_subscription<std_msgs::msg::Int32MultiArray>(
-            "python_cltool_topic", 10,
-            std::bind(&ExecutiveLoop::pythonCltoolCallback, mainLoopObject,
-                      std::placeholders::_1),
-            commandOptions);
-  }
-
- private:
-  rclcpp::CallbackGroup::SharedPtr callbackDepth;
-  rclcpp::CallbackGroup::SharedPtr callbackIMU;
-  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr
-      depth_sensor_subscription_;
-  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription_;
-  rclcpp::Subscription<sensor_msgs::msg::MagneticField>::SharedPtr
-      mag_subscription_;
-  rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
-      pythonCltool_subscription;
-};
-
-#ifndef TESTING_EXCLUDE_MAIN
-int main(int argc, char *argv[]) {
-  // setup performance and time benchmarks.
-  //  setup Robot during initialization.
-  rclcpp::init(argc, argv);
-  SetupRobot initStateandConfig = SetupRobot();
-  // ExecutiveLoop Think about object by reference or value passing
-  std::cout << "Executive Main Loop Object Creation" << std::endl;
-  std::shared_ptr<ExecutiveLoop> mainLoopObject =
-      std::make_shared<ExecutiveLoop>();
-  std::shared_ptr<SensorsData> sensorsROScallback =
-      std::make_shared<SensorsData>(mainLoopObject);
-  // ExecutiveLoop mainLoopObject = ExecutiveLoop(argc, argv);
-  // records false if run has not completed yet.
-  bool runStatus = false;
-  // these threads functions will have loops that go on for ever
-  // these functions will have wait functions just in case with a queue
-  // system.
-
-  // std::jthread ReadInputsThread(&ExecutiveLoop::ReadInputs,
-  // mainLoopObject); Creates a new thread for each node. Need to check if it
-  // does
-
-  std::jthread UpdateStateThread(&ExecutiveLoop::updateState, mainLoopObject);
-
-  std::jthread ExecutiveDecisionLoopThread(&ExecutiveLoop::executeDecisionLoop,
-                                           mainLoopObject);
-  // Note: We can join these two threads above and bottom if Raspberry PI
-  // really does not like multithreading.
-  // This is now the case ^.
-  // std::jthread
-  // SendThrusterCommandsThread(&ExecutiveLoop::sendThrusterCommands,
-  // mainLoopObject);
-  std::cout << "User defined threads has ran sucessfully" << std::endl;
-
-  rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
-  // auto sensorNode = std::make_shared<SensorsData>(sensorsROScallback);
-
-  SensorsExecutor.add_node(sensorsROScallback);
-  // SensorsExecutor.add_node(mainLoopObject);
-  std::cout << "ROS2 runnning" << std::endl;
-  SensorsExecutor.spin();
-  std::cout << "ROS2 runnning" << std::endl;
-
-  rclcpp::shutdown();
-  std::cout << "ROS2 exited." << std::endl;
-  /*
-    ReadInputsThread.join();
-    UpdateStateThread.join();
-    ExecutiveDecisionLoopThread.join();
-    SendThrusterCommandsThread.join();*/
-
-  return 0;
-}
-#endif  // TESTING_EXCLUDE_MAIN
