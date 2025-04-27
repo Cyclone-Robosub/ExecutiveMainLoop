@@ -2,18 +2,26 @@
 # Change directory to src
 # Build the package
 # Source ROS setup files
+cd ../
 source /opt/ros/jazzy/setup.bash
 
-cd ../ros2_ws/src 
+cd ros2_ws/src 
 colcon build &
 . install/setup.bash
 cd ../../
 
-source install/setup.bash # in order to source it for the executive build
-colcon build --cmake-args -DCMAKE_BUILD_TYPE=Debug &
+cd lib/Research/src
+colcon build &
+cd ../
+chmod +x startuppy.sh &
+cd ../../
 
-chmod +x build.sh 
+source install/setup.bash # in order to source it for the executive build
+colcon build --cmake-args -DMOCK_RPI=OFF &
+
+cd scripts
 chmod +x startup.sh
+cd ../
 
 
 
