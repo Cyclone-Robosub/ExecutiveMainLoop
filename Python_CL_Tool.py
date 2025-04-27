@@ -6,11 +6,13 @@ from std_msgs.msg import Int32MultiArray
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+from std_msgs.msg import Bool
+from std_msgs.msg import Int64
 import threading
 
-rev_pulse = 1100 * 1000
-stop_pulse = 1500 * 1000
-fwd_pulse_raw = 1900 * 1000 # dont use this one, it's output can't be replicated in reverse
+rev_pulse = 1100 * 1
+stop_pulse = 1500 * 1
+fwd_pulse_raw = 1900 * 1 # dont use this one, it's output can't be replicated in reverse
 rev_adj = 1 # thrusters are more powerful in fwd direction
 fwd_pulse = int(fwd_pulse_raw * rev_adj)
 frequency = 10
@@ -22,7 +24,7 @@ stop_set = [stop_pulse for i in range(8)]
 fwd_set = [stop_pulse for i in range(4)] + [fwd_pulse, rev_pulse, fwd_pulse, rev_pulse]
 crab_set = [stop_pulse for i in range(4)] + [fwd_pulse, fwd_pulse, rev_pulse, rev_pulse] 
 down_set =  [fwd_pulse, rev_pulse, fwd_pulse, rev_pulse] + [stop_pulse for i in range(4)]
-
+test_set = [1900, 1900, 1100, 1250, 1300, 1464, 1535, 1536]
 barrell = [fwd_pulse, fwd_pulse, fwd_pulse, fwd_pulse] + [stop_pulse for i in range(4)]
 summer = [rev_pulse, fwd_pulse, fwd_pulse, rev_pulse ] + [stop_pulse for i in range(4)]
 spin_set = [stop_pulse for i in range(4)] + [fwd_pulse for i in range(4)]
@@ -33,11 +35,31 @@ torpedo = [fwd_pulse, fwd_pulse, fwd_pulse, fwd_pulse] + [fwd_pulse, rev_pulse, 
 class PublisherPython(Node):
     def __init__(self):
         super().__init__('python_cltool_node')
-        self.commandPublisher = self.create_publisher(Int32MultiArray,'python_Manual_cltool_topic', 10)
+        self.commandPublisher = self.create_publisher(Int32MultiArray,'array_Cltool_topic', 10)
+        self.durationPublisher = self.create_publisher(Int64, 'duration_Cltool_topic', 10)
+        self.ManualToggleSwitch = self.create_publisher(Bool, 'manual_toggle_switch', 3)
+        self.ManualOverride = self.create_publisher(Bool,
+        'manualOverride', 4)
+
     def publish_array(self, pwm_array):
         msg = Int32MultiArray()
         msg.data = pwm_array
         self.commandPublisher.publish(msg)
+        print(msg.data)
+    def publish_duration(self, durationSec):
+        msg = Int64()
+        msg.data = durationSec
+        self.durationPublisher.publish(msg)
+        print(msg.data)
+    def publish_manual_switch(self, isManualEnabled):
+        msg = Bool()
+        msg.data = isManualEnabled
+        self.ManualToggleSwitch.publish(msg)
+      #  print(msg.data)
+    def publish_manual_override(self, isMistakeMade):
+        msg = Bool()
+        msg.data = isMistakeMade
+        self.ManualOverride.publish(msg)
         print(msg.data)
         
 class Plant:
@@ -135,11 +157,14 @@ class Thrust_Control:
             20,
             19,
             21]
-        self.publishCommandObject = PublisherPython()
+        self.publishCommandDurationObject = PublisherPython()
         self.ros_thread = threading.Thread(target=self.spin_ros)
         self.ros_thread.start()
+        print("Switching onto manual control...")
+        sleep(4)
+        self.publishCommandDurationObject.publish_manual_switch(True)
         print("Ready to input manual commands")
-        print("Please type tcs.exitCLTool() to safely exit manual control.")
+        print("Please type tcs.exitCLTool() to safely exit manual control.\n")
        #self.testSendArray(self.publishCommandObject)
         
         # Set default frequency and duty cycle
@@ -150,14 +175,22 @@ class Thrust_Control:
    # def testSendArray(self, publishCommandObject):
         #while True:
            # publishCommandObject.publish_array(self.thrusters)
+
+    def override(self, durationMS = -1, pwm_set = stop_set):
+        self.publishCommandDurationObject.publish_manual_override(True)
+        sleep(0.2)
+        self.publishCommandDurationObject.publish_array(pwm_set)
+        self.publishCommandDurationObject.publish_duration(durationMS)
     #TODO: Write auto control and exception handling.
     def exitCLTool(self):
-        print("Shutting down CL Tool")
+        print("Shutting down CL Tool and Manual Control")
+        self.publishCommandDurationObject.publish_manual_switch(False)
         rclpy.shutdown()
     def spin_ros(self):
-        rclpy.spin(self.publishCommandObject)
-    def pwm(self, pwm_set):
-        
+        rclpy.spin(self.publishCommandDurationObject)
+    def pwm(self, pwm_set, scale = 1):
+        if scale != 1:
+            pwm_set = self.scaled_pwm(pwm_set, scale)
         if (len(pwm_set) != len(self.thrusters)):
             print("Wrong length for pwm set\n")
             return
@@ -173,7 +206,8 @@ class Thrust_Control:
         # Assuming you have a PWM control library, you would set the duty cycle here
         # For example: self.thrusters[i].duty_ns(pwm_set[i])
         end = str(time.time_ns())
-        self.publishCommandObject.publish_array(pwm_set)
+        self.publishCommandDurationObject.publish_array(pwm_set)
+        self.publishCommandDurationObject.publish_duration(-1)
       #  string = start + "," + end + "," + ",".join(map(str, pwm_set)) + "\n"
       #  f.write(string)
       #  print(string)
@@ -184,7 +218,7 @@ class Thrust_Control:
     def scaled_pwm(self, pwm_set, scale):
         
         
-        new_pwm = [ scale * (i - stop_pulse) + stop_pulse for i in pwm_set]
+        new_pwm = [ int(scale * (i - stop_pulse) + stop_pulse) for i in pwm_set]
         
         #if scale < 0:
         #    signs = [-1 * new_pwm[i] / abs(new_pwm[i]) for i in range(len(new_pwm))]
@@ -195,12 +229,15 @@ class Thrust_Control:
     def timed_pwm(self, time_s, pwm_set, scale = 1):
         if scale != 1:
             pwm_set = self.scaled_pwm(pwm_set, scale)
-        print("Waiting for timer to complete....")
         #with ROS2 send pwm_set array values to a publishing topic.  
-        time.sleep(time_s)
         print("Executing timed_pwm function...")
         #self.pwm(stop_set)
-        self.publishCommandObject.publish_array(pwm_set)
+        self.publishCommandDurationObject.publish_array(pwm_set)
+        self.publishCommandDurationObject.publish_duration(time_s)
+       # sleep(time_s - (time_s / 2))
+        #needs to stop at some point
+       # self.publishCommandDurationObject.publish_array(stop_set)
+        #self.publishCommandDurationObject.publish_duration(-1)
         
     def read(self):
         logf = open(pwm_file, "r")
