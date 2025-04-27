@@ -275,8 +275,8 @@ public:
       //  Manual_Lock.unlock();
      //   std::cout << "Manual Enabled" << std::endl;
         //if typed in CL-Tool was tcs.override()
+      std::unique_lock<std::mutex> Manual_Override_Lock(Manual_Override_mutex);
         if (isManualOverride) {
-          std::unique_lock<std::mutex> Manual_Override_Lock(Manual_Override_mutex);
           //if the sendThrusterCommand is currently running or has a task.
           if (isRunningThrusterCommand) {
             std::cout << "manual override" << std::endl;
@@ -296,7 +296,7 @@ public:
         //Make sure isCurrnetCommandTimedPWM is only changed by Executive DecisionLoop or else put a mutex on it.
         if (!isCurrentCommandTimedPWM) {
           override();
-          std::cout << "executor decision Override" << std::endl;
+          std::cout << "Executive Decision: Replace Current PWM Command" << std::endl;
           if (ManualPWMQueue.front().second >=
               std::chrono::milliseconds(99999999)) {
             isCurrentCommandTimedPWM = false;
@@ -309,7 +309,7 @@ public:
               std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
                   ManualPWMQueue.front());
           CurrentpwmValuesLock.unlock();
-          std::cout << "1 Executor Decision: Replace PWM" << std::endl;
+         // std::cout << " Executor Decision: Replace PWM" << std::endl;
           std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
           isRunningThrusterCommand = true;
           thrusterCommandLock.unlock();
@@ -425,7 +425,7 @@ private:
 
   pwm_array given_array;
 
-  //The current PWM and duration ptr will and should always have a value regardless of what Executive DecisionLoop or Send Thrusters want. However, SendThrusters can "finish" a current PWM and duration and will say that it wants a new command, but it can be the same current PWM if ExecutiveDecision decides so. Executive Decision (on its own thread) will see that SendThrusters is not running a command and give it a new current PWM. This is made so that Executive Decision has the chance to give PWM a new Command if the current one is a timedPWM.
+  //The current PWM and duration ptr will and should always have a value regardless of what Executive DecisionLoop or Send Thrusters want. However, SendThrusters can "finish" a current PWM and duration and will say that it wants a new command, but it can be the same current PWM if ExecutiveDecision decides so. Executive Decision (on its own thread) will see that SendThrusters is not running a command and give it a new current PWM. This is made so that Executive Decision has the chance to give PWM a new Command if the current one is a timedPWM. In Later uses, the State file should use the current PWM that the Send Thruster is using.
   std::shared_ptr<std::pair<pwm_array, std::chrono::milliseconds>>
       currentPWMandDuration_ptr;
   // bool isQueuePWMEmpty = true;
@@ -463,7 +463,6 @@ private:
     if (isRunningThrusterCommand) {
       //May have to have a mutex for this ptr.
       commandInterpreter_ptr->interruptBlind_Execute();
-
       pwm_array zero_set_array;
       for (int i = 0; i < 8; i++) {
         zero_set_array.pwm_signals[i] = 0;

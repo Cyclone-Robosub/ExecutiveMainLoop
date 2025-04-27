@@ -178,6 +178,7 @@ class Thrust_Control:
 
     def override(self, durationMS = -1, pwm_set = stop_set):
         self.publishCommandDurationObject.publish_manual_override(True)
+        sleep(0.2)
         self.publishCommandDurationObject.publish_array(pwm_set)
         self.publishCommandDurationObject.publish_duration(durationMS)
     #TODO: Write auto control and exception handling.
