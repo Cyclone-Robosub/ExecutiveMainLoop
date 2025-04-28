@@ -481,9 +481,9 @@ private:
   }
 };
 
-class SensorsData : public rclcpp::Node {
+class SensorsDataConfig : public rclcpp::Node {
 public:
-  SensorsData(std::shared_ptr<ExecutiveLoop> mainLoopObject)
+  SensorsDataConfig(std::shared_ptr<ExecutiveLoop> mainLoopObject)
       : Node("sensorsNode") {
     callbackDepthPressure = this->create_callback_group(
         rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -590,8 +590,8 @@ int main(int argc, char *argv[]) {
   std::cout << "Executive Main Loop Object Creation" << std::endl;
   std::shared_ptr<ExecutiveLoop> mainLoopObject =
       std::make_shared<ExecutiveLoop>();
-  std::shared_ptr<SensorsData> sensorsROScallback =
-      std::make_shared<SensorsData>(mainLoopObject);
+  std::shared_ptr<SensorsDataConfig> sensorsROScallback =
+      std::make_shared<SensorsDataConfig>(mainLoopObject);
   // ExecutiveLoop mainLoopObject = ExecutiveLoop(argc, argv);
   // records false if run has not completed yet.
   bool runStatus = false;
@@ -616,7 +616,7 @@ int main(int argc, char *argv[]) {
   std::cout << "User defined threads has ran sucessfully" << std::endl;
 
   rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
-  // auto sensorNode = std::make_shared<SensorsData>(sensorsROScallback);
+  // auto sensorNode = std::make_shared<SensorsDataConfig>(sensorsROScallback);
 
   SensorsExecutor.add_node(sensorsROScallback);
   // SensorsExecutor.add_node(mainLoopObject);
