@@ -3,7 +3,7 @@ project(executive_main_loop)
 
 # Add dependency locations
 add_subdirectory(lib/yaml-cpp)
-add_subdirectory(lib/Executive_Propulsion/pi)
+add_subdirectory(lib/Executive_Propulsion)
 
 # Find required packages
 find_package(std_msgs REQUIRED)
@@ -23,7 +23,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(EXPORT_COMPILE_COMMANDS True)
 
 # Main executable
-add_executable(ExecutiveExecutable 
+add_executable(ExecutiveExecutable
   ExecutiveLoop.cpp
   SetupConfig/SetupRobot.cpp
 )
@@ -40,7 +40,8 @@ ament_target_dependencies(ExecutiveExecutable
   std_srvs
 )
 ament_package()
-target_link_libraries(ExecutiveExecutable 
+target_link_libraries(ExecutiveExecutable
+  wiringPi
   PropulsionFunctions
   yaml-cpp
 )
@@ -52,12 +53,12 @@ target_include_directories(ExecutiveExecutable PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
   ${CMAKE_CURRENT_SOURCE_DIR}/PropulsionFunctions
 )
-
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion
 )
-
+find_library(wiringPi_LIB wiringPi)
+target_link_libraries(ExecutiveExecutable ${wiringPi_LIB})
 # Testing configuration
 if(BUILD_TESTING)
   # Add test executable with test directory files
@@ -66,7 +67,7 @@ if(BUILD_TESTING)
     test/test_main.cpp
     test/test_nodes.hpp
     test/test_sensor_data.cpp)
-   
+
 
   # Testing definitions and includes
   target_compile_definitions(run_Executive_tests PRIVATE TESTING_EXCLUDE_MAIN)
@@ -87,11 +88,10 @@ if(BUILD_TESTING)
     gtest
     gtest_main
     pthread
-    
+
     PropulsionFunctions
     yaml-cpp
   )
-
   # Install and discover tests
   install(TARGETS run_Executive_tests DESTINATION lib/${PROJECT_NAME})
 endif()

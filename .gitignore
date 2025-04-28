@@ -48,7 +48,7 @@ install
 *.lai
 *.la
 *.a
-*.lib
+
 
 # Executables
 *.exe
@@ -71,7 +71,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -281,8 +280,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
+install/
 parts/
 sdist/
 var/
@@ -441,3 +440,5 @@ cython_debug/
 .pypirc
 
 __pycache__
+ros2_ws/src/log/
+log/
