@@ -17,6 +17,7 @@ find_package(diagnostic_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(Threads REQUIRED)
 
 # Compiler settings
 set(CMAKE_CXX_STANDARD 20)
@@ -61,15 +62,17 @@ ament_target_dependencies(ExecutiveExecutable
   std_srvs
 )
 
-install(TARGETS ExecutiveExecutable DESTINATION lib/${PROJECT_NAME})
-
 # Testing
 if(BUILD_TESTING)
-  enable_testing()
-  find_package(ament_cmake_gtest REQUIRED)
+  # Automatic inclusion of lint-related tests
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
 
+  # gtest
+  find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(test_executive_loop
     test/test_executive_loop.cpp
+    main.cpp
   )
 
   target_include_directories(test_executive_loop PUBLIC
@@ -93,6 +96,7 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_sensor_data
     test/test_sensor_data.cpp
+    main.cpp
   )
 
   target_include_directories(test_sensor_data PUBLIC
@@ -115,7 +119,6 @@ if(BUILD_TESTING)
   )
 endif()
 
-# Threads
-find_package(Threads REQUIRED)
+install(TARGETS ExecutiveExecutable DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
