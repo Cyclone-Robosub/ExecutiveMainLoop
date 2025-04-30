@@ -33,6 +33,14 @@ namespace fs = std::filesystem;
 #define FAULTY_SENSOR_VALUE -40404
 
 // start the executive Loop
+//TODO from William:
+// Move work out of constructor. Pass variables (i.e. ostreams, Command_Interpreter, etc.) as arguments
+// and init with initialization list
+// Move other nodes to their own files
+// Create .h files for classes
+// Move main to its own Main.cpp files
+// Swap std::cout for a configurable ostream
+// Write docstring thingies for function definitions (i.e. /// @param, /// @brief, etc.)
 class ExecutiveLoop : public rclcpp::Node {
 public:
   // Setup for all the functions should be done here.
@@ -395,7 +403,7 @@ public:
   }*/
 
 private:
-  //NOTE: there are going to be a lot of unused variables, please remove in the future.
+  //TODO: there are going to be a lot of unused variables, please remove in the future.
   bool isManualEnabled = false;
   bool isManualOverride = false;
   bool isRunningThrusterCommand = false;
