@@ -15,8 +15,6 @@ Once you have clone the repo:
 ```
 cd ExecutiveMainLoop
 git submodule update --init --recursive --remote
-git rm lib/Propulsion
-git rm lib/libusb
 git submodule sync
 git submodule status
 ```
