@@ -13,11 +13,6 @@ Ninja is optional but is faster then makefiles
 
 Once you have clone the repo:
 ```
-cd ExecutiveMainLoop/scripts
-chmod +x submodules.sh
-./submodules.sh
-
-``
 Check for ros2 simulink inside of ros2_ws/src (Check if files are there)
 
 Check for Executive_Propulsion/Pi/CmakeLists.txt compile problem fixed.

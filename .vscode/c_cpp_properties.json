@@ -52,8 +52,12 @@
             "cppStandard": "c++20",
             "compileCommands": [
                 "./compile_commands.json"
+            ],
+            "includePath": [
+                "${default}",
+                "${workspaceFolder}/lib/Executive_Propulsion/lib"
             ]
-        },
+        }
     ],
     "version": 4
 }
