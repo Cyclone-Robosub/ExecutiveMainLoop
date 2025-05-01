@@ -14,6 +14,7 @@ Ninja is optional but is faster then makefiles
 Once you have clone the repo:
 ```
 cd ExecutiveMainLoop/scripts
+chmod +x submodules.sh
 ./submodules.sh
 
 ``
