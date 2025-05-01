@@ -212,11 +212,8 @@ class Thrust_Control:
       #  f.write(string)
       #  print(string)
       #  f.close()
-        
-        
     
     def scaled_pwm(self, pwm_set, scale):
-        
         
         new_pwm = [ int(scale * (i - stop_pulse) + stop_pulse) for i in pwm_set]
         
@@ -252,10 +249,5 @@ class Thrust_Control:
         
 def main():
     print("Type in : tcs = Thrust_Control()")
-    
-
-
-
-    
         
 main()

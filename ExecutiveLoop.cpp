@@ -45,56 +45,8 @@ class ExecutiveLoop : public rclcpp::Node {
 public:
   // Setup for all the functions should be done here.
   // Setup everything so that when the threads startup, it can run its tasks.
-  ExecutiveLoop(std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr, std::shared_ptr<std::pair<pwm_array, std::chrono::milliseconds>> currentPWMandDuration_ptr, ostream& output, ostream& error) : Node("executive_main_node"),
-                                      output(output), error(error), commandInterpreter_ptr(commandInterpreter_ptr) {
-    std::cout << "Constructor Executive Loop" << std::endl;
-
-    //Setting a stop set in the beginnning of startup -> needs to be better.
-    pwm_array zero_set_array;
-    for (int i = 0; i < 8; i++) {
-      zero_set_array.pwm_signals[i] = 1500;
-    }
-    std::pair<pwm_array, std::chrono::milliseconds> zero_set_pair(
-        zero_set_array, std::chrono::milliseconds(99999999));
-    std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
-    currentPWMandDuration_ptr =
-        std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
-            zero_set_pair);
-    pwmValuesLock.unlock();
-
-    // State file creation or appending
-    fs::path currentPath = fs::current_path();
-    fs::path stateFilePath = currentPath.parent_path().parent_path();
-    std::string stateFileString = std::string(stateFilePath) + "/state.csv";
-    std::cout << stateFileString << std::endl;
-    if (!std::filesystem::exists(stateFileString)) {
-      stateFile.open(stateFileString, std::ofstream::app);
-
-      // Append this for every new file.
-      stateFile << "Time,Depth(m),Pressure, IMU Data, PWM Data" << std::endl;
-      std::cout << "Created new state file." << std::endl;
-    } else {
-      stateFile.open(stateFileString, std::ofstream::app);
-      std::cout << "Appending to current state file" << std::endl;
-    }
-
-    // Status of Loop
-    loopIsRunning = true;
-    tasksCompleted = false;
-
-    // Setup Pins
-    auto PhysicalPins = std::vector<int>{2, 3, 4, 5, 6, 7, 8, 9};
-    for (auto i : PhysicalPins) {
-      thrusterPins.push_back(new HardwarePwmPin(i));
-      // digitalPins.push_back(new DigitalPin(5, ActiveLow));
-    }
-
-    //Setup the Command Interpreter's pins with the physical pins.
-    commandInterpreter_ptr = std::make_unique<Command_Interpreter_RPi5>(
-        thrusterPins, std::vector<DigitalPin *>{});
-    commandInterpreter_ptr->initializePins();
-   // commandInterpreter_ptr->readPins();
-  }
+  ExecutiveLoop(std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr, std::shared_ptr<std::pair<pwm_array, std::chrono::milliseconds>> currentPWMandDuration_ptr, ofstream& stateFile, ostream& output, ostream& error) : Node("executive_main_node"),
+                commandInterpreter_ptr(commandInterpreter_ptr), currentPWMandDuration_ptr(currentPWMandDuration_ptr), stateFile(stateFile), output(output), error(error), loopIsRunning(false), tasksCompleted(true) {}
   // these callback functions serve as the "read Input node in the loop"
   //Feel free to later push these into the Sensors Class, but make sure ExecutiveLoop can still access through memory its needed fields.
 
@@ -600,10 +552,60 @@ int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);
   SetupRobot initStateandConfig = SetupRobot();
 
+  // START PULLED FROM CONSTRUCTOR
+
+  //Setting a stop set in the beginnning of startup -> needs to be better.
+  pwm_array zero_set_array;
+  for (int i = 0; i < 8; i++) {
+    zero_set_array.pwm_signals[i] = 1500;
+  }
+  std::pair<pwm_array, std::chrono::milliseconds> zero_set_pair(
+      zero_set_array, std::chrono::milliseconds(99999999));
+  std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
+  currentPWMandDuration_ptr =
+      std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
+          zero_set_pair);
+  pwmValuesLock.unlock();
+
+  // State file creation or appending
+  fs::path currentPath = fs::current_path();
+  fs::path stateFilePath = currentPath.parent_path().parent_path();
+  std::string stateFileString = std::string(stateFilePath) + "/state.csv";
+  std::cout << stateFileString << std::endl;
+  if (!std::filesystem::exists(stateFileString)) {
+    stateFile.open(stateFileString, std::ofstream::app);
+
+    // Append this for every new file.
+    stateFile << "Time,Depth(m),Pressure, IMU Data, PWM Data" << std::endl;
+    std::cout << "Created new state file." << std::endl;
+  } else {
+    stateFile.open(stateFileString, std::ofstream::app);
+    std::cout << "Appending to current state file" << std::endl;
+  }
+
+  // Status of Loop
+  loopIsRunning = true;
+  tasksCompleted = false;
+
+  // Setup Pins
+  auto PhysicalPins = std::vector<int>{2, 3, 4, 5, 6, 7, 8, 9};
+  for (auto i : PhysicalPins) {
+    thrusterPins.push_back(new HardwarePwmPin(i));
+    // digitalPins.push_back(new DigitalPin(5, ActiveLow));
+  }
+
+  //Setup the Command Interpreter's pins with the physical pins.
+  commandInterpreter_ptr = std::make_unique<Command_Interpreter_RPi5>(
+      thrusterPins, std::vector<DigitalPin *>{});
+  commandInterpreter_ptr->initializePins();
+ // commandInterpreter_ptr->readPins();
+
+ // END PULLED FROM CONSTRUCTOR
+
   // ExecutiveLoop Think about object by reference or value passing
   std::cout << "Executive Main Loop Object Creation" << std::endl;
   std::shared_ptr<ExecutiveLoop> mainLoopObject =
-      std::make_shared<ExecutiveLoop>();
+      std::make_shared<ExecutiveLoop>(commandInterpreter_ptr, currentPWMandDuration_ptr, stateFile, std::cout, std::cerr);
   std::shared_ptr<SensorsDataConfig> sensorsROScallback =
       std::make_shared<SensorsDataConfig>(mainLoopObject);
   // ExecutiveLoop mainLoopObject = ExecutiveLoop(argc, argv);
