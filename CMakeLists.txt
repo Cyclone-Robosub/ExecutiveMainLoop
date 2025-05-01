@@ -39,7 +39,6 @@ ament_target_dependencies(ExecutiveExecutable
   sensor_msgs
   std_srvs
 )
-ament_package()
 target_link_libraries(ExecutiveExecutable
   wiringPi
   PropulsionFunctions
@@ -59,6 +58,13 @@ include_directories(
 )
 find_library(wiringPi_LIB wiringPi)
 target_link_libraries(ExecutiveExecutable ${wiringPi_LIB})
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/DIDINS1.msg"
+  )
+ament_export_include_directories(ros2_ws/src/inertial-sense-sdk/ROS/ros2/shared/include)
+ament_export_libraries(inertial_sense_ros2)
+ament_export_dependencies(rclcpp std_msgs)
+ament_package()
 # Testing configuration
 if(BUILD_TESTING)
   # Add test executable with test directory files

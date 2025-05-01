@@ -23,6 +23,7 @@
 
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/magnetic_field.hpp"
+#include "executive_main_loop/msg/didins1.hpp"
 
 using namespace std::literals;
 namespace fs = std::filesystem;
