@@ -45,7 +45,8 @@ class ExecutiveLoop : public rclcpp::Node {
 public:
   // Setup for all the functions should be done here.
   // Setup everything so that when the threads startup, it can run its tasks.
-  ExecutiveLoop() : Node("executive_main_node") {
+  ExecutiveLoop(std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr, std::shared_ptr<std::pair<pwm_array, std::chrono::milliseconds>> currentPWMandDuration_ptr, ostream& output, ostream& error) : Node("executive_main_node"),
+                                      output(output), error(error), commandInterpreter_ptr(commandInterpreter_ptr) {
     std::cout << "Constructor Executive Loop" << std::endl;
 
     //Setting a stop set in the beginnning of startup -> needs to be better.
@@ -438,6 +439,8 @@ private:
       currentPWMandDuration_ptr;
   // bool isQueuePWMEmpty = true;
   std::ofstream stateFile;
+  std::ostream output;
+  std::ostream error;
   std::mutex sensor_mutex;
   std::mutex Queue_pwm_mutex;
   std::mutex imu_mutex;
@@ -488,6 +491,9 @@ private:
     }
   }
 };
+
+
+
 
 class SensorsDataConfig : public rclcpp::Node {
 public:
