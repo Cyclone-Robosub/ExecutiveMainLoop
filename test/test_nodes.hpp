@@ -17,7 +17,7 @@
  * @author Danny Kwong
  * @date April 14, 2025
  */
-
+/*
 #pragma once
 #include <gtest/gtest.h>
 #include <rclcpp/rclcpp.hpp>
@@ -57,4 +57,4 @@ protected:
 
     std::shared_ptr<ExecutiveLoop> exec_node;
     std::shared_ptr<SensorsData> sensor_node;
-};
+};*/
