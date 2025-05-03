@@ -47,8 +47,21 @@ class ExecutiveLoop : public rclcpp::Node {
 public:
   // Setup for all the functions should be done here.
   // Setup everything so that when the threads startup, it can run its tasks.
-  ExecutiveLoop(std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr, std::shared_ptr<std::pair<pwm_array, std::chrono::milliseconds>> currentPWMandDuration_ptr, std::ofstream& stateFile, std::ostream& output, std::ostream& error) : Node("executive_main_node"),
-                commandInterpreter_ptr(std::move(commandInterpreter_ptr)), currentPWMandDuration_ptr(currentPWMandDuration_ptr), stateFile(stateFile), output(output), error(error), loopIsRunning(false), tasksCompleted(true) {}
+  ExecutiveLoop(
+		  std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr, 
+		  std::shared_ptr<std::pair<pwm_array, 
+		  std::chrono::milliseconds>> currentPWMandDuration_ptr, 
+		  std::ofstream& stateFile, 
+		  std::ostream& output, 
+		  std::ostream& error ) :
+        Node("executive_main_node"),
+        commandInterpreter_ptr(std::move(commandInterpreter_ptr)),
+	      currentPWMandDuration_ptr(currentPWMandDuration_ptr),
+	      stateFile(stateFile),
+	      output(output),
+	      error(error),
+		    loopIsRunning(false),
+	      tasksCompleted(true) {}
   // these callback functions serve as the "read Input node in the loop"
   //Feel free to later push these into the Sensors Class, but make sure ExecutiveLoop can still access through memory its needed fields.
 
