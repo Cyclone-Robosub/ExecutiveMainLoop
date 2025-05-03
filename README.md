@@ -54,12 +54,44 @@ follow the directions printed or read the code (lol what documentation?)
 
 Note: In the Robot/Rasberry Pi, the startup.sh should run on startup, and the build files should already be built on the Pi 5.
 
+
 ## Testing
 ---
-building for test:
+building for test ExecutiveMainLoop:
+
+1. go to ExecutiveMainLoop
+2. Run the build command:
+General form:
 ```
-colcon build --cmake-args -DBUILD_TESTING=ON
+colcon build [ARGUMENT]
 ```
+Example:
+
+Non-Pi:
+```
+# For testing:
+colcon build --cmake-args -DMOCK_RPI=ON -DBUILD_TESTING=ON
+# Production/omit test:
+colcon build --cmake-args -DMOCK_RPI=ON -DBUILD_TESTING=OFF
+```
+Pi:
+```
+# Testing:
+colcon build --cmake-args -DMOCK_RPI=Off -DBUILD_TESTING=ON
+# Or:
+# colcon build --cmake-args -DBUILD_TESTING=ON
+Production:
+# colcon build --cmake-args -DMOCK_RPI=Off -DBUILD_TESTING=OFF
+# Or:
+# colcon build --cmake-args -DBUILD_TESTING=OFF
+```
+Explanation for flags:
+- For non pi computers, use the `-DMOCK_RPI=ON`
+- For pi, omit the `-DMOCK_RPI` flag or use the `-DMOCK_RPI=ON`
+- For testing, omit the `-DBUILD_TESTING` flag or use the `-DBUILD_TESTING=ON`
+- For omit testing, use the `-DBUILD_TESTING=OFF`
+- If you used any flag, you must use the `--cmake-args` flag at the front.
+
 Run the test:
 ```
 colcon test --packages-select executive_main_loop
