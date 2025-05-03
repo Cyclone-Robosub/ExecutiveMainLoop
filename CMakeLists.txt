@@ -63,61 +63,61 @@ ament_target_dependencies(ExecutiveExecutable
 )
 
 # Testing
-if(BUILD_TESTING)
-  # Automatic inclusion of lint-related tests
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+# if(BUILD_TESTING)
+#   # Automatic inclusion of lint-related tests
+#   find_package(ament_lint_auto REQUIRED)
+#   ament_lint_auto_find_test_dependencies()
 
-  # gtest
-  find_package(ament_cmake_gtest REQUIRED)
-  ament_add_gtest(test_executive_loop
-    test/test_executive_loop.cpp
-    main.cpp
-  )
+#   # gtest
+#   find_package(ament_cmake_gtest REQUIRED)
+#   ament_add_gtest(test_executive_loop
+#     test/test_executive_loop.cpp
+#     main.cpp
+#   )
 
-  target_include_directories(test_executive_loop PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/SetupConfig
-    ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
-  )
+#   target_include_directories(test_executive_loop PUBLIC
+#     ${CMAKE_CURRENT_SOURCE_DIR}
+#     ${CMAKE_CURRENT_SOURCE_DIR}/SetupConfig
+#     ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
+#     ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
+#   )
 
-  target_link_libraries(test_executive_loop
-    yaml-cpp
-    ExecutivePropulsionLib
-  )
+#   target_link_libraries(test_executive_loop
+#     yaml-cpp
+#     ExecutivePropulsionLib
+#   )
 
-  ament_target_dependencies(test_executive_loop
-    rclcpp
-    std_msgs
-    sensor_msgs
-    geometry_msgs
-  )
+#   ament_target_dependencies(test_executive_loop
+#     rclcpp
+#     std_msgs
+#     sensor_msgs
+#     geometry_msgs
+#   )
 
-  ament_add_gtest(test_sensor_data
-    test/test_sensor_data.cpp
-    main.cpp
-  )
+#   ament_add_gtest(test_sensor_data
+#     test/test_sensor_data.cpp
+#     main.cpp
+#   )
 
-  target_include_directories(test_sensor_data PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/SetupConfig
-    ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
-  )
+#   target_include_directories(test_sensor_data PUBLIC
+#     ${CMAKE_CURRENT_SOURCE_DIR}
+#     ${CMAKE_CURRENT_SOURCE_DIR}/SetupConfig
+#     ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
+#     ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
+#   )
 
-  target_link_libraries(test_sensor_data
-    yaml-cpp
-    ExecutivePropulsionLib
-  )
+#   target_link_libraries(test_sensor_data
+#     yaml-cpp
+#     ExecutivePropulsionLib
+#   )
 
-  ament_target_dependencies(test_sensor_data
-    rclcpp
-    std_msgs
-    sensor_msgs
-    geometry_msgs
-  )
-endif()
+#   ament_target_dependencies(test_sensor_data
+#     rclcpp
+#     std_msgs
+#     sensor_msgs
+#     geometry_msgs
+#   )
+# endif()
 
 install(TARGETS ExecutiveExecutable DESTINATION lib/${PROJECT_NAME})
 

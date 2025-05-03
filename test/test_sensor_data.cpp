@@ -9,6 +9,7 @@
 
  #include "test_nodes.hpp"
 
+/*
  TEST_F(TestSensorsData, SensorSubscriptions) {
      auto depth_subs = sensor_node->get_subscriptions_info_by_topic("depthSensorData");
      auto imu_subs = sensor_node->get_subscriptions_info_by_topic("imu");

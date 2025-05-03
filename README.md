@@ -1,5 +1,6 @@
 # DriverEnvironment
-
+Please Read https://www.notion.so/crsucd/GitHub-Organization-1d88a3eca2f0808f9eacc3a7fbea26df?pvs=4 if developing for us
+to understand the branch mangement.
 ## Set up
 ---
 Run only once to set up ROS on your environment:
@@ -8,48 +9,49 @@ cd misc
 chmod +x ros2jazzyinstall.sh
 ./ros2jazzyinstall.sh
 ```
-Note : These are the general commands the above script runs.
-```
-sudo apt update && sudo apt install curl -y
-sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-sudo apt update && sudo apt install ros-dev-tools
-sudo apt update && sudo apt upgrade
-sudo apt install build-essentials cmake ninja-build ros-jazzy-desktop
-sudo apt-get install gdb
-```
 Ninja is optional but is faster then makefiles
 
 Once you have clone the repo:
 ```
 cd ExecutiveMainLoop
 git submodule update --init --recursive --remote
+git rm lib/Propulsion
+git rm lib/libusb
+git submodule sync
+git submodule status
 ```
-If you have never build ros at least once:
-```
-cd ros2_ws/src
-source /opt/ros/jazzy/setup.bash
-source install/setup.bash
-colcon build
-cd ..
-. install/setup.bash
-colcon build
-```
-the build need to be repeated for the setup.bash script to generate. Otherwise build has missing env vars.
+Check for ros2 simulink inside of ros2_ws/src (Check if files are there)
 
-## build
+Check for Executive_Propulsion/Pi/CmakeLists.txt compile problem fixed.
+
+## Build/Compile
 ---
-Run from /ExecutiveMainLoop
+Run from /ExecutiveMainLoop/scripts
 ```
 chmod +x build.sh
 ./build.sh
 ```
-## Run the robot
-again run from /ExecutiveMainLoop
+or if you are plugged to a nuclear reactor and have 16 cores of gaming 
+Make sure you Control-C once finished compling to exit out of the bash script 
+for this option.
+```
+chmod +x buildQuick.sh
+./buildQuick.sh
+```
+## Run the ExecutiveMainLoop Functions
+again run from /ExecutiveMainLoop/scripts
 ```
 chmod +x startup.sh
 ./startup.sh
 ```
+### Manual Control/Python CLTool
+from /ExecutiveMainLoop/scripts
+```
+chmod +x startupCL.sh
+./startupCL.sh
+```
+follow the directions printed or read the code (lol what documentation?)
+
 Note: In the Robot/Rasberry Pi, the startup.sh should run on startup, and the build files should already be built on the Pi 5.
 
 ## Testing
@@ -109,3 +111,6 @@ Then do:
 git submodule sync
 ```
 And finally, try initing the submodules.
+
+
+NOTES:

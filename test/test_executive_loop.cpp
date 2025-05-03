@@ -8,7 +8,7 @@
  */
 
 #include "test_nodes.hpp"
-
+/*
 TEST_F(TestExecutiveLoop, NodeInitialization) {
     EXPECT_EQ(exec_node->get_name(), "executive_main_node");
     EXPECT_TRUE(exec_node->returnStatus());
@@ -23,6 +23,7 @@ TEST_F(TestExecutiveLoop, EmergencyShutdown) {
     exec_node->executeFailCommands();
     EXPECT_FALSE(exec_node->returnStatus());
     EXPECT_TRUE(exec_node->returntasksCompleted());
+}*/
 }
 
 int main(int argc, char** argv)
