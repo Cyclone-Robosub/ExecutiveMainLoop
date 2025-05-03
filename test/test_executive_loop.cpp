@@ -24,3 +24,10 @@ TEST_F(TestExecutiveLoop, EmergencyShutdown) {
     EXPECT_FALSE(exec_node->returnStatus());
     EXPECT_TRUE(exec_node->returntasksCompleted());
 }*/
+}
+
+int main(int argc, char** argv)
+{
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
