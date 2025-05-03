@@ -25,7 +25,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(EXPORT_COMPILE_COMMANDS ON)
 
 # Add external libraries
-add_subdirectory(lib/yaml-cpp)
 add_subdirectory(lib/Executive_Propulsion)
 
 # ExecutivePropulsionLib
