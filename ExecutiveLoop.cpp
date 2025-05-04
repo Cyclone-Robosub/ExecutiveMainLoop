@@ -326,7 +326,6 @@ public:
 
   // Sends Commands to Thrusters with CommandInterpreter
   void sendThrusterCommand() {
-    std::ofstream logFilePins("PWM_LOGS.txt");
     while (loopIsRunning) {
       if (typeOfExecute == "blind_execute") {
         CommandComponent commandComponent;
@@ -339,7 +338,7 @@ public:
           // setup ROS topic for duration
           commandComponent.duration = currentPWMandDuration_ptr->second;
           CurrentpwmValuesLock.unlock();
-          commandInterpreter_ptr->blind_execute(commandComponent, logFilePins);
+          commandInterpreter_ptr->blind_execute(commandComponent);
           std::cout << "Finished Thruster Command\n" << std::endl;
 
           std::unique_lock<std::mutex> statusThruster(thruster_mutex);
@@ -581,6 +580,7 @@ int main(int argc, char *argv[]) {
           zero_set_pair);
 
   // State file creation or appending
+  std::ofstream logFilePins("PWM_LOGS.txt");
   std::ofstream stateFile;
   fs::path currentPath = fs::current_path();
   fs::path stateFilePath = currentPath.parent_path().parent_path();
@@ -601,13 +601,14 @@ int main(int argc, char *argv[]) {
   auto PhysicalPins = std::vector<int>{2, 3, 4, 5, 6, 7, 8, 9};
   std::vector<PwmPin *> thrusterPins;
   for (auto i : PhysicalPins) {
-    thrusterPins.push_back(new HardwarePwmPin(i));
+    thrusterPins.push_back(new HardwarePwmPin(i, stateFile, std::cout, std::cerr));
     // digitalPins.push_back(new DigitalPin(5, ActiveLow));
   }
 
   //Setup the Command Interpreter's pins with the physical pins.
+  auto wiringControl = WiringControl(std::cout, logFilePins, std::cerr);
   std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr = std::make_unique<Command_Interpreter_RPi5>(
-      thrusterPins, std::vector<DigitalPin *>{});
+      thrusterPins, std::vector<DigitalPin *>{}, wiringControl, stateFile, std::cout, std::cerr);
   commandInterpreter_ptr->initializePins();
  // commandInterpreter_ptr->readPins();
 
