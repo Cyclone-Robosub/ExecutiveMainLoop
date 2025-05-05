@@ -2,6 +2,10 @@
 # Change directory to src
 # Build the package
 # Source ROS setup files
+
+chmod +x submodules.sh
+./submodules.sh
+
 cd ../
 source /opt/ros/jazzy/setup.bash
 

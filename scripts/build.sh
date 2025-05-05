@@ -2,6 +2,10 @@
 # Change directory to src
 # Build the package
 # Source ROS setup files
+
+chmod +x submodules.sh
+./submodules.sh
+
 cd ../
 source /opt/ros/jazzy/setup.bash
 
@@ -19,7 +23,6 @@ cd ../../
 source install/setup.bash # in order to source it for the executive build
 colcon build --cmake-args -DMOCK_RPI=OFF
 
-chmod +x build.sh 
 chmod +x startup.sh
 
 

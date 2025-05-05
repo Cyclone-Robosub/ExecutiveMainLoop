@@ -12,15 +12,8 @@ chmod +x ros2jazzyinstall.sh
 Ninja is optional but is faster then makefiles
 
 Once you have clone the repo:
-```
-cd ExecutiveMainLoop
-git submodule update --init --recursive --remote
-git rm lib/Propulsion
-git rm lib/libusb
-git submodule sync
-git submodule status
-```
-Check for ros2 simulink inside of ros2_ws/src (Check if files are there)
+
+Check for ros2 symlink inside of ros2_ws/src (Check if files are there)
 
 Check for Executive_Propulsion/Pi/CmakeLists.txt compile problem fixed.
 
