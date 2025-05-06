@@ -41,7 +41,6 @@ ament_target_dependencies(ExecutiveExecutable
 )
 ament_package()
 target_link_libraries(ExecutiveExecutable
-  wiringPi
   PropulsionFunctions
   yaml-cpp
 )
@@ -57,8 +56,6 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion
 )
-find_library(wiringPi_LIB wiringPi)
-target_link_libraries(ExecutiveExecutable ${wiringPi_LIB})
 # Testing configuration
 if(BUILD_TESTING)
   # Add test executable with test directory files
