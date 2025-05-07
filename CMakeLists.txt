@@ -35,16 +35,17 @@ add_library(ExecutivePropulsionLib
 
 # Main executable
 add_executable(ExecutiveExecutable
-  main.cpp
-  ExecutiveLoop.cpp
-  ExecutiveLoop.hpp
-  SensorDataConfig.cpp
-  SensorDataConfig.hpp
+  src/main.cpp
+  src/ExecutiveLoop.cpp
+  src/ExecutiveLoop.hpp
+  src/SensorDataConfig.cpp
+  src/SensorDataConfig.hpp
   SetupConfig/SetupRobot.cpp
 )
 
 target_include_directories(ExecutiveExecutable PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/
   ${CMAKE_CURRENT_SOURCE_DIR}/SetupConfig
   ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
