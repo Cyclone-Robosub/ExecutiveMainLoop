@@ -55,8 +55,22 @@
             ],
             "includePath": [
                 "${default}",
-                "${workspaceFolder}/lib/Executive_Propulsion/lib"
+                "${workspaceFolder}/lib/Executive_Propulsion/lib",
+                "/opt/ros/jazzy/include/rclcpp"
             ]
+        },
+        {
+            "name": "Linux G++ x64",
+            "includePath": [
+                "${default}",
+                "${workspaceFolder}/lib/Executive_Propulsion/lib",
+                "/opt/ros/jazzy/include/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c17",
+            "cppStandard": "gnu++20",
+            "intelliSenseMode": "linux-gcc-x64"
         }
     ],
     "version": 4
