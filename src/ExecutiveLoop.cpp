@@ -1,10 +1,13 @@
 #include "ExecutiveLoop.hpp"
 
-// start the executive Loop
+
+
 //TODO from William:
 // Write docstring thingies for function definitions (i.e. /// @param, /// @brief, etc.)
+// Change untimed commands to call Command_Interpreter's untimed command function. Update duration for untimed
+// commands to be zero, or some other solution than 99999 milliseconds.
 
-
+// start the executive Loop
 // Setup for all the functions should be done here.
 // Setup everything so that when the threads startup, it can run its tasks.
 ExecutiveLoop::ExecutiveLoop(
@@ -65,7 +68,6 @@ void ExecutiveLoop::depthPressureSensorCallback(const std_msgs::msg::String::Sha
 
 
 void ExecutiveLoop::imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
-
   std::lock_guard<std::mutex> CallBacklock(imu_mutex);
   // std::cout << "imu sensor\n";
   angular_velocity_x = msg.angular_velocity.x;
@@ -83,7 +85,7 @@ void ExecutiveLoop::magCallback(const sensor_msgs::msg::MagneticField &msg) {
   mag_field_z = msg.magnetic_field.z;
 }
 
-// First get the PWM Array. Then Allow the duration callback to execute and pair the array with the duration.
+// First get the PWM Array. Then allow the duration callback to execute and pair the array with the duration.
 // Then push it onto the queue for ExecuteDecision. Notify every time we allow either Duration or Execute to
 // use the queue for chain of execution. 
 void ExecutiveLoop::PWMArrayCallback(const std_msgs::msg::Int32MultiArray::SharedPtr msg) {
