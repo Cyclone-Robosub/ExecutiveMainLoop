@@ -2,7 +2,6 @@
 
 // start the executive Loop
 //TODO from William:
-// Swap std::cout for a configurable ostream
 // Write docstring thingies for function definitions (i.e. /// @param, /// @brief, etc.)
 
 
@@ -44,6 +43,8 @@ void ExecutiveLoop::ManualControlCallback(const std_msgs::msg::Bool::SharedPtr m
   }
   Change_Manual.notify_all();
 }
+
+
 //This should only clear the queue
 void ExecutiveLoop::ManualOverrideCallback(const std_msgs::msg::Bool::SharedPtr msg) {
   std::unique_lock<std::mutex> Manual_Lock(Manual_Override_mutex);
@@ -57,12 +58,15 @@ void ExecutiveLoop::ManualOverrideCallback(const std_msgs::msg::Bool::SharedPtr 
     sizeQueue = 0;
   }
 }
+
+
 void ExecutiveLoop::depthPressureSensorCallback(const std_msgs::msg::String::SharedPtr msg) {
   //  std::lock_guard<std::mutex> lock(mutex_);
   // std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
   // output << "Got depth ";
   depth_pressure_msg = msg->data;
 }
+
 
 void ExecutiveLoop::imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
 
@@ -75,13 +79,15 @@ void ExecutiveLoop::imuSensorCallback(const sensor_msgs::msg::Imu &msg) {
   linear_acceleration_y = msg.linear_acceleration.y;
   linear_acceleration_z = msg.linear_acceleration.z;
 }
+
+
 void ExecutiveLoop::magCallback(const sensor_msgs::msg::MagneticField &msg) {
   mag_field_x = msg.magnetic_field.x;
   mag_field_y = msg.magnetic_field.y;
   mag_field_z = msg.magnetic_field.z;
 }
 
-//First get the PWM Array. Then Allow the duration callback to execute and pair the array with the duration.
+// First get the PWM Array. Then Allow the duration callback to execute and pair the array with the duration.
 // Then push it onto the queue for ExecuteDecision. Notify every time we allow either Duration or Execute to
 // use the queue for chain of execution. 
 void ExecutiveLoop::PWMArrayCallback(const std_msgs::msg::Int32MultiArray::SharedPtr msg) {
@@ -101,6 +107,8 @@ void ExecutiveLoop::PWMArrayCallback(const std_msgs::msg::Int32MultiArray::Share
   SendToDuration_change.notify_all();
   pwm_lock.unlock();
 }
+
+
 void ExecutiveLoop::durationCallback(const std_msgs::msg::Int64::SharedPtr msg) {
   std::unique_lock<std::mutex> duration_lock(array_duration_sync_mutex,
                                               std::defer_lock);
@@ -141,6 +149,7 @@ void ExecutiveLoop::durationCallback(const std_msgs::msg::Int64::SharedPtr msg) 
   PWM_cond_change.notify_all();
   output << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
 }
+
 /*
   void readInputs() {
     while (loopIsRunning) {
@@ -161,6 +170,8 @@ void ExecutiveLoop::durationCallback(const std_msgs::msg::Int64::SharedPtr msg) 
     }
   }
 */
+
+
 void ExecutiveLoop::updateState() {
   output << "UpdateState" << std::endl;
   while (loopIsRunning) {
@@ -196,6 +207,7 @@ void ExecutiveLoop::updateState() {
     std::this_thread::sleep_for(std::chrono::milliseconds(UPDATE_WAIT_TIME));
   }
 }
+
 
 void ExecutiveLoop::executeDecisionLoop() {
 
@@ -288,6 +300,7 @@ void ExecutiveLoop::executeDecisionLoop() {
 }
 // if all decisions/tasks are done, make tasksCompleted true;
 
+
 // Sends Commands to Thrusters with CommandInterpreter
 void ExecutiveLoop::sendThrusterCommand() {
   while (loopIsRunning) {
@@ -317,11 +330,14 @@ void ExecutiveLoop::sendThrusterCommand() {
       }
     }
   }
-  
 }
 
 bool ExecutiveLoop::returnStatus() { return loopIsRunning; }
+
+
 bool ExecutiveLoop::returntasksCompleted() { return tasksCompleted; }
+
+
 void ExecutiveLoop::executeFailCommands() {
   std::lock_guard<std::mutex> stateFileLock(sensor_mutex);
   stateFile << std::endl;
@@ -344,6 +360,8 @@ std::string ExecutiveLoop::getCurrentDateTime() {
   strftime(buffer, sizeof(buffer), "%H:%M:%S", localTime);
   return std::string(buffer);
 }
+
+
 //If a task is currently running, stop this task and set a zero pair to clear everything. Execute Decision Loop should then be able to decide what to do next.
 void ExecutiveLoop::override() {
   if (isRunningThrusterCommand) {
