@@ -23,6 +23,14 @@ ExecutiveLoop::ExecutiveLoop(
       loopIsRunning(false),
       tasksCompleted(true) {}
 
+void ExecutiveLoop::clearQueue() {
+  std::lock_guard<std::mutex> QueueLock(Queue_pwm_mutex);
+  std::queue<std::pair<pwm_array, std::chrono::milliseconds>> empty;
+  std::swap(ManualPWMQueue, empty);
+  output << "Manual Command Current Override -> Deleted Queue"
+            << std::endl;
+  sizeQueue = 0;
+}
 
 // these callback functions serve as the "read Input node in the loop"
 //Feel free to later push these into the Sensors Class, but make sure ExecutiveLoop can still access through memory its needed fields.
@@ -34,28 +42,18 @@ void ExecutiveLoop::ManualControlCallback(const std_msgs::msg::Bool::SharedPtr m
     // need to add to here later.
   } else {
     output << "Manual Control Disabled" << std::endl;
-    std::lock_guard<std::mutex> QueueLock(Queue_pwm_mutex);
-    std::queue<std::pair<pwm_array, std::chrono::milliseconds>> empty;
-    std::swap(ManualPWMQueue, empty);
-    output << "Manual Command Current Override -> Deleted Queue"
-              << std::endl;
-    sizeQueue = 0;
+    clearQueue();
   }
   Change_Manual.notify_all();
 }
 
 
 //This should only clear the queue
-void ExecutiveLoop::ManualOverrideCallback(const std_msgs::msg::Bool::SharedPtr msg) {
+void ExecutiveLoop::ManualOverrideCallback() {
   std::unique_lock<std::mutex> Manual_Lock(Manual_Override_mutex);
-  isManualOverride = msg->data;
+  isManualOverride = true;
   if (isManualOverride) {
-    std::lock_guard<std::mutex> QueueLock(Queue_pwm_mutex);
-    std::queue<std::pair<pwm_array, std::chrono::milliseconds>> empty;
-    std::swap(ManualPWMQueue, empty);
-    output << "Manual Command Current Override -> Deleted Queue"
-              << std::endl;
-    sizeQueue = 0;
+    clearQueue();
   }
 }
 
@@ -210,7 +208,6 @@ void ExecutiveLoop::updateState() {
 
 
 void ExecutiveLoop::executeDecisionLoop() {
-
   while (loopIsRunning) {
     // Control Loop from Simulink
     /*if (userinput == "end") {

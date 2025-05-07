@@ -47,7 +47,7 @@ public:
 		  std::ostream& error);
 
   void ManualControlCallback(const std_msgs::msg::Bool::SharedPtr msg);
-  void ManualOverrideCallback(const std_msgs::msg::Bool::SharedPtr msg);
+  void ManualOverrideCallback();
   void depthPressureSensorCallback(const std_msgs::msg::String::SharedPtr msg);
 
   void imuSensorCallback(const sensor_msgs::msg::Imu &msg);
@@ -130,5 +130,6 @@ private:
   std::string typeOfExecute;
 
   std::string getCurrentDateTime();
+  void clearQueue();
   void override();
 };
