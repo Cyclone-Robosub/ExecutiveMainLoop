@@ -23,6 +23,7 @@
 #include "std_msgs/msg/int32_multi_array.hpp"
 #include "std_msgs/msg/int64.hpp"
 #include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/empty.hpp"
 #include <yaml-cpp/yaml.h>
 
 #include "sensor_msgs/msg/imu.hpp"
@@ -47,7 +48,7 @@ public:
 		  std::ostream& error);
 
   void ManualControlCallback(const std_msgs::msg::Bool::SharedPtr msg);
-  void ManualOverrideCallback();
+  void ManualOverrideCallback(const std_msgs::msg::Empty::SharedPtr msg);
   void depthPressureSensorCallback(const std_msgs::msg::String::SharedPtr msg);
 
   void imuSensorCallback(const sensor_msgs::msg::Imu &msg);

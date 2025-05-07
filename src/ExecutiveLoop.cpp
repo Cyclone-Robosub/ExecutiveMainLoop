@@ -49,12 +49,10 @@ void ExecutiveLoop::ManualControlCallback(const std_msgs::msg::Bool::SharedPtr m
 
 
 //This should only clear the queue
-void ExecutiveLoop::ManualOverrideCallback() {
+void ExecutiveLoop::ManualOverrideCallback(const std_msgs::msg::Empty::SharedPtr msg) {
   std::unique_lock<std::mutex> Manual_Lock(Manual_Override_mutex);
   isManualOverride = true;
-  if (isManualOverride) {
-    clearQueue();
-  }
+  clearQueue();
 }
 
 

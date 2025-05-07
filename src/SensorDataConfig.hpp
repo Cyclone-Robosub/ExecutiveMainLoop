@@ -19,6 +19,6 @@ class SensorsDataConfig : public rclcpp::Node {
       rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
           CLTool_subscription_;
       rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr Manual_Control_sub;
-      rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr Manual_Override_sub;
+      rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr Manual_Override_sub;
       rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr duration_subscription_;
 };
