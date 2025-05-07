@@ -22,7 +22,7 @@ cd ../../
 cd lib/Research/src
 colcon build &
 cd ../
-chmod +x startuppy.sh &
+chmod +x startuppy.sh
 cd ../../
 
 source install/setup.bash # in order to source it for the executive build
