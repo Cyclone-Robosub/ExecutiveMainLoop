@@ -2,6 +2,12 @@
 # Change directory to src
 # Build the package
 # Source ROS setup files
+trap killgroup SIGINT
+
+killgroup(){
+  kill 0
+}
+
 
 chmod +x submodules.sh
 ./submodules.sh
@@ -25,6 +31,4 @@ colcon build --cmake-args -DMOCK_RPI=OFF
 
 chmod +x startup.sh
 
-
-
-
+wait
