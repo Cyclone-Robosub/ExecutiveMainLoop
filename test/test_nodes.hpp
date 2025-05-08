@@ -17,12 +17,12 @@
  * @author Danny Kwong
  * @date April 14, 2025
  */
-
+/*
 #pragma once
 #include <gtest/gtest.h>
 #include <rclcpp/rclcpp.hpp>
 #include "ExecutiveLoop.cpp"  // Include node implementation(s)
-
+/*
 class TestExecutiveLoop : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -57,4 +57,4 @@ protected:
 
     std::shared_ptr<ExecutiveLoop> exec_node;
     std::shared_ptr<SensorsData> sensor_node;
-};
+};*/

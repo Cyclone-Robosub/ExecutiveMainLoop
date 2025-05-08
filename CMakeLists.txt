@@ -21,7 +21,10 @@ find_package(rosidl_default_generators REQUIRED)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(EXPORT_COMPILE_COMMANDS True)
-
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/DIDINS1.msg"
+  DEPENDENCIES std_msgs builtin_interfaces
+  )
 # Main executable
 add_executable(ExecutiveExecutable
   ExecutiveLoop.cpp
@@ -39,11 +42,11 @@ ament_target_dependencies(ExecutiveExecutable
   sensor_msgs
   std_srvs
 )
-ament_package()
 target_link_libraries(ExecutiveExecutable
   wiringPi
   PropulsionFunctions
   yaml-cpp
+  executive_main_loop__rosidl_typesupport_cpp
 )
 
 # Include directories
@@ -56,9 +59,18 @@ target_include_directories(ExecutiveExecutable PUBLIC
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion
+  ${CMAKE_CURRENT_SOURCE_DIR}/build/executive_main_loop/rosidl_generator_cpp/
+  ${CMAKE_CURRENT_SOURCE_DIR}/ros2_ws/src/build/inertial_sense_ros2/rosidl_generator_cpp/
 )
 find_library(wiringPi_LIB wiringPi)
+
+
 target_link_libraries(ExecutiveExecutable ${wiringPi_LIB})
+ament_export_include_directories(ros2_ws/src/inertial-sense-sdk/ROS/ros2/shared/include)
+ament_export_libraries(inertial_sense_ros2)
+ament_export_dependencies(rclcpp std_msgs)
+ament_package()
+
 # Testing configuration
 if(BUILD_TESTING)
   # Add test executable with test directory files
@@ -76,7 +88,11 @@ if(BUILD_TESTING)
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/test
   )
-
+target_link_libraries(ExecutiveExecutable
+  wiringPi
+  PropulsionFunctions
+  yaml-cpp
+)
   # Dependencies and linking
   ament_target_dependencies(run_Executive_tests
     rclcpp

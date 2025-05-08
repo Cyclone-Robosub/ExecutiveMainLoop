@@ -1,4 +1,5 @@
 #include <atomic>
+#include <algorithm>
 #include <chrono>
 #include <condition_variable>
 #include <filesystem>
@@ -23,6 +24,7 @@
 
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/magnetic_field.hpp"
+#include "executive_main_loop/msg/didins1.hpp"
 
 using namespace std::literals;
 namespace fs = std::filesystem;
@@ -62,7 +64,7 @@ public:
       stateFile.open(stateFileString, std::ofstream::app);
 
       // Append this for every new file.
-      stateFile << "Time,Depth(m),Pressure, IMU Data, PWM Data" << std::endl;
+      stateFile << "Time,Depth(M),Pressure,Angular Velocity X, Angular Velocity Y, Angular Velocity Z, Linear Acceleration X, Linear Acceleration Y, Linear Acceleration Z, Mag Field X, Mag Field Y, Mag Field Z, Theta Roll, Theta Pitch, Theta Yaw, Velocity U, Velocity V, Velocity W, North(Meters), East(M), West(M), LLA 0, LLA1, LLA2, PWM Data" <<  std::endl;
       std::cout << "Created new state file." << std::endl;
     } else {
       stateFile.open(stateFileString, std::ofstream::app);
@@ -141,6 +143,13 @@ public:
     mag_field_x = msg.magnetic_field.x;
     mag_field_y = msg.magnetic_field.y;
     mag_field_z = msg.magnetic_field.z;
+  }
+  void did_insCallback(const executive_main_loop::msg::DIDINS1& msg){
+    std::lock_guard<std::mutex> CallbackDIDLock(did_mutex);
+    std::copy(msg.theta.begin(), msg.theta.end(), thetaArray);
+        std::copy(msg.uvw.begin(), msg.uvw.end(), uvwArray);
+        std::copy(msg.lla.begin(), msg.lla.end(), llaArray);
+        std::copy(msg.ned.begin(), msg.ned.end(), nedArray);
   }
 
   //First get the PWM Array. Then Allow the duration callback to execute and pair the array with the duration. Then push it onto the queue for ExecuteDecision. Notify every time we allow either Duration or Execute to use the queue for chain of execution. 
@@ -238,14 +247,27 @@ public:
                 << angular_velocity_z << ", " << linear_acceleration_x << ", "
                 << linear_acceleration_y << ", " << linear_acceleration_z << ", ";
       IMUlock.unlock();
-      stateFile << mag_field_x << ", " << mag_field_y << ", " << mag_field_z
-                << ", PWM :[";
-
-      std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
-      for (auto i : currentPWMandDuration_ptr->first.pwm_signals) {
+      stateFile << mag_field_x << ", " << mag_field_y << ", " << mag_field_z;
+      std::unique_lock<std::mutex> DIDLock(did_mutex);
+      for(auto i : thetaArray){
+        stateFile << i <<", ";
+      }
+      for(auto i : uvwArray){
+        stateFile << i <<", ";
+      }
+      for(auto i : nedArray){
         stateFile << i << ", ";
       }
-      stateFile << "],";
+      for(auto i : llaArray){
+        stateFile << i <<", ";
+      }
+      DIDLock.unlock();
+       stateFile << "[";
+      std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
+      for (auto i : currentPWMandDuration_ptr->first.pwm_signals) {
+        stateFile << i << " ";
+      }
+      stateFile << "], ";
       pwmValuesLock.unlock();
       stateFile << "\n";
       if (stateFile.tellp() > 200) {
@@ -398,13 +420,41 @@ private:
   //NOTE: there are going to be a lot of unused variables, please remove in the future.
   bool isManualEnabled = false;
   bool isManualOverride = false;
+  std::mutex Manual_Mutex;
+
   bool isRunningThrusterCommand = false;
   bool isCurrentCommandTimedPWM = false;
-  bool AllowDurationSync = false;
   std::mutex thruster_mutex;
+  //The current PWM and duration ptr will and should always have a value regardless of what Executive DecisionLoop or Send Thrusters want. However, SendThrusters can "finish" a current PWM and duration and will say that it wants a new command, but it can be the same current PWM if ExecutiveDecision decides so. Executive Decision (on its own thread) will see that SendThrusters is not running a command and give it a new current PWM. This is made so that Executive Decision has the chance to give PWM a new Command if the current one is a timedPWM. In Later uses, the State file should use the current PWM that the Send Thruster is using.
+  std::shared_ptr<std::pair<pwm_array, std::chrono::milliseconds>>
+      currentPWMandDuration_ptr;
+
+  // bool isQueuePWMEmpty = true;
+  bool AllowDurationSync = false;
   std::mutex array_duration_sync_mutex;
-  std::mutex Manual_Mutex;
+
+  std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr;
+  std::vector<PwmPin *> thrusterPins;
+  std::vector<DigitalPin *> digitalPins;
+  pwm_array our_pwm_array;
+
+
+  std::queue<std::pair<pwm_array, std::chrono::milliseconds>> ManualPWMQueue;
   unsigned int sizeQueue = 0;
+  pwm_array given_array;
+
+  std::ofstream stateFile;
+  std::mutex sensor_mutex;
+  std::mutex Queue_pwm_mutex;
+  std::mutex imu_mutex;
+  std::mutex did_mutex;
+  std::mutex ThrusterCommand_mutex;
+  std::mutex Manual_Override_mutex;
+  std::mutex current_PWM_duration_mutex;
+  std::condition_variable SendToDuration_change;
+  std::condition_variable PWM_cond_change;
+  std::condition_variable Thruster_cond_change;
+  std::condition_variable Change_Manual;
 
   float angular_velocity_x = NULL_SENSOR_VALUE;
   float angular_velocity_y = NULL_SENSOR_VALUE;
@@ -417,36 +467,20 @@ private:
   float mag_field_y = NULL_SENSOR_VALUE;
   float mag_field_z = NULL_SENSOR_VALUE;
 
-  std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr;
-  std::vector<PwmPin *> thrusterPins;
-  std::vector<DigitalPin *> digitalPins;
-  pwm_array our_pwm_array;
-  std::queue<std::pair<pwm_array, std::chrono::milliseconds>> ManualPWMQueue;
+  float thetaArray[3];
+  float uvwArray[3];
+  float llaArray[3];
+  float nedArray[3];
 
-  pwm_array given_array;
-
-  //The current PWM and duration ptr will and should always have a value regardless of what Executive DecisionLoop or Send Thrusters want. However, SendThrusters can "finish" a current PWM and duration and will say that it wants a new command, but it can be the same current PWM if ExecutiveDecision decides so. Executive Decision (on its own thread) will see that SendThrusters is not running a command and give it a new current PWM. This is made so that Executive Decision has the chance to give PWM a new Command if the current one is a timedPWM. In Later uses, the State file should use the current PWM that the Send Thruster is using.
-  std::shared_ptr<std::pair<pwm_array, std::chrono::milliseconds>>
-      currentPWMandDuration_ptr;
-  // bool isQueuePWMEmpty = true;
-  std::ofstream stateFile;
-  std::mutex sensor_mutex;
-  std::mutex Queue_pwm_mutex;
-  std::mutex imu_mutex;
-  std::mutex ThrusterCommand_mutex;
-  std::mutex Manual_Override_mutex;
-  std::mutex current_PWM_duration_mutex;
-  std::condition_variable SendToDuration_change;
-  std::condition_variable PWM_cond_change;
-  std::condition_variable Thruster_cond_change;
-  std::condition_variable Change_Manual;
   std::string depth_pressure_msg = "Depth Sensor Not Started Yet";
   std::string imu_msg;
   std::vector<float> imu_data;
   float depth = NULL_SENSOR_VALUE;
   float pressure = NULL_SENSOR_VALUE;
+
   bool loopIsRunning;
   bool tasksCompleted;
+
   std::string userinput;
   int duration_int_pwm;
   std::string typeOfExecute;
@@ -509,6 +543,8 @@ public:
     ManualToggleOptions.callback_group = callbackManual;
     auto ManualOverride = rclcpp::SubscriptionOptions();
     ManualOverride.callback_group = callbackManual;
+    auto did_ins_Options = rclcpp::SubscriptionOptions();
+    did_ins_Options.callback_group = callbackIMU;
 
     depth_pressure_sensor_subscription_ =
         this->create_subscription<std_msgs::msg::String>(
@@ -533,12 +569,12 @@ public:
             magOptions);
 
               //Please implement Kory's data as soon as possible
-    /*did_ins_subscription =
-    this->create_subscription<sensor_msgs::msg::MagneticField>(
+    did_ins_subscription_ =
+    this->create_subscription<executive_main_loop::msg::DIDINS1>(
         "mag", rclcpp::QoS(5),
-        std::bind(&ExecutiveLoop::, mainLoopObject,
+        std::bind(&ExecutiveLoop::did_insCallback, mainLoopObject,
                   std::placeholders::_1),
-        did_ins_Options);*/
+        did_ins_Options);
     CLTool_subscription_ =
         this->create_subscription<std_msgs::msg::Int32MultiArray>(
             "array_Cltool_topic", rclcpp::QoS(10),
@@ -574,6 +610,7 @@ private:
       mag_subscription_;
   rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
       CLTool_subscription_;
+  rclcpp::Subscription<executive_main_loop::msg::DIDINS1>::SharedPtr did_ins_subscription_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr Manual_Control_sub;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr Manual_Override_sub;
   rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr duration_subscription_;
