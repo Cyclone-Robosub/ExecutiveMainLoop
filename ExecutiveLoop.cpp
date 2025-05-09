@@ -24,7 +24,7 @@
 
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/magnetic_field.hpp"
-#include "executive_main_loop/msg/didins1.hpp"
+#include "inertial_sense_ros2/msg/didins1.hpp"
 
 using namespace std::literals;
 namespace fs = std::filesystem;
@@ -144,12 +144,12 @@ public:
     mag_field_y = msg.magnetic_field.y;
     mag_field_z = msg.magnetic_field.z;
   }
-  void did_insCallback(const executive_main_loop::msg::DIDINS1& msg){
+  void did_insCallback(const inertial_sense_ros2::msg::DIDINS1::SharedPtr msg){
     std::lock_guard<std::mutex> CallbackDIDLock(did_mutex);
-    std::copy(msg.theta.begin(), msg.theta.end(), thetaArray);
-        std::copy(msg.uvw.begin(), msg.uvw.end(), uvwArray);
-        std::copy(msg.lla.begin(), msg.lla.end(), llaArray);
-        std::copy(msg.ned.begin(), msg.ned.end(), nedArray);
+    std::copy(msg->theta.begin(), msg->theta.end(), thetaArray);
+        std::copy(msg->uvw.begin(), msg->uvw.end(), uvwArray);
+        std::copy(msg->lla.begin(), msg->lla.end(), llaArray);
+        std::copy(msg->ned.begin(), msg->ned.end(), nedArray);
   }
 
   //First get the PWM Array. Then Allow the duration callback to execute and pair the array with the duration. Then push it onto the queue for ExecuteDecision. Notify every time we allow either Duration or Execute to use the queue for chain of execution. 
@@ -570,7 +570,7 @@ public:
 
               //Please implement Kory's data as soon as possible
     did_ins_subscription_ =
-    this->create_subscription<executive_main_loop::msg::DIDINS1>(
+    this->create_subscription<inertial_sense_ros2::msg::DIDINS1>(
         "mag", rclcpp::QoS(5),
         std::bind(&ExecutiveLoop::did_insCallback, mainLoopObject,
                   std::placeholders::_1),
@@ -610,7 +610,7 @@ private:
       mag_subscription_;
   rclcpp::Subscription<std_msgs::msg::Int32MultiArray>::SharedPtr
       CLTool_subscription_;
-  rclcpp::Subscription<executive_main_loop::msg::DIDINS1>::SharedPtr did_ins_subscription_;
+  rclcpp::Subscription<inertial_sense_ros2::msg::DIDINS1>::SharedPtr did_ins_subscription_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr Manual_Control_sub;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr Manual_Override_sub;
   rclcpp::Subscription<std_msgs::msg::Int64>::SharedPtr duration_subscription_;
