@@ -1,14 +1,17 @@
 #pragma once
 
 #include <chrono>
-#include "lib/Executive_Propulsion/lib/Command.h" // for pwm_array.
+#include "lib/Executive_Propulsion/lib/Command.h"
 #include "lib/Executive_Propulsion/lib/Command_Interpreter.h"
+
+const pwm_array stop_set_array = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 
 class Pwm_Command {
 protected:
     pwm_array pwms;
 public:
-    virtual void execute(Command_Interpreter_RPi5& commandInterpreter);
+    virtual void execute(Command_Interpreter_RPi5& commandInterpreter) = 0;
+    virtual pwm_array getPwms() {return pwms;};
     explicit Pwm_Command(pwm_array pwms) : pwms(pwms) {};
 };
 
@@ -23,5 +26,5 @@ private:
     std::chrono::milliseconds duration;
 public:
     void execute(Command_Interpreter_RPi5& commandInterpreter) override;
-    explicit Timed_Command(pwm_array pwms);
+    explicit Timed_Command(pwm_array pwms, std::chrono::milliseconds duration);
 };

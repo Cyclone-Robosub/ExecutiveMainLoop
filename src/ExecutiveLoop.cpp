@@ -2,23 +2,19 @@
 
 //TODO from William:
 // Write docstring thingies for function definitions (i.e. /// @param, /// @brief, etc.)
-// Change untimed commands to call Command_Interpreter's untimed command function. Update duration for untimed
-// commands to be zero, or some other solution than 99999 milliseconds.
-// Replace ptr with new object. Replace sendThrusterCommand body.
 
 // start the executive Loop
 // Setup for all the functions should be done here.
 // Setup everything so that when the threads startup, it can run its tasks.
 ExecutiveLoop::ExecutiveLoop(
-    std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr, 
-    std::shared_ptr<std::pair<pwm_array, 
-    std::chrono::milliseconds>> currentPWMandDuration_ptr,
-    std::ofstream& stateFile, 
-    std::ostream& output, 
+    std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr,
+    std::unique_ptr<Pwm_Command> currentCommand_ptr,
+    std::ofstream& stateFile,
+    std::ostream& output,
     std::ostream& error ) :
       Node("executive_main_node"),
       commandInterpreter_ptr(std::move(commandInterpreter_ptr)),
-      currentPWMandDuration_ptr(currentPWMandDuration_ptr),
+      currentCommand_ptr(std::move(currentCommand_ptr)),
       stateFile(stateFile),
       output(output),
       error(error),
@@ -27,11 +23,10 @@ ExecutiveLoop::ExecutiveLoop(
 
 void ExecutiveLoop::clearQueue() {
   std::lock_guard<std::mutex> QueueLock(Queue_pwm_mutex);
-  std::queue<std::pair<pwm_array, std::chrono::milliseconds>> empty;
+  std::queue<std::unique_ptr<Pwm_Command>> empty;
   std::swap(ManualPWMQueue, empty);
   output << "Manual Command Current Override -> Deleted Queue"
             << std::endl;
-  sizeQueue = 0;
 }
 
 // these callback functions serve as the "read Input node in the loop"
@@ -113,60 +108,26 @@ void ExecutiveLoop::durationCallback(const std_msgs::msg::Int64::SharedPtr msg) 
                               [this] { return AllowDurationSync; });
   output << "Getting duration" << std::endl;
   auto duration_int_pwm = msg->data;
-  std::chrono::milliseconds durationMS;
-  bool isgivenTimed = false;
-  // duration_int_pwm = std::stoi(duration_pwm);
-  switch (duration_int_pwm) {
-  case -1:
-  //PWM
-    durationMS = std::chrono::milliseconds(9999999999);
-    output << durationMS << std::endl;
-    break;
-  default:
-  //TIMED PWM
-    durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
-    isgivenTimed = true;
-    output << durationMS << std::endl;
-    break;
-  }
+  std::unique_ptr<Pwm_Command> newCommand;
   std::unique_lock<std::mutex> Queue_sync_lock(Queue_pwm_mutex);
-  ManualPWMQueue.push(std::make_pair(given_array, durationMS));
-  sizeQueue++;
-  if(isgivenTimed){
-    pwm_array stop_set_array;
-    for (int i = 0; i < 8; i++) {
-      stop_set_array.pwm_signals[i] = 1500;
-    }
-    std::pair<pwm_array, std::chrono::milliseconds> stop_set_pair(
-        stop_set_array, std::chrono::milliseconds(99999999));
-    ManualPWMQueue.push(stop_set_pair);
-    sizeQueue++;
+  switch (duration_int_pwm) {
+  case -1: // PWM
+    newCommand = std::make_unique<Untimed_Command>(given_array);
+    ManualPWMQueue.push(newCommand);
+    haltCurrentCommand();
+    break;
+  default: // TIMED PWM
+    std::chrono::milliseconds durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
+    output << durationMS << std::endl;
+    newCommand = std::make_unique<Timed_Command>(given_array, durationMS);
+    ManualPWMQueue.push(newCommand);
+    ManualPWMQueue.push(std::make_unique<Untimed_Command>(stop_set_array));
+    break;
   }
   AllowDurationSync = false;
   PWM_cond_change.notify_all();
   output << "Pushed to queue, Duration: " << duration_int_pwm << std::endl;
 }
-
-/*
-  void readInputs() {
-    while (loopIsRunning) {
-      //std::lock_guard<std::mutex> lock(mutex_);
-      // Have to check what the msg is saying.
-      // Parse msg data. Put the research data into a vector or var
-  iables.
-      // IMU data will probably go into vector.
-      // IF needed we can use parameters with ROS if a lot of different
-  types
-      // of data. one part of message has to the be imu and the other part
-  has
-      // to be the depth. Assuming I have it right. Need to read
-      // multithreading with mutex condition and lock pushing to
-  variables. or
-      // anyway of setting it
-
-    }
-  }
-*/
 
 
 void ExecutiveLoop::updateState() {
@@ -189,8 +150,8 @@ void ExecutiveLoop::updateState() {
     stateFile << mag_field_x << ", " << mag_field_y << ", " << mag_field_z
               << ", PWM :[";
 
-    std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
-    for (auto i : currentPWMandDuration_ptr->first.pwm_signals) {
+    std::unique_lock<std::mutex> pwmValuesLock(command_mutex);
+    for (auto i : (currentCommand_ptr->getPwms().pwm_signals)) {
       stateFile << i << ", ";
     }
     stateFile << "],";
@@ -205,6 +166,15 @@ void ExecutiveLoop::updateState() {
   }
 }
 
+void ExecutiveLoop::replaceCurrentCommand() {
+  std::unique_lock<std::mutex> CurrentpwmValuesLock(
+    command_mutex);
+  currentCommand_ptr = std::move(ManualPWMQueue.front());
+  ManualPWMQueue.pop();
+  std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
+  isRunningThrusterCommand = true;
+}
+
 
 void ExecutiveLoop::executeDecisionLoop() {
   while (loopIsRunning) {
@@ -215,7 +185,8 @@ void ExecutiveLoop::executeDecisionLoop() {
         //if the sendThrusterCommand is currently running or has a task.
         if (isRunningThrusterCommand) {
           output << "manual override" << std::endl;
-          override();
+          haltCurrentCommand();
+          replaceCurrentCommand();
           //override was successful; revert back.
           isManualOverride = false;
         }
@@ -224,50 +195,10 @@ void ExecutiveLoop::executeDecisionLoop() {
       std::unique_lock<std::mutex> QueuepwmValuesLock(Queue_pwm_mutex,
                                                       std::defer_lock);
       PWM_cond_change.wait(QueuepwmValuesLock,
-                            [this] { return !(sizeQueue == 0); });
-      //Make sure isCurrnetCommandTimedPWM is only changed by Executive DecisionLoop or else put a mutex on it.
-      if (!isCurrentCommandTimedPWM) {
-        override();
-        output << "Executive Decision: Replace Current PWM Command" << std::endl;
-        if (ManualPWMQueue.front().second >=
-            std::chrono::milliseconds(99999999)) {
-          isCurrentCommandTimedPWM = false;
-        } else {
-          isCurrentCommandTimedPWM = true;
-        }
-        std::unique_lock<std::mutex> CurrentpwmValuesLock(
-            current_PWM_duration_mutex);
-        currentPWMandDuration_ptr =
-            std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
-                ManualPWMQueue.front());
-        CurrentpwmValuesLock.unlock();
-        std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
-        isRunningThrusterCommand = true;
-        thrusterCommandLock.unlock();
-        ManualPWMQueue.pop();
-        sizeQueue--;
-      }
+                            [this] { return !(ManualPWMQueue.size() == 0); });
       // Add comment here below and above.
-      else if (!isRunningThrusterCommand) {
-        output << "2 Executor Decision: Needs a Command" << std::endl;
-        if (ManualPWMQueue.front().second >=
-            std::chrono::milliseconds(9999999)) {
-          isCurrentCommandTimedPWM = false;
-        } else {
-          isCurrentCommandTimedPWM = true;
-        }
-        std::unique_lock<std::mutex> CurrentpwmValuesLock(
-            current_PWM_duration_mutex);
-        currentPWMandDuration_ptr =
-            std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
-                ManualPWMQueue.front());
-        std::unique_lock<std::mutex> statusThruster(thruster_mutex);
-        isRunningThrusterCommand = true;
-        statusThruster.unlock();
-        CurrentpwmValuesLock.unlock();
-        output << "3 executor decision: Gave New Command" << std::endl;
-        ManualPWMQueue.pop();
-        sizeQueue--;
+      if (!isRunningThrusterCommand) {
+        replaceCurrentCommand();
       }else{
         
       }
@@ -279,33 +210,19 @@ void ExecutiveLoop::executeDecisionLoop() {
 
 
 // Sends Commands to Thrusters with CommandInterpreter
-void ExecutiveLoop::sendThrusterCommand() {
-  while (loopIsRunning) {
-    if (typeOfExecute == "blind_execute") {
-      CommandComponent commandComponent;
-      // our_pwm_array.pwm_signals = inputPWM;
-      if (isRunningThrusterCommand) {
-        output << "Send Thruster Command is doing its job" << std::endl;
-        std::unique_lock<std::mutex> CurrentpwmValuesLock(
-            current_PWM_duration_mutex);
-        if (currentPWMandDuration_ptr->second == std::chrono::milliseconds(0)) {
-          commandInterpreter_ptr->untimed_execute(currentPWMandDuration_ptr->first);
-        } else {
-          commandComponent.thruster_pwms = currentPWMandDuration_ptr->first;
-          // setup ROS topic for duration
-          commandComponent.duration = currentPWMandDuration_ptr->second;
-          CurrentpwmValuesLock.unlock();
-          commandInterpreter_ptr->blind_execute(commandComponent);  
-        }
-        output << "Finished Thruster Command\n" << std::endl;
 
-        std::unique_lock<std::mutex> statusThruster(thruster_mutex);
-        isRunningThrusterCommand = false;
-        statusThruster.unlock();
-        // Thruster_cond_change.notify_all();
-        // completed
-      }
+
+void ExecutiveLoop::sendThrusterCommand(Pwm_Command& command) {
+  while (loopIsRunning) {
+    if (isRunningThrusterCommand) {
+      output << "Send Thruster Command is doing its job" << std::endl;
+      std::unique_lock<std::mutex> current_command_lock(
+        command_mutex);
+      command.execute(*commandInterpreter_ptr);
+      std::unique_lock<std::mutex> statusThruster(thruster_mutex);
+      isRunningThrusterCommand = false;
     }
+    output << "Finished Thruster Command\n" << std::endl;
   }
 }
 
@@ -339,23 +256,11 @@ std::string ExecutiveLoop::getCurrentDateTime() {
 }
 
 
-//If a task is currently running, stop this task and set a zero pair to clear everything. Execute Decision Loop should then be able to decide what to do next.
-void ExecutiveLoop::override() {
+//If a task is currently running, stop this task.
+void ExecutiveLoop::haltCurrentCommand() {
   if (isRunningThrusterCommand) {
     //May have to have a mutex for this ptr.
     commandInterpreter_ptr->interruptBlind_Execute();
-    pwm_array zero_set_array;
-    for (int i = 0; i < 8; i++) {
-      zero_set_array.pwm_signals[i] = 0;
-    }
-    std::pair<pwm_array, std::chrono::milliseconds> zero_set_pair(
-        zero_set_array, std::chrono::milliseconds(100));
-    std::unique_lock<std::mutex> pwmValuesLock(current_PWM_duration_mutex);
-    currentPWMandDuration_ptr =
-        std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
-            zero_set_pair);
-    pwmValuesLock.unlock();
-    isCurrentCommandTimedPWM = false;
     std::lock_guard<std::mutex> statusThrusterLock(thruster_mutex);
     isRunningThrusterCommand = false;
   }

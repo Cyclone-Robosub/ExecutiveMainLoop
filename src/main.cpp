@@ -1,5 +1,6 @@
 #ifndef TESTING_EXCLUDE_MAIN
 #include "ExecutiveLoop.hpp"
+#include "Pwm_Command.hpp"
 #include "SensorDataConfig.hpp"
 #include <iostream>
 #include <fstream>
@@ -22,18 +23,11 @@ std::ofstream makeStateFile(std::ostream& output, std::ostream& error) {
     return stateFile;
 }
   
-std::shared_ptr<std::pair<pwm_array, std::chrono::milliseconds>> makeCurrentPWMDurationPtr() {
-    pwm_array zero_set_array;
-    for (int i = 0; i < 8; i++) {
-      zero_set_array.pwm_signals[i] = 1500;
-    }
+std::unique_ptr<Pwm_Command> makeCurrentCommand_ptr() {
   
-    std::pair<pwm_array, std::chrono::milliseconds> zero_set_pair(
-        zero_set_array, std::chrono::milliseconds(0)); // 0 for when we want to run an untimed command
-    auto currentPWMandDuration_ptr = std::make_shared<std::pair<pwm_array,
-        std::chrono::milliseconds>>(zero_set_pair);
+    std::unique_ptr<Pwm_Command> currentCommand_ptr = std::make_unique<Untimed_Command>(stop_set_array);
     
-    return currentPWMandDuration_ptr;
+    return currentCommand_ptr;
   }
   
   std::unique_ptr<Command_Interpreter_RPi5> makeCommandInterpreterPtr(std::ostream& output, std::ostream& error, std::ostream& logFile) {
@@ -65,10 +59,10 @@ int main(int argc, char *argv[]) {
     auto commandInterpreter_ptr = makeCommandInterpreterPtr(output, error, stateFile);
     commandInterpreter_ptr->initializePins();
 
-    auto currentPWMandDuration_ptr = makeCurrentPWMDurationPtr();
+    auto currentCommand_ptr = makeCurrentCommand_ptr();
 
     output << "Executive Main Loop Object Creation" << std::endl;
-    auto mainLoopObject = std::make_shared<ExecutiveLoop>(std::move(commandInterpreter_ptr), currentPWMandDuration_ptr, stateFile, std::cout, std::cerr);
+    auto mainLoopObject = std::make_shared<ExecutiveLoop>(std::move(commandInterpreter_ptr), std::move(currentCommand_ptr), stateFile, output, error);
     auto sensorsROScallback = std::make_shared<SensorsDataConfig>(mainLoopObject);
 
     // records false if run has not completed yet.

@@ -11,4 +11,4 @@ void Timed_Command::execute(Command_Interpreter_RPi5& commandInterpreter) {
     commandInterpreter.blind_execute(commandComponent);
 }
 
-explicit Timed_Command::Timed_Command(pwm_array pwms): Pwm_Command(pwms) {}
+explicit Timed_Command::Timed_Command(pwm_array pwms, std::chrono::milliseconds duration): Pwm_Command(pwms), duration(duration) {}
