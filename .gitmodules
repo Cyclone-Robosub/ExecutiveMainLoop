@@ -5,7 +5,6 @@
 [submodule "yaml-cpp"]
 	path = lib/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
-
 [submodule "inertial-sense-sdk"]
 	path = ros2_ws/src/inertial-sense-sdk
 	url = https://github.com/Cyclone-Robosub/inertial-sense-sdk.git
