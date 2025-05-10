@@ -1,11 +1,10 @@
 #include "ExecutiveLoop.hpp"
 
-
-
 //TODO from William:
 // Write docstring thingies for function definitions (i.e. /// @param, /// @brief, etc.)
 // Change untimed commands to call Command_Interpreter's untimed command function. Update duration for untimed
 // commands to be zero, or some other solution than 99999 milliseconds.
+// Replace ptr with new object. Replace sendThrusterCommand body.
 
 // start the executive Loop
 // Setup for all the functions should be done here.
@@ -13,7 +12,7 @@
 ExecutiveLoop::ExecutiveLoop(
     std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr, 
     std::shared_ptr<std::pair<pwm_array, 
-    std::chrono::milliseconds>> currentPWMandDuration_ptr, 
+    std::chrono::milliseconds>> currentPWMandDuration_ptr,
     std::ofstream& stateFile, 
     std::ostream& output, 
     std::ostream& error ) :
@@ -209,22 +208,9 @@ void ExecutiveLoop::updateState() {
 
 void ExecutiveLoop::executeDecisionLoop() {
   while (loopIsRunning) {
-    // Control Loop from Simulink
-    /*if (userinput == "end") {
-    executeFailCommands();
-    std::cout << "User Interrupted Executive Loop" << std::endl;
-    break;
-  }*/
-    // test these two lines of code
     std::unique_lock<std::mutex> Manual_Lock(Manual_Mutex);
-    // Change_Manual.wait(Manual_Lock, [this] { return isManualEnabled; });
-
-    //CHECK CL-TOOL IS CONTROLLING
     if (isManualEnabled) {
-    //  Manual_Lock.unlock();
-    //   std::cout << "Manual Enabled" << std::endl;
-      //if typed in CL-Tool was tcs.override()
-    std::unique_lock<std::mutex> Manual_Override_Lock(Manual_Override_mutex);
+      std::unique_lock<std::mutex> Manual_Override_Lock(Manual_Override_mutex);
       if (isManualOverride) {
         //if the sendThrusterCommand is currently running or has a task.
         if (isRunningThrusterCommand) {
@@ -235,13 +221,10 @@ void ExecutiveLoop::executeDecisionLoop() {
         }
       }
       typeOfExecute = "blind_execute";
-      //std::cout << "Getting the lock for queue." << std::endl;
       std::unique_lock<std::mutex> QueuepwmValuesLock(Queue_pwm_mutex,
                                                       std::defer_lock);
-      // std::cout << "Got the queue lock, looking at the queue." << std::endl;
       PWM_cond_change.wait(QueuepwmValuesLock,
                             [this] { return !(sizeQueue == 0); });
-      //std::cout << "Something is in the queue." << std::endl;
       //Make sure isCurrnetCommandTimedPWM is only changed by Executive DecisionLoop or else put a mutex on it.
       if (!isCurrentCommandTimedPWM) {
         override();
@@ -258,7 +241,6 @@ void ExecutiveLoop::executeDecisionLoop() {
             std::make_shared<std::pair<pwm_array, std::chrono::milliseconds>>(
                 ManualPWMQueue.front());
         CurrentpwmValuesLock.unlock();
-        // std::cout << " Executor Decision: Replace PWM" << std::endl;
         std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
         isRunningThrusterCommand = true;
         thrusterCommandLock.unlock();
@@ -284,12 +266,10 @@ void ExecutiveLoop::executeDecisionLoop() {
         statusThruster.unlock();
         CurrentpwmValuesLock.unlock();
         output << "3 executor decision: Gave New Command" << std::endl;
-        //std::unique_lock<std::mutex> thrusterCommandLock(thruster_mutex);
-        //thrusterCommandLock.unlock();
         ManualPWMQueue.pop();
         sizeQueue--;
       }else{
-
+        
       }
     }
   }
