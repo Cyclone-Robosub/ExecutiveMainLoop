@@ -18,6 +18,7 @@
 
 #include "Command_Interpreter.h"
 #include "SetupConfig/SetupRobot.cpp"
+#include "Pwm_Command.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "std_msgs/msg/int32_multi_array.hpp"
@@ -41,8 +42,7 @@ class ExecutiveLoop : public rclcpp::Node {
 public:
   ExecutiveLoop(
 		  std::unique_ptr<Command_Interpreter_RPi5> commandInterpreter_ptr, 
-		  std::shared_ptr<std::pair<pwm_array, 
-		  std::chrono::milliseconds>> currentPWMandDuration_ptr, 
+      std::unique_ptr<Pwm_Command> currentCommand_ptr,
 		  std::ofstream& stateFile, 
 		  std::ostream& output, 
 		  std::ostream& error);
@@ -60,7 +60,7 @@ public:
   void updateState();
   void executeDecisionLoop();
 
-  void sendThrusterCommand();
+  void sendThrusterCommand(Pwm_Command& command);
 
   bool returnStatus();
   bool returntasksCompleted();
@@ -71,12 +71,10 @@ private:
   bool isManualEnabled = false;
   bool isManualOverride = false;
   bool isRunningThrusterCommand = false;
-  bool isCurrentCommandTimedPWM = false;
   bool AllowDurationSync = false;
   std::mutex thruster_mutex;
   std::mutex array_duration_sync_mutex;
   std::mutex Manual_Mutex;
-  unsigned int sizeQueue = 0;
 
   float angular_velocity_x = NULL_SENSOR_VALUE;
   float angular_velocity_y = NULL_SENSOR_VALUE;
@@ -93,7 +91,7 @@ private:
   std::vector<PwmPin *> thrusterPins;
   std::vector<DigitalPin *> digitalPins;
   pwm_array our_pwm_array;
-  std::queue<std::pair<pwm_array, std::chrono::milliseconds>> ManualPWMQueue;
+  std::queue<std::unique_ptr<Pwm_Command>> ManualPWMQueue;
 
   pwm_array given_array;
 
@@ -103,8 +101,7 @@ private:
   // thread) will see that SendThrusters is not running a command and give it a new current PWM. This is made so that
   // Executive Decision has the chance to give PWM a new Command if the current one is a timedPWM. In Later uses, the
   // State file should use the current PWM that the Send Thruster is using.
-  std::shared_ptr<std::pair<pwm_array, std::chrono::milliseconds>>
-      currentPWMandDuration_ptr;
+  std::unique_ptr<Pwm_Command> currentCommand_ptr;
   // bool isQueuePWMEmpty = true;
   std::ofstream& stateFile;
   std::ostream& output;
@@ -114,7 +111,7 @@ private:
   std::mutex imu_mutex;
   std::mutex ThrusterCommand_mutex;
   std::mutex Manual_Override_mutex;
-  std::mutex current_PWM_duration_mutex;
+  std::mutex command_mutex;
   std::condition_variable SendToDuration_change;
   std::condition_variable PWM_cond_change;
   std::condition_variable Thruster_cond_change;
@@ -130,7 +127,8 @@ private:
   int duration_int_pwm;
   std::string typeOfExecute;
 
+  void replaceCurrentCommand();
   std::string getCurrentDateTime();
   void clearQueue();
-  void override();
+  void haltCurrentCommand();
 };
