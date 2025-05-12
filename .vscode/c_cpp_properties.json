@@ -64,7 +64,8 @@
             "includePath": [
                 "${default}",
                 "${workspaceFolder}/lib/Executive_Propulsion/lib",
-                "/opt/ros/jazzy/include/**"
+                "/opt/ros/jazzy/include/**",
+                "${workspaceFolder}"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

@@ -73,7 +73,7 @@ SensorsDataConfig::SensorsDataConfig(std::shared_ptr<ExecutiveLoop> mainLoopObje
         std::bind(&ExecutiveLoop::ManualControlCallback, mainLoopObject,
                     std::placeholders::_1),
         ManualToggleOptions);
-    Manual_Override_sub = this->create_subscription<std_msgs::msg::Bool>(
+    Manual_Override_sub = this->create_subscription<std_msgs::msg::Empty>(
         "manualOverride", rclcpp::QoS(4),
         std::bind(&ExecutiveLoop::ManualOverrideCallback, mainLoopObject,
                     std::placeholders::_1),
