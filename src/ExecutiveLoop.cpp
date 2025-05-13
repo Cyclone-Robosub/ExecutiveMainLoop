@@ -113,14 +113,14 @@ void ExecutiveLoop::durationCallback(const std_msgs::msg::Int64::SharedPtr msg) 
   switch (duration_int_pwm) {
   case -1: // PWM
     newCommand = std::make_unique<Untimed_Command>(given_array);
-    ManualPWMQueue.push(newCommand);
+    ManualPWMQueue.push(std::move(newCommand));
     haltCurrentCommand();
     break;
   default: // TIMED PWM
     std::chrono::milliseconds durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
     output << durationMS << std::endl;
     newCommand = std::make_unique<Timed_Command>(given_array, durationMS);
-    ManualPWMQueue.push(newCommand);
+    ManualPWMQueue.push(std::move(newCommand));
     ManualPWMQueue.push(std::make_unique<Untimed_Command>(stop_set_array));
     break;
   }
@@ -212,13 +212,13 @@ void ExecutiveLoop::executeDecisionLoop() {
 // Sends Commands to Thrusters with CommandInterpreter
 
 
-void ExecutiveLoop::sendThrusterCommand(Pwm_Command& command) {
+void ExecutiveLoop::sendThrusterCommand() {
   while (loopIsRunning) {
     if (isRunningThrusterCommand) {
       output << "Send Thruster Command is doing its job" << std::endl;
       std::unique_lock<std::mutex> current_command_lock(
         command_mutex);
-      command.execute(*commandInterpreter_ptr);
+      currentCommand_ptr->execute(*commandInterpreter_ptr);
       std::unique_lock<std::mutex> statusThruster(thruster_mutex);
       isRunningThrusterCommand = false;
     }
