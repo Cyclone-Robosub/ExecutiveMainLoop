@@ -191,7 +191,7 @@ void ExecutiveLoop::executeDecisionLoop() {
           isManualOverride = false;
         }
       }
-      typeOfExecute = "blind_execute";
+      typeOfExecute = "timed_execute";
       std::unique_lock<std::mutex> QueuepwmValuesLock(Queue_pwm_mutex,
                                                       std::defer_lock);
       PWM_cond_change.wait(QueuepwmValuesLock,

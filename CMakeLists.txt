@@ -29,8 +29,8 @@ add_subdirectory(lib/Executive_Propulsion)
 
 # ExecutivePropulsionLib
 add_library(ExecutivePropulsionLib
-  lib/Executive_Propulsion/lib/Command_Interpreter.cpp
-  lib/Executive_Propulsion/lib/Wiring.cpp
+  lib/Executive_Propulsion/src/Command_Interpreter.cpp
+  lib/Executive_Propulsion/src/Wiring.cpp
 )
 
 # Main executable
@@ -50,7 +50,7 @@ target_include_directories(ExecutiveExecutable PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src/
   ${CMAKE_CURRENT_SOURCE_DIR}/SetupConfig
   ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
-  ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/src
 )
 
 target_link_libraries(ExecutiveExecutable
