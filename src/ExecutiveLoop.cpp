@@ -260,7 +260,7 @@ std::string ExecutiveLoop::getCurrentDateTime() {
 void ExecutiveLoop::haltCurrentCommand() {
   if (isRunningThrusterCommand) {
     //May have to have a mutex for this ptr.
-    commandInterpreter_ptr->interruptBlind_Execute();
+    commandInterpreter_ptr->interruptTimed_Execute();
     std::lock_guard<std::mutex> statusThrusterLock(thruster_mutex);
     isRunningThrusterCommand = false;
   }
