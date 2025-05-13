@@ -60,7 +60,7 @@ public:
   void updateState();
   void executeDecisionLoop();
 
-  void sendThrusterCommand(Pwm_Command& command);
+  void sendThrusterCommand();
 
   bool returnStatus();
   bool returntasksCompleted();

@@ -40,6 +40,8 @@ add_executable(ExecutiveExecutable
   src/ExecutiveLoop.hpp
   src/SensorDataConfig.cpp
   src/SensorDataConfig.hpp
+  src/Pwm_Command.cpp
+  src/Pwm_Command.hpp
   SetupConfig/SetupRobot.cpp
 )
 
