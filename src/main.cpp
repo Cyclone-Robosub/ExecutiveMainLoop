@@ -81,8 +81,8 @@ int main(int argc, char *argv[]) {
 
     std::jthread ExecutiveDecisionLoopThread(&ExecutiveLoop::executeDecisionLoop,
                                                 mainLoopObject);
-    std::jthread SendThrusterCommandThread(&ExecutiveLoop::sendThrusterCommand,
-                                            mainLoopObject);
+    //std::jthread SendThrusterCommandThread(&ExecutiveLoop::sendThrusterCommand,
+    //                                        mainLoopObject);
 
     // std::jthread
     // SendThrusterCommandThread(&ExecutiveLoop::sendThrusterCommand,
