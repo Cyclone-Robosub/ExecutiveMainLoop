@@ -11,4 +11,6 @@ void Timed_Command::execute(Command_Interpreter_RPi5& commandInterpreter) {
     commandInterpreter.timed_execute(commandComponent);
 }
 
-Timed_Command::Timed_Command(pwm_array pwms, std::chrono::milliseconds duration): Pwm_Command(pwms), duration(duration) {}
+
+Timed_Command::Timed_Command(pwm_array pwms, std::chrono::milliseconds duration)
+    : Pwm_Command(pwms), duration(duration) {}

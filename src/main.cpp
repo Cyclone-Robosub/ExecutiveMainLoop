@@ -1,3 +1,4 @@
+
 #ifndef TESTING_EXCLUDE_MAIN
 #include "ExecutiveLoop.hpp"
 #include "Pwm_Command.hpp"
@@ -80,8 +81,8 @@ int main(int argc, char *argv[]) {
 
     std::jthread ExecutiveDecisionLoopThread(&ExecutiveLoop::executeDecisionLoop,
                                                 mainLoopObject);
-    std::jthread SendThrusterCommandThread(&ExecutiveLoop::sendThrusterCommand,
-                                            mainLoopObject);
+    //std::jthread SendThrusterCommandThread(&ExecutiveLoop::sendThrusterCommand,
+    //                                        mainLoopObject);
 
     // std::jthread
     // SendThrusterCommandThread(&ExecutiveLoop::sendThrusterCommand,
