@@ -113,14 +113,14 @@ void ExecutiveLoop::durationCallback(const std_msgs::msg::Int64::SharedPtr msg) 
   switch (duration_int_pwm) {
   case -1: // PWM
     newCommand = std::make_unique<Untimed_Command>(given_array);
-    ManualPWMQueue.push(newCommand);
+    ManualPWMQueue.push(std::move(newCommand));
     haltCurrentCommand();
     break;
   default: // TIMED PWM
     std::chrono::milliseconds durationMS = std::chrono::milliseconds(duration_int_pwm * 1000);
     output << durationMS << std::endl;
     newCommand = std::make_unique<Timed_Command>(given_array, durationMS);
-    ManualPWMQueue.push(newCommand);
+    ManualPWMQueue.push(std::move(newCommand));
     ManualPWMQueue.push(std::make_unique<Untimed_Command>(stop_set_array));
     break;
   }
@@ -260,7 +260,7 @@ std::string ExecutiveLoop::getCurrentDateTime() {
 void ExecutiveLoop::haltCurrentCommand() {
   if (isRunningThrusterCommand) {
     //May have to have a mutex for this ptr.
-    commandInterpreter_ptr->interruptBlind_Execute();
+    commandInterpreter_ptr->interruptTimed_Execute();
     std::lock_guard<std::mutex> statusThrusterLock(thruster_mutex);
     isRunningThrusterCommand = false;
   }
