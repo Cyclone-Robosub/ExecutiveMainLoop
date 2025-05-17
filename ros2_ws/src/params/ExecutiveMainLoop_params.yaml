@@ -26,21 +26,21 @@
 #
 ########################
 # * END OF INERTIALSENSE INFO
-
-meta: |
-  author: Danny Kwong
-  title: ExecutiveMainLoop_params.yaml
-  date: Mar 8th, 2025
-  relevent documentation:
-    for possible topics and messages: ./ros2_ws/src/ros2/src/inertial_sense_ros2.cpp
-    for description of these topics and msgs: https://docs.inertialsense.com/user-manual/com-protocol/DID-descriptions/
+#
+#   author: Danny Kwong
+#   title: ExecutiveMainLoop_params.yaml
+#   date: Mar 8th, 2025
+#   relevent documentation:
+#     for possible topics and messages: ./ros2_ws/src/ros2/src/inertial_sense_ros2.cpp
+#     for description of these topics and msgs: https://docs.inertialsense.com/user-manual/com-protocol/DID-descriptions/
+#
 
 topic: "inertialsense"
 port: [/dev/ttyACM0, /dev/ttyACM1, /dev/ttyACM2]
 baudrate: 921600
 enable_log: true
 publishTf: true                                 # Publish Transform Frame (TR)
-frame_id: ""                                    # FIXME: What is this?  is it just the FrameID to use in the ROS messages?
+# frame_id: ""                                    # FIXME: What is this?  is it just the FrameID to use in the ROS messages?
 mag_declination: 0.0
 ref_lla: [0.0, 0.0, 0.0]
 # factory_reset: true                             # Reset flash config to factory defaults on startup.
@@ -138,7 +138,7 @@ sensors:
 #! NO POINT LOOKING PASS HERE SINCE FEATURE BELOW IS NOT PROVIDED BY OUR BOARD 
 
 gps1:
-  enable: false
+  enabled: false
   type: 'F9P'
   antenna_offset: [0, 0, 0]                     # X,Y,Z offset in meters in Sensor Frame to GPS 1 antenna
   gpsTimeUserDelay: 0.0
@@ -179,7 +179,7 @@ gps1:
         topic: "info"
 
 gps2:
-  enable: false
+  enabled: false
   type: 'F9P'
   antenna_offset: [0, 0, 0]                     # X,Y,Z offset in meters in Sensor Frame to GPS 1 antenna
   gpsTimeUserDelay: 0.0
