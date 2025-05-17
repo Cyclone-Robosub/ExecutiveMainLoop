@@ -15,6 +15,14 @@ git checkout main
 cd ../yaml-cpp
 git checkout master
 
+cd ../../ros2_ws/src/inertial-sense-sdk
+git checkout main
 
+cd src/libusb
+git checkout master
 
+cd ../../../ros2
+git checkout main
+
+cd ../../../
 git submodule foreach --recursive git pull
