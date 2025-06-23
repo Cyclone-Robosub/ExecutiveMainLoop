@@ -7,6 +7,7 @@ int main(){
     //In the way future, we could make a waypoint seconds generator function.
     //Create a Executive Scheduler based on timestamps and then the waypoint.
         //Think of a Data Strcuture for this.
+        //Static -> just read of the getline.
         //My suggestion, Linked List (if we want to reorganize order) vs vector(if we do not care about reorganize order).
     //Run the Exeuctive Scheduler to publish WayPoints onto the waypoint topic.
     //The topic just to be clear will publish continously the message that contains the waypoint at this current moment.
