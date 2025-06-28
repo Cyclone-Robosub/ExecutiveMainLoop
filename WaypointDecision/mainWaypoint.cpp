@@ -3,15 +3,17 @@
 int main(){
     //TODO:
     //Parse input commands or YAML File.
-    //The Foramt could be Waypoint -> given seconds. 
+    //The Format could be Waypoint -> given seconds. 
     //In the way future, we could make a waypoint seconds generator function.
     //Create a Executive Scheduler based on timestamps and then the waypoint.
-        //Think of a Data Strcuture for this.
-        //Static -> just read of the getline.
-        //My suggestion, Linked List (if we want to reorganize order) vs vector(if we do not care about reorganize order).
-    //Run the Exeuctive Scheduler to publish WayPoints onto the waypoint topic.
-    //The topic just to be clear will publish continously the message that contains the waypoint at this current moment.
+        //Think of a Data Structure for this.
+        //If, Static -> just read of the getline. (File Output Input Data Structure)
+        //My suggestion if dynamic, Linked List (if we want to reorganize order) vs vector(if we do not care about reorganize order).
+    //Run the Executive Scheduler to publish WayPoints onto the waypoint topic.
+    //The topic just to be clear will publish continuously the message that contains the waypoint at this current moment.
     //Listen to Position Topic, do some simple reasoning to determine to move to next waypoint.
+    //Here we can include the Changing of State Features in which we have predetermined actions with waypoints attached to them.
+    //Executive Overload should be able to shut down if ExecutiveMainLoop does not have that privilege level.
 
     //Pseudo code
     /*
