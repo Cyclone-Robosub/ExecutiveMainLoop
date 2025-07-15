@@ -63,7 +63,7 @@
             "name": "Linux G++ x64",
             "includePath": [
                 "${default}",
-                "${workspaceFolder}/lib/Executive_Propulsion/lib",
+                "${workspaceFolder}/lib/Executive_Propulsion/src",
                 "/opt/ros/jazzy/include/**",
                 "${workspaceFolder}"
             ],

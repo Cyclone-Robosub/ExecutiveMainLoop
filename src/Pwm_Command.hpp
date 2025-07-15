@@ -1,8 +1,8 @@
 #pragma once
 
 #include <chrono>
-#include "lib/Executive_Propulsion/lib/Command.h"
-#include "lib/Executive_Propulsion/lib/Command_Interpreter.h"
+#include "Command.hpp"
+#include "Command_Interpreter.hpp"
 
 const pwm_array stop_set_array = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 

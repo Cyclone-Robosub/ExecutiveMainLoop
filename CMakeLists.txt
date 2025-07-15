@@ -27,12 +27,6 @@ set(EXPORT_COMPILE_COMMANDS ON)
 # Add external libraries
 add_subdirectory(lib/Executive_Propulsion)
 
-# ExecutivePropulsionLib
-add_library(ExecutivePropulsionLib
-  lib/Executive_Propulsion/lib/Command_Interpreter.cpp
-  lib/Executive_Propulsion/lib/Wiring.cpp
-)
-
 # Main executable
 add_executable(ExecutiveExecutable
   src/main.cpp
@@ -43,6 +37,7 @@ add_executable(ExecutiveExecutable
   src/Pwm_Command.cpp
   src/Pwm_Command.hpp
   SetupConfig/SetupRobot.cpp
+  src/Pwm_Command.cpp
 )
 
 target_include_directories(ExecutiveExecutable PUBLIC
@@ -50,12 +45,12 @@ target_include_directories(ExecutiveExecutable PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/src/
   ${CMAKE_CURRENT_SOURCE_DIR}/SetupConfig
   ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
-  ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/lib
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/src
 )
 
 target_link_libraries(ExecutiveExecutable
   yaml-cpp
-  ExecutivePropulsionLib
+  PropulsionFunctions
 )
 
 ament_target_dependencies(ExecutiveExecutable

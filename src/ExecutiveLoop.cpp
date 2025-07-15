@@ -191,7 +191,7 @@ void ExecutiveLoop::executeDecisionLoop() {
           isManualOverride = false;
         }
       }
-      typeOfExecute = "blind_execute";
+      typeOfExecute = "timed_execute";
       std::unique_lock<std::mutex> QueuepwmValuesLock(Queue_pwm_mutex,
                                                       std::defer_lock);
       PWM_cond_change.wait(QueuepwmValuesLock,
@@ -260,7 +260,7 @@ std::string ExecutiveLoop::getCurrentDateTime() {
 void ExecutiveLoop::haltCurrentCommand() {
   if (isRunningThrusterCommand) {
     //May have to have a mutex for this ptr.
-    commandInterpreter_ptr->interruptBlind_Execute();
+    commandInterpreter_ptr->interruptTimed_Execute();
     std::lock_guard<std::mutex> statusThrusterLock(thruster_mutex);
     isRunningThrusterCommand = false;
   }
