@@ -2,7 +2,7 @@
 #ifndef TESTING_EXCLUDE_MAIN
 #include "ExecutiveLoop.hpp"
 #include "Pwm_Command.hpp"
-#include "SensorDataConfig.hpp"
+// #include "SensorDataConfig.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 
     output << "Executive Main Loop Object Creation" << std::endl;
     auto mainLoopObject = std::make_shared<ExecutiveLoop>(std::move(commandInterpreter_ptr), std::move(currentCommand_ptr), stateFile, output, error);
-    auto sensorsROScallback = std::make_shared<SensorsDataConfig>(mainLoopObject);
+    // auto sensorsROScallback = std::make_shared<SensorsDataConfig>(mainLoopObject);
 
     // records false if run has not completed yet.
     bool runStatus = false;
@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
     rclcpp::executors::MultiThreadedExecutor SensorsExecutor;
     // auto sensorNode = std::make_shared<SensorsDataConfig>(sensorsROScallback);
 
-    SensorsExecutor.add_node(sensorsROScallback);
+    // SensorsExecutor.add_node(sensorsROScallback);
     // SensorsExecutor.add_node(mainLoopObject);
     output << "ROS2 runnning" << std::endl;
     SensorsExecutor.spin();
