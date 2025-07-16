@@ -29,15 +29,9 @@ add_subdirectory(lib/Executive_Propulsion)
 
 # Main executable
 add_executable(ExecutiveExecutable
-  src/main.cpp
-  src/ExecutiveLoop.cpp
-  src/ExecutiveLoop.hpp
-  src/SensorDataConfig.cpp
-  src/SensorDataConfig.hpp
-  src/Pwm_Command.cpp
-  src/Pwm_Command.hpp
-  SetupConfig/SetupRobot.cpp
-  src/Pwm_Command.cpp
+  WayPointDecisiion/mainWaypoint.cpp
+  Waypoint.cpp
+  Waypoint.h
 )
 
 target_include_directories(ExecutiveExecutable PUBLIC
