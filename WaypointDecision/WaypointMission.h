@@ -6,5 +6,5 @@ struct WaypointMission{
 	waypoint WaypointPointer;
 	bool NeedsVision;
 	bool NeedsManipulation;
-	int timeSuspended;
+	int timeSuspended = -1;
 };

@@ -9,6 +9,6 @@ class WaypointExecutive {
   WaypointMission getMission();
   // publisher of Waypoint topic.
   private:
-  bool isSOCINT;
+  bool isSOCINT{false};
   WaypointMission CurrentWaypointMission;
 };
