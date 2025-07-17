@@ -1,40 +1,71 @@
 #include "WaypointExecutive.h"
 #include <memory>
 
-///
+
 void WaypointExecutive::Controller() {
   while (true) {
-    getMissionCommand();
+    getNewMissionCommand();
+    SendCurrentWaypoint();
     while (isTaskNotCompleted()) {
-      if (CheckINTofTask()) {
-        ServiceINTofTask();
-      } else {
-        SetCurrentWaypoint();
+      if (CurrentTask.isInterruptable) {
+        INT_Flag = CheckINTofTask(); // Potential Conditional Unresponsive Function
+        if (INT_Flag.has_value()) {
+          ServiceINTofTask();
+        }
       }
     }
   }
 }
-
-///@brief : O(1) Algo and no conditional waiting.
-void WaypointExecutive::SetCurrentWaypoint() {
-  // check position
-  MissionWaypoint.WaypointPointer;
+///@brief O(1) Algo and no conditional waiting.
+void WaypointExecutive::SendCurrentWaypoint() {
+  CurrentWaypointPtr = CurrentTask.WaypointPointer;
+  // Publisher-> publish the ptr->Array of Float;
+}
+///@brief O(1) and no conditional waiting. Returns True if the task should still
+/// run.
+bool WaypointExecutive::isTaskNotCompleted() {
+  // check position var (include tolerance) with CurrentWaypointPtr
+  // if position not met -> return true
+  // else
+  if (HoldWaypTime_TimeElapsed.has_value()) {
+    (HoldWaypTime_TimeElapsed.first > HoldWaypTime_TimeElapsed.second) ? true
+                                                                       : false;
+  }
+  // else
+  return false;
+}
+///@brief Conditional waiting. Returns a value in the optional if there is a
+/// condition met such as position or vision has sent some data over.
+std::optional<Interrupt> WaypointExecutive::CheckINTofTask() {
 
   // check vision if needed
+  if (CurrentTask.NeedsVision) {
+    /*if(VisionChanged)
+    {
+     return true;
+    }*/
+  }
   // listen to the vision topic;
-
-  // check heading and position
 
   // check battery
   if (isSOCINT) {
-    // Pre-determined Waypoint; //Change the Mission Waypoint
+    return {.SOCDanger = true}// INT_CODE;
   }
-  // check real-time requirement
-  CurrentWaypointPtr = std::make_shared<waypointPtr>();
+  return std::nullopt;
+}
+///@brief Service the INT. Clear the INT_Flag at the end.
+void WaypointExecutive::ServiceINTofTask() {
+  if(INT_Flag == 1){
+    //Battery WayPoint
+    CurrentTask = {.WaypointPointer = };
+    SendCurrentWaypoint();
+  }
+  INT_Flag.reset();
 }
 
-///@brief O(1) Algo and no conditional waiting. Has authority of changing CurrentTask.
-WaypointMission WaypointExecutive::getMissionCommand() {
+///@brief O(1) Algo and no conditional waiting. Has authority of changing
+/// CurrentTask.
+void WaypointExecutive::getNewMissionCommand() {
   // fetch or predetermined waypoints.
 
   // Fetch

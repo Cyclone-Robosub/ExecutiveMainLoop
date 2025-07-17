@@ -5,21 +5,39 @@
 #include <iostream>
 #include <fstream>
 
+/*
+Notes:
+  INT stands for interrupts.
+  The Interrupt code right now is rededaunt.
+  
+*/
+
+struct Interrupt {
+  bool SOCDanger{false};
+};
+
 class WaypointExecutive {
   WaypointExecutive() {
     Controller();
   }
+
+private:
   void Controller();
-  void SetCurrentWaypoint();
-  void getMissionCommand();
+  void SendCurrentWaypoint();
+  void getNewMissionCommand();
   bool isTaskNotCompleted();
-  bool CheckINTofTask();
+  std::optional<Interrupt> CheckINTofTask();
   void ServiceINTofTask();
   // publisher of CurrentWaypointPtr topic.
-  private:
   bool isSOCINT{false};
   waypointPtr CurrentWaypointPtr;
   Task CurrentTask;
-  //Task MissionWaypoint;
+  std::optional<Interrupt> INT_Flag;
+  //Need to resolve the Time Elapsed and Counting.
 
+  //callback ROS2 functions
+  /*
+    positionCallback->positionvar
+    visionCallback->Vision Data Fields
+  */
 };
