@@ -7,7 +7,7 @@ void WaypointExecutive::Controller() {
     getNewMissionCommand();
     SendCurrentWaypoint();
     while (isTaskNotCompleted()) {
-      if (CurrentTask.isInterruptable) {
+      if (CurrentTask.isInterruptable) { //Think about Hard vs Soft INT
         INT_Flag = CheckINTofTask(); // Potential Conditional Unresponsive Function
         if (INT_Flag.has_value()) {
           ServiceINTofTask();
@@ -38,7 +38,7 @@ bool WaypointExecutive::isTaskNotCompleted() {
 /// condition met such as position or vision has sent some data over.
 std::optional<Interrupt> WaypointExecutive::CheckINTofTask() {
 
-  // check vision if needed
+  // check vision if needed -> Manipulation Tasks can be coded apart and along side this vision requriment along with position and altitude.
   if (CurrentTask.NeedsVision) {
     /*if(VisionChanged)
     {
@@ -48,18 +48,20 @@ std::optional<Interrupt> WaypointExecutive::CheckINTofTask() {
   // listen to the vision topic;
 
   // check battery
-  if (isSOCINT) {
+  if (isSOCINT.has_value()) {
+    isSOCINT.reset();
     return {.SOCDanger = true}// INT_CODE;
   }
   return std::nullopt;
 }
+
 ///@brief Service the INT. Clear the INT_Flag at the end.
 void WaypointExecutive::ServiceINTofTask() {
-  if(INT_Flag == 1){
+  if(INT_Flag.SOCDanger){
     //Battery WayPoint
     CurrentTask = {.WaypointPointer = };
-    SendCurrentWaypoint();
   }
+  SendCurrentWaypoint();
   INT_Flag.reset();
 }
 
@@ -79,4 +81,8 @@ void WaypointExecutive::getNewMissionCommand() {
 
 void WaypointExecutive::SOCIntCallback(const std_msgs::Bool::SharedPtr msg) {
   isSOCINT = msg->data;
+}
+
+void WaypointExecutive::ManipulationTask(){
+  //Send Manipulation Code over Publisher.
 }
