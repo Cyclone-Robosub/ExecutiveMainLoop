@@ -3,19 +3,24 @@
 #include "std_msgs/msg/bool.hpp"
 #include <memory>
 #include <iostream>
+#include <queue>
 #include <fstream>
 
 /*
 Notes:
   INT stands for interrupts.
-  Theoretically, interrupts that occur while another interrupt is being serviced could be never attended to as the order in which the CheckINTofTask checks all the interrupts specifies priority. This could be solved by a queue of Interrupts, but then there is a loss of actual priority. Thus a data structure of the interrupts, perferably a max heap, that has the ability to sort itself (This will be a task for the controller to do so) is a solution. 
+  Theoretically, interrupts that occur while another interrupt is being serviced or checked could be never attended to as the order in which the ServiceINTofTask or services all the interrupts specifies priority. This could be solved by a queue of Interrupts, but then there is a loss of actual priority. Thus a data structure of the interrupts, perferably a max heap, that sorts itself is a solution. Multithreading is another solution.
 
 
   Vision and Manipulation INT should be able to work together and apart. There will probably be functions, but understanding the outputs and inputs from Vision and Manipulation should solve this implementation problem. 
 */
 
-struct Interrupt {
+struct Interrupts {
   bool SOCDanger{false};
+  //Vision I See The Bins
+  //Vision Drop Objects;
+  //ManipulationCode
+  int size{0};
 };
 
 class WaypointExecutive {
@@ -27,15 +32,15 @@ private:
   void Controller();
   void SendCurrentWaypoint();
   void getNewMissionCommand();
-  bool isTaskNotCompleted();
+  bool isTaskCompleted();
   void ManipulationTask();
-  std::optional<Interrupt> CheckINTofTask();
+  void CheckINTofTask();
   void ServiceINTofTask();
   // publisher of CurrentWaypointPtr topic.
   std::optional<bool> isSOCINT;
   waypointPtr CurrentWaypointPtr;
   Task CurrentTask;
-  std::optional<Interrupt> INT_Flag;
+  std::queue<Interrupts> Current_Interrupts; //Review the priority queue < opreator between two elements with void pointers.
   //Need to resolve the Time Elapsed and Counting.
 
   //callback ROS2 functions
