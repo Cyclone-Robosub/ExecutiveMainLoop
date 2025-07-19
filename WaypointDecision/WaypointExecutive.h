@@ -1,6 +1,7 @@
 #include "Task.h"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include <cstddef>
 #include <memory>
 #include <iostream>
 #include <queue>
@@ -19,8 +20,7 @@ struct Interrupts {
   bool SOCDanger{false};
   //Vision I See The Bins
   //Vision Drop Objects;
-  //ManipulationCode
-  int size{0};
+  //ManipulationCodeSend
 };
 
 class WaypointExecutive {
@@ -32,7 +32,7 @@ private:
   void Controller();
   void SendCurrentWaypoint();
   void getNewMissionCommand();
-  bool isTaskCompleted();
+  bool isCurrentTaskCompleted();
   void ManipulationTask();
   void CheckINTofTask();
   void ServiceINTofTask();
@@ -48,4 +48,6 @@ private:
     positionCallback->positionvar
     visionCallback->Vision Data Fields
   */
+  bool StopWorking{false};
+  bool AllTasksCompleted{false};
 };

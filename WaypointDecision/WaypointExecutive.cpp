@@ -3,12 +3,12 @@
 
 
 void WaypointExecutive::Controller() {
-  while (true) {
+  while (!AllTasksCompleted || !StopWorking) {
     getNewMissionCommand();
     SendCurrentWaypoint();
-    while (!isTaskCompleted()) {
+    while (!isCurrentTaskCompleted()) {
      // if (CurrentTask.isInterruptable) { //Think about Hard vs Soft INT
-        CheckINTofTask(); // Potential Conditional Unresponsive Function (should not be as development continues)
+        CheckINTofTask(); // Potentially Conditional Unresponsive Function (should not be as development continues)
         if (!Current_Interrupts.empty()) {
           ServiceINTofTask();
         }
@@ -80,13 +80,15 @@ void WaypointExecutive::CheckINTofTask() {
 ///@brief O(1) Algo and no conditional waiting. Service the INT. Clear the
 ///Current Interrupt at the end.
 void WaypointExecutive::ServiceINTofTask() {
-  if(Current_Interrupts.SOCDanger){
+  Interrupts ServiceINT = Current_Interrupts.top();
+  if(ServiceINT.SOCDanger){
     //Battery WayPoint
     CurrentTask = {.WaypointPointer = std::make_shared<waypointPtr>()}; //Creating a new.
     SendCurrentWaypoint();
+    StopWorking = true;
   }
 
-  if(Current_Interrupts.ManipulationCode){
+  if(ServiceINT.ManipulationCodeSend){
     //Manipulation_Publisher ->publish( CurrentTask.ManipulationCodeandStatus.first);
     CurrentTask.ManipulationCodeandStatus.second = true;
   }
