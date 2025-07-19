@@ -50,4 +50,8 @@ private:
   */
   bool StopWorking{false};
   bool AllTasksCompleted{false};
+  void StartTimer();
+  void StopTimer();
+  std::chrono::steady_clock::time_point timeInital;
+
 };
