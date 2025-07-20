@@ -3,12 +3,18 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <queue>
+#include <string>
+#include "lib/crs_common/position/position.hpp"
 
-typedef std::shared_ptr<std::array<float, 6>> waypointPtr;
-struct Task {
+typedef std::shared_ptr<Position> waypointPtr;
+
+struct Step {
   waypointPtr WaypointPointer;
   bool NeedsVision{false}; //Will become more robust.
   bool isInterruptable{false}; //Think About Hard vs Soft INT
+  bool doBarrelRoll{false}; //Will also need to be more robust
+  bool stopWorking{false};
   std::optional<std::pair<int,bool>> ManipulationCodeandStatus;
 
   //Make sure that the second of the pair when initalized is set to 0.
@@ -16,3 +22,9 @@ struct Task {
 
   // const static Waypoints pre-determined of vector?
 };
+
+struct Task {
+  std::string name;
+  std::queue<Step> steps;
+};
+

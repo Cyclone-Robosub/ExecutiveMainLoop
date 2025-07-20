@@ -28,7 +28,7 @@ void WaypointExecutive::SendCurrentWaypoint() {
 }
 ///@brief O(1) and no conditional waiting. Returns True if the task should still
 /// run.
-bool WaypointExecutive::isTaskCompleted() {
+bool WaypointExecutive::isCurrentTaskCompleted() {
   // check position var (include tolerance) with CurrentWaypointPtr
   // if position not met -> return false;
   if (HoldWaypTime_TimeElapsed.has_value()) {

@@ -18,3 +18,6 @@
 	path = lib/Research
 	url = https://github.com/Cyclone-Robosub/Research_Cyclone.git
 	branch=master
+[submodule "lib/crs_common"]
+	path = lib/crs_common
+	url = https://github.com/Cyclone-Robosub/crs_common.git
