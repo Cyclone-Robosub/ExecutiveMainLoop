@@ -1,4 +1,5 @@
 #include "WaypointExecutive.h"
+#include <chrono>
 #include <memory>
 
 
@@ -20,6 +21,10 @@ void WaypointExecutive::Controller() {
 void WaypointExecutive::SendCurrentWaypoint() {
   CurrentWaypointPtr = CurrentTask.WaypointPointer;
   // Publisher-> publish the ptr->Array of Float;
+  //start the timer
+  if(CurrentTask.HoldWaypTime_TimeElapsed.has_value()){
+    StartTimer();
+  }
 }
 ///@brief O(1) and no conditional waiting. Returns True if the task should still
 /// run.
@@ -27,9 +32,11 @@ bool WaypointExecutive::isCurrentTaskCompleted() {
   // check position var (include tolerance) with CurrentWaypointPtr
   // if position not met -> return false;
   if (HoldWaypTime_TimeElapsed.has_value()) {
+    StopTimer();
     if(HoldWaypTime_TimeElapsed.first > HoldWaypTime_TimeElapsed.second){
       return false;
     }
+    StartTimer();
   }
   if(ManipulationCodeandStatus.has_value()){
     if(!ManipulationCodeandStatus.second){
@@ -115,4 +122,16 @@ void WaypointExecutive::SOCIntCallback(const std_msgs::Bool::SharedPtr msg) {
 
 void WaypointExecutive::ManipulationTask(){
   //Send Manipulation Code over Publisher.
+}
+///@brief O(1) Algo and no conditional waiting. Save the current time in timeInital.
+void WaypointExecutive::StartTimer(){
+  timeInital = std::chrono::steady_clock::now();
+}
+
+///@brief O(1) Algo and no conditional waiting. Add time to the Elapsed Time of Current Task.
+void WaypointExecutive::StopTimer(){
+  auto deltaTime = std::chrono::duration<double>(
+                       std::chrono::steady_clock::now() - timeInital)
+                       .count();
+  HoldWaypTime_TimeElapsed.second += deltaTime;
 }
