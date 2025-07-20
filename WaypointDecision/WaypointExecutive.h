@@ -20,7 +20,7 @@ struct Interrupts {
   bool SOCDanger{false};
   //Vision I See The Bins
   //Vision Drop Objects;
-  //ManipulationCodeSend
+  //ManipulationSendCode
 };
 
 class WaypointExecutive {
