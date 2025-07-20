@@ -114,4 +114,5 @@
         "pwms"
     ],
     "C_Cpp_Runner.cppStandard": "c++23",
+    "C_Cpp.default.cppStandard": "c++20",
 }
