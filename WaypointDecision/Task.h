@@ -6,6 +6,7 @@
 #include <queue>
 #include <string>
 #include "lib/crs_common/position/position.hpp"
+#include "JSON_Parser/MissionAnalyser.hpp"
 
 typedef std::shared_ptr<Position> waypointPtr;
 

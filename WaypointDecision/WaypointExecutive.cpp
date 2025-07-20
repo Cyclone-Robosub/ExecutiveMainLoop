@@ -4,7 +4,8 @@
 
 
 void WaypointExecutive::Controller() {
-  while (!AllTasksCompleted || !StopWorking) {
+  MissionQueue.parseJSONForMission();
+  while (!MissionQueue.allTasksComplete() || !StopWorking) {
     getNewMissionCommand();
     SendCurrentWaypoint();
     while (!isCurrentTaskCompleted()) {
@@ -22,21 +23,12 @@ void WaypointExecutive::SendCurrentWaypoint() {
   CurrentWaypointPtr = CurrentTask.WaypointPointer;
   // Publisher-> publish the ptr->Array of Float;
   //start the timer
-  if(CurrentTask.HoldWaypTime_TimeElapsed.has_value()){
-    StartTimer();
-  }
 }
 ///@brief O(1) and no conditional waiting. Returns True if the task should still
 /// run.
 bool WaypointExecutive::isCurrentTaskCompleted() {
-  // check position var (include tolerance) with CurrentWaypointPtr
-  // if position not met -> return false;
-  if (HoldWaypTime_TimeElapsed.has_value()) {
-    StopTimer();
-    if(HoldWaypTime_TimeElapsed.first > HoldWaypTime_TimeElapsed.second){
-      return false;
-    }
-    StartTimer();
+  if(!MetPositionandTimeReq()){
+    return false;
   }
   if(ManipulationCodeandStatus.has_value()){
     if(!ManipulationCodeandStatus.second){
@@ -106,13 +98,7 @@ void WaypointExecutive::ServiceINTofTask() {
 /// CurrentTask.
 void WaypointExecutive::getNewMissionCommand() {
   // fetch or predetermined waypoints.
-
-  // Fetch
-  // std::getline or what ever the JSON equivlent.
-  // make new Task Object
-  // Fill in Data
-  // Return
-
+  CurrentTask = MissionQueue.popNextTask();
   // Predetermined -> Waypoint Objects?
 }
 
@@ -123,15 +109,46 @@ void WaypointExecutive::SOCIntCallback(const std_msgs::Bool::SharedPtr msg) {
 void WaypointExecutive::ManipulationTask(){
   //Send Manipulation Code over Publisher.
 }
+
+///@brief O(1) Algo and no conditional waiting. 
+bool WaypointExecutive::MetPositionandTimeReq(){
+  // check position var (include tolerance) with CurrentWaypointPtr
+  // if position not met -> if(optional) StopTimer(); //Missed after reaching it.
+  // then return false;
+  // else if position met { 
+  if (CurrentTask.HoldWaypTime_TimeElapsed.has_value()) {
+    if(!isTimerOn){
+    StartTimer();
+    }
+  }
+  //}
+
+  //Time Req
+  if (CurrentTask.HoldWaypTime_TimeElapsed.has_value()) {
+    CalcTimer();
+    if (CurrentTask.HoldWaypTime_TimeElapsed.first >
+        CurrentTask.HoldWaypTime_TimeElapsed.second) {
+      return false;
+    }
+  }
+  return true;
+}
 ///@brief O(1) Algo and no conditional waiting. Save the current time in timeInital.
 void WaypointExecutive::StartTimer(){
   timeInital = std::chrono::steady_clock::now();
+  isTimerOn = true;
 }
 
-///@brief O(1) Algo and no conditional waiting. Add time to the Elapsed Time of Current Task.
+///@brief O(1) Algo and no conditional waiting.
 void WaypointExecutive::StopTimer(){
+  isTimerOn = false;
+}
+///@brief O(1) Algo and no conditional waiting. Add time to the Elapsed Time of
+///Current Task.
+void WaypointExecutive::CalcTimer(){
   auto deltaTime = std::chrono::duration<double>(
                        std::chrono::steady_clock::now() - timeInital)
                        .count();
-  HoldWaypTime_TimeElapsed.second += deltaTime;
+  CurrentTask.HoldWaypTime_TimeElapsed.second += deltaTime;
+  timeInital = std::chrono::steady_clock::now();
 }

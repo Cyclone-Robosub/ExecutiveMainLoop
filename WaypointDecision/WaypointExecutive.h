@@ -1,3 +1,4 @@
+#include "JSON_Parser/MissionAnalyser.hpp"
 #include "Task.h"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
@@ -24,7 +25,8 @@ struct Interrupts {
 };
 
 class WaypointExecutive {
-  WaypointExecutive() {
+  WaypointExecutive() : MissionQueue("JSON_Parser/MissionPath.JSON")
+  {
     Controller();
   }
 
@@ -53,6 +55,9 @@ private:
   bool AllTasksCompleted{false};
   void StartTimer();
   void StopTimer();
+  void CalcTimer();
+  bool isTimerOn{false};
   std::chrono::steady_clock::time_point timeInital;
-
+  MissionAnalyser MissionQueue;
+  bool MetPositionandTimeReq();
 };
