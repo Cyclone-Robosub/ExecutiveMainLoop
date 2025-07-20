@@ -40,6 +40,7 @@ private:
   std::optional<bool> isSOCINT;
   waypointPtr CurrentWaypointPtr;
   Task CurrentTask;
+  Step CurrentStep;
   std::queue<Interrupts> Current_Interrupts; //Review the priority queue < opreator between two elements with void pointers.
   //Need to resolve the Time Elapsed and Counting.
 

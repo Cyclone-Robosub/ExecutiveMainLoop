@@ -15,7 +15,6 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
-find_package(yaml-cpp REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(Threads REQUIRED)
 
@@ -41,10 +40,10 @@ target_include_directories(ExecutiveExecutable PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/SetupConfig
   ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/Json
 )
 
 target_link_libraries(ExecutiveExecutable
-  yaml-cpp
   PropulsionFunctions
 )
 
