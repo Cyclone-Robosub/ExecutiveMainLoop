@@ -30,6 +30,7 @@ add_subdirectory(lib/Executive_Propulsion)
 add_executable(ExecutiveExecutable
   WaypointDecision/mainWaypoint.cpp
   WaypointDecision/Task.hpp
+  WaypointDecision/Task.cpp
   WaypointDecision/WaypointExecutive.hpp
   WaypointDecision/WaypointExecutive.cpp
   WaypointDecision/JSON_Parser/MissionAnalyser.hpp
