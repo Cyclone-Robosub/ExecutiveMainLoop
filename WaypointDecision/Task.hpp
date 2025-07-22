@@ -1,6 +1,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <chrono>
 #include <utility>
 #include <queue>
 #include <string>
@@ -11,7 +12,7 @@ typedef std::shared_ptr<Position> waypointPtr;
 
 struct Step {
   waypointPtr WaypointPointer;
-  bool NeedsVision{false}; //Will become more robust.
+  std::optional<std::string> VisionCommand;
   bool isInterruptable{false}; //Think About Hard vs Soft INT
   bool doBarrelRoll{false}; //Will also need to be more robust
   bool stopWorking{false};
@@ -21,6 +22,12 @@ struct Step {
   std::optional<std::pair<double, double>> HoldWaypTime_TimeElapsed;
 
   // const static Waypoints pre-determined of vector?
+  void StartTimer();
+  void StopTimer();
+  void CalcTimer();
+  bool isTimerOn{false};
+  std::chrono::steady_clock::time_point timeInital;
+  
 };
 
 struct Task {

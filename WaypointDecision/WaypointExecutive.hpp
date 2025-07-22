@@ -29,15 +29,15 @@ and Manipulation should solve this implementation problem.
 ///@TODO: 
 // Tasks to Complete 
 // Interrupt Handling 
-//    Controller vs Task Interrupts Handling and Implementaion Location 
-//    Then Finish up CheckINTofStep and ServiceINTofStep
-//    Upload Design Image.
+//    Controller vs Task Interrupts Handling and Implementaion Location -> Done
+//    Then Finish up CheckINTofStep and ServiceINTofStep -> Done
+//    Upload Design Image -> Not Needed.
 // ROS2
-//     Vision and Manipulation ROS Topics 
+//     Vision and Manipulation ROS Topics -> Waiting for External
 //     Custom MSG for Float or just get_x ...
 // Manipulation Code Checkup with ManipulationTask() updated.
-// StopWorking mechanism in Controller 
-// Timer Implementation Location Change to Task.hpp
+// StopWorking mechanism in Controller -> Done
+// Timer Implementation Location Change to Task.hpp -> Done
 
 
 
@@ -79,13 +79,9 @@ private:
   rclcpp::Publisher<std_msgs::msg::Float32Array>::SharedPtr WaypointPublisher;
   rclcpp::Subscriber<std_msgs::msg::String>::SharedPtr VisionSub;
   rclcpp::Subscriber<std_msgs::msg::Bool>::SharedPtr SOCINTSub;
-  
+  //Make This Pair or Class to save the interrupt details.
   bool StopWorking{false};
-  void StartTimer();
-  void StopTimer();
-  void CalcTimer();
-  bool isTimerOn{false};
-  std::chrono::steady_clock::time_point timeInital;
   MissionAnalyser MissionQueue;
   bool MetPositionandTimeReq();
+  void EndReport();
 };

@@ -1,5 +1,6 @@
 #include "WaypointExecutive.hpp"
 #include <chrono>
+#include <fstream>
 #include <memory>
 
 void WaypointExecutive::SetupROS() {
@@ -10,15 +11,15 @@ void WaypointExecutive::SetupROS() {
       this->create_subscription<std_msgs::msg::String>("VisionTopic", 10);
 }
 
-//Need to think about a better StopWorking mechanism. 
+// Need to think about a better StopWorking mechanism.
 void WaypointExecutive::Controller() {
   MissionQueue.parseJSONForMission();
-  while (!MissionQueue.allTasksComplete() || !StopWorking) {
+  while (!MissionQueue.allTasksComplete()) {
     getNewMissionTask();
-    while (!CurrentTask.steps.empty() || !StopWorking) {
+    while (!CurrentTask.steps.empty()) {
       getNewMissionStep();
       SendCurrentWaypoint();
-      while (!isCurrentStepCompleted() || !StopWorking) {
+      while (!isCurrentStepCompleted()) {
         // if (CurrentTask.isInterruptable) { //Think about Hard vs Soft INT
         CheckINTofStep(); // Potentially Conditional Unresponsive Function
                           // (should not be as development continues)
@@ -33,7 +34,7 @@ void WaypointExecutive::Controller() {
 ///@brief O(1) Algo and no conditional waiting.
 void WaypointExecutive::SendCurrentWaypoint() {
   CurrentWaypointPtr = CurrentStep.WaypointPointer;
-  //Use Custom msg.
+  // Use Custom msg.
   WaypointPublisher->publish((CurrentWaypointPtr.get_array_copy()));
   // start the timer
 }
@@ -43,6 +44,9 @@ bool WaypointExecutive::isCurrentStepCompleted() {
   if (!MetPositionandTimeReq()) {
     return false;
   }
+
+  //use the vision condition option to check if done?
+
   if (ManipulationCodeandStatus.has_value()) {
     if (!ManipulationCodeandStatus.second) {
       return false;
@@ -51,34 +55,28 @@ bool WaypointExecutive::isCurrentStepCompleted() {
   // else
   return true;
 }
-///@brief Conditional waiting for some and for now. Returns a optional if there
-/// is a condition met such as position or vision has sent some data over.
+///@brief Conditional waiting for some and for now. Pushes INT instance to the queue of Current Queue.
 void WaypointExecutive::CheckINTofStep() {
   Interrupts generateINT;
   // check vision if needed -> Manipulation Tasks can be coded apart and along
   // side this vision requriment along with position and altitude.
-  if (CurrentStep.NeedsVision) {
-    /*if(VisionChangedorSentSomethingOveroneofTheTopics)
-    {
-     return true;
-    }*/
-
-    /*
-    if(Vision I See the Bins Flag){
-      Reset the Flag.
-      interrupt.BINSSPOTTED = true;
-    }
-    */
-    /*
-        if(Vision Drop Flag and Manipulation Code for this Current Task)
+  if (CurrentStep.VisionCommand.has_value()) {
+    switch (VisionCommand) {
+    case "BINS_SPOTTED":
+      // Check Bool
+      // Reset the Flag.
+      // interrupt.BINSSPOTTED = true;
+      break;
+    case "DROP_INTO_BINS":
+      /*if(Altitude is good)
           {
-            if(Altitude is good)
-            {
-              Vision reset flag.
-              interrupt.DROPTHEBINS;
-            }
-        }
-    */
+            Vision reset flag.
+            interrupt.DROPTHEBINS;
+          }*/
+      break;
+    default:
+      break;
+    }
   }
   // listen to the vision topic;
 
@@ -100,8 +98,11 @@ void WaypointExecutive::ServiceINTofStep() {
                        std::make_shared<waypointPtr>()}; // Creating a new.
     SendCurrentWaypoint();
     StopWorking = true;
+    EndReport();
   }
-
+  if(ServiceINT.BINS_SPOTTED){
+    //
+  }
   if (ServiceINT.ManipulationCodeSend) {
     // Manipulation_Publisher ->publish(
     // CurrentTask.ManipulationCodeandStatus.first);
@@ -110,8 +111,7 @@ void WaypointExecutive::ServiceINTofStep() {
   Current_Interrupts.pop();
 }
 
-
-void WaypointExecutive::getNewMissionTask(){
+void WaypointExecutive::getNewMissionTask() {
   CurrentTask = MissionQueue.popNextTask();
 }
 
@@ -134,18 +134,18 @@ void WaypointExecutive::ManipulationTask() {
 ///@brief O(1) Algo and no conditional waiting.
 bool WaypointExecutive::MetPositionandTimeReq() {
   // check position var (include tolerance) with CurrentWaypointPtr
-  // if position not met -> if(optional) StopTimer(); //Missed after reaching
+  // if position not met -> if(optional) CurrentStep.StopTimer(); //Missed after reaching
   // it. then return false; else if position met {
   if (CurrentStep.HoldWaypTime_TimeElapsed.has_value()) {
-    if (!isTimerOn) {
-      StartTimer();
+    if (!CurrentStep.isTimerOn) {
+     CurrentStep.StartTimer();
     }
   }
   //}
 
   // Time Req
   if (CurrentStep.HoldWaypTime_TimeElapsed.has_value()) {
-    CalcTimer();
+    CurrentStep.CalcTimer();
     if (CurrentStep.HoldWaypTime_TimeElapsed.first >
         CurrentStep.HoldWaypTime_TimeElapsed.second) {
       return false;
@@ -155,24 +155,17 @@ bool WaypointExecutive::MetPositionandTimeReq() {
 }
 
 
-
-//These Timer functions should be put into the Step Struct to avoid confusion of a timer for WaypointExecutive vs timer for Current Step.
-
-///@brief O(1) Algo and no conditional waiting. Save the current time in
-/// timeInital.
-void WaypointExecutive::StartTimer() {
-  timeInital = std::chrono::steady_clock::now();
-  isTimerOn = true;
-}
-
-///@brief O(1) Algo and no conditional waiting.
-void WaypointExecutive::StopTimer() { isTimerOn = false; }
-///@brief O(1) Algo and no conditional waiting. Add time to the Elapsed Time of
-/// Current Step.
-void WaypointExecutive::CalcTimer() {
-  auto deltaTime = std::chrono::duration<double>(
-                       std::chrono::steady_clock::now() - timeInital)
-                       .count();
-  CurrentTask.HoldWaypTime_TimeElapsed.second += deltaTime;
-  timeInital = std::chrono::steady_clock::now();
+/// @brief: Will Exit itself after creating Report
+void WaypointExecutive::EndReport(){
+  std::ofstream ReportFile("End_Report");
+  ReportFile << "___________START OF REPORT__________" << std::endl;
+  ReportFile << "Reason for Report : ";
+  if(StopWorking){
+    ReportFile << "A predetermined flag to stop the controller." << std::endl;
+  }else{
+    ReportFile << "Finished all tasks." << std::endl;
+  }
+  ReportFile << "___________END OF REPORT ___________" << std::endl;
+  ReportFile.close();
+  ~WaypointExecutive();
 }
