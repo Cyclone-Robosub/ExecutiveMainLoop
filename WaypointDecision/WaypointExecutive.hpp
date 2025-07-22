@@ -38,13 +38,14 @@ and Manipulation should solve this implementation problem.
 // Manipulation Code Checkup with ManipulationTask() updated.
 // StopWorking mechanism in Controller -> Done
 // Timer Implementation Location Change to Task.hpp -> Done
+// Outside WaypointExec work -> build scripts and mainWaypoint.cpp
 
 
 
 struct Interrupts {
   bool SOCDANGER{false};
   bool BINS_SPOTTED{false};
-  bool DROP_INTO_BINS{false};
+  bool DROP_INTO_BINS{false}; //READY_TO_DROP_INTO_BINS
   bool TriggerManipSendCode{false};
 };
 

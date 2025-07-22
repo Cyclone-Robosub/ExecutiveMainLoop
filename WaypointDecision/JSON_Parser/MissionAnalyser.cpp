@@ -66,7 +66,7 @@ void MissionAnalyser::parseJSONForMission() {
                 }
                 else if (stepJson.contains("control_signal")) {
                     std::string signal = stepJson["control_signal"].get<std::string>();
-                    if (signal == "STOP") {
+                    if (signal == "STOP") { //Rename "STOP"
                         step.stopWorking = true;
                     }
                     // TODO: add handling for any other signals (not sure if we're going to have any others?)

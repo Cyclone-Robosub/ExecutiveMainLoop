@@ -30,6 +30,7 @@ void WaypointExecutive::Controller() {
       }
     }
   }
+  EndReport();
 }
 ///@brief O(1) Algo and no conditional waiting.
 void WaypointExecutive::SendCurrentWaypoint() {
