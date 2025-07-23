@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <queue>
+#include <utility>
 
 /*
 Notes:
@@ -33,18 +34,19 @@ and Manipulation should solve this implementation problem.
 //    Then Finish up CheckINTofStep and ServiceINTofStep -> Done
 //    Upload Design Image -> Not Needed.
 // ROS2
-//     Vision and Manipulation ROS Topics -> Waiting for External
-//     Custom MSG for Float or just get_x ...
-// Manipulation Code Checkup with ManipulationTask() updated.
+//     Vision and Manipulation and Position ROS Topics -> Waiting for External (Manipulation Done)
+//     Custom MSG for Float or just get_x ... -> Done
+// Manipulation Code Checkup with ManipulationTask() updated. -> Needs Review
 // StopWorking mechanism in Controller -> Done
-// Timer Implementation Location Change to Task.hpp -> Done
+// Timer Implementation Location Change to Task.hpp -> Done 
+// EndReport Details and Information Handling
 
 
 
 struct Interrupts {
   bool SOCDANGER{false};
   bool BINS_SPOTTED{false};
-  bool DROP_INTO_BINS{false};
+ // bool DROP_INTO_BINS{false};
   bool TriggerManipSendCode{false};
 };
 
@@ -61,7 +63,7 @@ private:
   void getNewMissionStep();
   void getNewMissionTask();
   bool isCurrentStepCompleted();
-  void ManipulationStep();
+  void ManipulationTask(int code);
   void CheckINTofStep();
   void ServiceINTofStep();
   // publisher of CurrentWaypointPtr topic.
@@ -77,6 +79,7 @@ private:
   // callback ROS2 functions
   
   rclcpp::Publisher<std_msgs::msg::Float32Array>::SharedPtr WaypointPublisher;
+  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr ManipulationPublisher;
   rclcpp::Subscriber<std_msgs::msg::String>::SharedPtr VisionSub;
   rclcpp::Subscriber<std_msgs::msg::Bool>::SharedPtr SOCINTSub;
   //Make This Pair or Class to save the interrupt details.
