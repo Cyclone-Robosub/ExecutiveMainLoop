@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(executive_main_loop)
+project(waypoint_decision)
 
 # Option to mock RPi (Pico replacement)
 option(MOCK_RPI "Use mock RPi functions (no Pico)" OFF)

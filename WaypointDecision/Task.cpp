@@ -14,6 +14,6 @@ void Step::CalcTimer() {
   auto deltaTime = std::chrono::duration<double>(
                        std::chrono::steady_clock::now() - timeInital)
                        .count();
-  HoldWaypTime_TimeElapsed.second += deltaTime;
+  HoldWaypTime_TimeElapsed.emplace(std::make_pair(HoldWaypTime_TimeElapsed.value().first, HoldWaypTime_TimeElapsed.value().second + deltaTime));
   timeInital = std::chrono::steady_clock::now();
 }

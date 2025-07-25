@@ -2,7 +2,7 @@
 #include "Task.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
-#include "std_msgs/msg/float32MultiArray.hpp"
+#include "std_msgs/msg/float32_multi_array.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "std_msgs/msg/int32.hpp"
 #include <cstddef>
@@ -66,7 +66,7 @@ private:
   void getNewMissionStep();
   void getNewMissionTask();
   bool isCurrentStepCompleted();
-  void ManipulationTask(int code);
+  void ManipulationStep(int code);
   void CheckINTofStep();
   void ServiceINTofStep();
   // publisher of CurrentWaypointPtr topic.
@@ -81,11 +81,11 @@ private:
 
   // callback ROS2 functions
   
-  rclcpp::Publisher<std_msgs::msg::Float32Array>::SharedPtr WaypointPublisher;
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr ManipulationPublisher;
+  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr WaypointPublisher;
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr Manipulation_Publisher;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr VisionSub;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr SOCINTSub;
-  void SOCIntCallback(const std__msgs::msg::Bool::SharedPtr msg);
+  void SOCIntCallback(const std_msgs::msg::Bool::SharedPtr msg);
       // Make This Pair or Class to save the interrupt details.
       bool StopWorking{false};
   MissionAnalyser MissionQueue;

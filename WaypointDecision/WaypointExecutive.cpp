@@ -5,12 +5,12 @@
 
 void WaypointExecutive::SetupROS() {
   WaypointPublisher =
-      this->create_publisher<std_msgs::msg::Float32Array>("waypoint_topic", 10);
+      this->create_publisher<std_msgs::msg::Float32MultiArray>("waypoint_topic", 10);
   SOCINTSub = this->create_subscription<std_msgs::msg::Bool>("SOCIntTopic", 10, std::bind(&WaypointExecutive::SOCIntCallback, this, std::placeholders::_1));
   VisionSub =
       this->create_subscription<std_msgs::msg::String>("VisionTopic", 10);
-  ManipulationPublisher =
-      this->create_publisher<std_msgs::msg::Int64>("manipulationCommand", 10);
+  Manipulation_Publisher =
+      this->create_publisher<std_msgs::msg::Int32>("manipulationCommand", 10);
 }
 
 // Need to think about a better StopWorking mechanism.
@@ -18,7 +18,7 @@ void WaypointExecutive::Controller() {
   MissionQueue.parseJSONForMission();
   while (!MissionQueue.allTasksComplete()) {
     getNewMissionTask();
-    while (!CurrentTask.steps.empty()) {
+    while (!CurrentTask.steps_queue.empty()) {
       getNewMissionStep();
       SendCurrentWaypoint();
       while (!isCurrentStepCompleted()) {
@@ -55,7 +55,7 @@ bool WaypointExecutive::isCurrentStepCompleted() {
   //use the vision condition option to check if done?
 
   if (CurrentStep.ManipulationCodeandStatus.has_value()) {
-    if (!CurrentStep.ManipulationCodeandStatus.second) {
+    if (!CurrentStep.ManipulationCodeandStatus.value().second) {
       return false;
     }
   }
@@ -101,11 +101,11 @@ void WaypointExecutive::CheckINTofStep() {
 ///@brief O(1) Algo and no conditional waiting. Service the INT. Clear the
 /// Current Interrupt at the end.
 void WaypointExecutive::ServiceINTofStep() {
-  Interrupts ServiceINT = Current_Interrupts.top();
+  Interrupts ServiceINT = Current_Interrupts.front();
   if (ServiceINT.SOCDANGER) {
     // Battery WayPoint
-    CurrentTask = {.WaypointPointer =
-                       std::make_shared<waypointPtr>()}; // Creating a new.
+    CurrentStep = Step();
+//CurrentStep.WaypointPointer = std::make_shared<waypointPtr>(); // Creating a new waypoint.
     SendCurrentWaypoint();
     StopWorking = true;
     EndReport();
@@ -114,9 +114,10 @@ void WaypointExecutive::ServiceINTofStep() {
     //
   }
   if (ServiceINT.TriggerManipSendCode) {
-     Manipulation_Publisher->publish(
-     CurrentTask.ManipulationCodeandStatus.first);
-    CurrentTask.ManipulationCodeandStatus.second = true;
+ auto manipulation_msg = std::make_unique<std_msgs::msg::Int32>();
+    manipulation_msg->data = CurrentStep.ManipulationCodeandStatus.value().first;
+    Manipulation_Publisher->publish(std::move(manipulation_msg));
+    CurrentStep.ManipulationCodeandStatus.value().second = true;
   }
   Current_Interrupts.pop();
 }
@@ -130,16 +131,17 @@ void WaypointExecutive::getNewMissionTask() {
 void WaypointExecutive::getNewMissionStep() {
   // fetch or predetermined waypoints.
   // Predetermined -> Waypoint Objects?
-  CurrentStep = CurrentTask.pop();
+  CurrentStep = CurrentTask.steps_queue.front();
+  CurrentTask.steps_queue.pop();
 }
 
-void WaypointExecutive::SOCIntCallback(const std_msgs::Bool::SharedPtr msg) {
+void WaypointExecutive::SOCIntCallback(const std_msgs::msg::Bool::SharedPtr msg) {
   isSOCINT = msg->data;
 }
 
 void WaypointExecutive::ManipulationStep(int code) {
   // Send Manipulation Code over Publisher.
-  ManipulationPublisher->publish(code);
+  Manipulation_Publisher->publish(code);
 }
 
 ///@brief O(1) Algo and no conditional waiting.
@@ -157,8 +159,8 @@ bool WaypointExecutive::MetPositionandTimeReq() {
   // Time Req
   if (CurrentStep.HoldWaypTime_TimeElapsed.has_value()) {
     CurrentStep.CalcTimer();
-    if (CurrentStep.HoldWaypTime_TimeElapsed.first >
-        CurrentStep.HoldWaypTime_TimeElapsed.second) {
+    if (CurrentStep.HoldWaypTime_TimeElapsed.value().first >
+        CurrentStep.HoldWaypTime_TimeElapsed.value().second) {
       return false;
     }
   }
@@ -178,5 +180,5 @@ void WaypointExecutive::EndReport(){
   }
   ReportFile << "___________END OF REPORT ___________" << std::endl;
   ReportFile.close();
-  ~WaypointExecutive();
+  this->~WaypointExecutive();
 }

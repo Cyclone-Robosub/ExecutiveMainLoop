@@ -1,3 +1,7 @@
+#ifndef TASK_HPP
+#define TASK_HPP
+
+
 #include <memory>
 #include <optional>
 #include <string>
@@ -34,6 +38,7 @@ struct Step {
 
 struct Task {
   std::string name;
-  std::queue<Step> steps;
+  std::queue<Step> steps_queue;
 };
 
+#endif

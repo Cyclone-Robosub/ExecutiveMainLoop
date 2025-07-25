@@ -71,7 +71,7 @@ void MissionAnalyser::parseJSONForMission() {
                     }
                     // TODO: add handling for any other signals (not sure if we're going to have any others?)
                 }                    
-                task.steps.push(step);
+                task.steps_queue.push(step);
             }                
             mission.push(task);
         }
