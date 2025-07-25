@@ -6,9 +6,11 @@
 void WaypointExecutive::SetupROS() {
   WaypointPublisher =
       this->create_publisher<std_msgs::msg::Float32Array>("waypoint_topic", 10);
-  SOCINTSub = this->create_subscription<std_msgs::msg::Bool>("SOCIntTopic", 10);
+  SOCINTSub = this->create_subscription<std_msgs::msg::Bool>("SOCIntTopic", 10, std::bind(&WaypointExecutive::SOCIntCallback, this, std::placeholders::_1));
   VisionSub =
       this->create_subscription<std_msgs::msg::String>("VisionTopic", 10);
+  ManipulationPublisher =
+      this->create_publisher<std_msgs::msg::Int64>("manipulationCommand", 10);
 }
 
 // Need to think about a better StopWorking mechanism.
@@ -35,8 +37,12 @@ void WaypointExecutive::Controller() {
 ///@brief O(1) Algo and no conditional waiting.
 void WaypointExecutive::SendCurrentWaypoint() {
   CurrentWaypointPtr = CurrentStep.WaypointPointer;
-  // Use Custom msg.
-  WaypointPublisher->publish((CurrentWaypointPtr.get_array_copy()));
+  auto message = std_msgs::msg::Float32MultiArray();
+  message.data.resize(6);
+  for (int i = 0; i < 6; ++i) {
+    message.data[i] = static_cast<float>((*CurrentWaypointPtr)[i]);
+  }
+  WaypointPublisher->publish(message);
   // start the timer
 }
 ///@brief O(1) and no conditional waiting. Returns True if the task should still
@@ -48,8 +54,8 @@ bool WaypointExecutive::isCurrentStepCompleted() {
 
   //use the vision condition option to check if done?
 
-  if (ManipulationCodeandStatus.has_value()) {
-    if (!ManipulationCodeandStatus.second) {
+  if (CurrentStep.ManipulationCodeandStatus.has_value()) {
+    if (!CurrentStep.ManipulationCodeandStatus.second) {
       return false;
     }
   }
@@ -59,24 +65,24 @@ bool WaypointExecutive::isCurrentStepCompleted() {
 ///@brief Conditional waiting for some and for now. Pushes INT instance to the queue of Current Queue.
 void WaypointExecutive::CheckINTofStep() {
   Interrupts generateINT;
+  // Make this better if possible.
+  bool didInterruptHappen = false;
   // check vision if needed -> Manipulation Tasks can be coded apart and along
   // side this vision requriment along with position and altitude.
   if (CurrentStep.VisionCommand.has_value()) {
-    switch (VisionCommand) {
-    case "BINS_SPOTTED":
-      // Check Bool
-      // Reset the Flag.
-      // interrupt.BINSSPOTTED = true;
-      break;
-    case "DROP_INTO_BINS":
-      /*if(Altitude is good)
-          {
-            Vision reset flag.
-            interrupt.DROPTHEBINS;
-          }*/
-      break;
-    default:
-      break;
+    const auto &cmd = CurrentStep.VisionCommand.value();
+
+    if (cmd == "BINS_SPOTTED") {
+      // Handle BINS_SPOTTED
+      // e.g., reset flag, set interrupt
+      generateINT.BINS_SPOTTED = true;
+      didInterruptHappen = true;
+
+    } else if (cmd == "DROP_INTO_BINS") {
+      // Handle DROP_INTO_BINS
+      // e.g., check altitude, reset flag, set manip code
+      generateINT.TriggerManipSendCode = true;
+      didInterruptHappen = true;
     }
   }
   // listen to the vision topic;
@@ -84,7 +90,10 @@ void WaypointExecutive::CheckINTofStep() {
   // check battery
   if (isSOCINT.has_value()) {
     isSOCINT.reset();
-    generateINT.SOCDanger = true;
+    generateINT.SOCDANGER = true;
+    didInterruptHappen = true;
+  }
+  if (didInterruptHappen) {
     Current_Interrupts.push(generateINT);
   }
 }
@@ -93,7 +102,7 @@ void WaypointExecutive::CheckINTofStep() {
 /// Current Interrupt at the end.
 void WaypointExecutive::ServiceINTofStep() {
   Interrupts ServiceINT = Current_Interrupts.top();
-  if (ServiceINT.SOCDanger) {
+  if (ServiceINT.SOCDANGER) {
     // Battery WayPoint
     CurrentTask = {.WaypointPointer =
                        std::make_shared<waypointPtr>()}; // Creating a new.
@@ -104,9 +113,9 @@ void WaypointExecutive::ServiceINTofStep() {
   if(ServiceINT.BINS_SPOTTED){
     //
   }
-  if (ServiceINT.ManipulationCodeSend) {
-    // Manipulation_Publisher ->publish(
-    // CurrentTask.ManipulationCodeandStatus.first);
+  if (ServiceINT.TriggerManipSendCode) {
+     Manipulation_Publisher->publish(
+     CurrentTask.ManipulationCodeandStatus.first);
     CurrentTask.ManipulationCodeandStatus.second = true;
   }
   Current_Interrupts.pop();
@@ -128,8 +137,9 @@ void WaypointExecutive::SOCIntCallback(const std_msgs::Bool::SharedPtr msg) {
   isSOCINT = msg->data;
 }
 
-void WaypointExecutive::ManipulationTask() {
+void WaypointExecutive::ManipulationStep(int code) {
   // Send Manipulation Code over Publisher.
+  ManipulationPublisher->publish(code);
 }
 
 ///@brief O(1) Algo and no conditional waiting.

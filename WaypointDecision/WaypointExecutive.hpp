@@ -2,6 +2,9 @@
 #include "Task.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "std_msgs/msg/float32MultiArray.hpp"
+#include "std_msgs/msg/string.hpp"
+#include "std_msgs/msg/int32.hpp"
 #include <cstddef>
 #include <fstream>
 #include <iostream>
@@ -38,29 +41,20 @@ and Manipulation should solve this implementation problem.
 //     Custom MSG for Float or just get_x ... -> Done
 // Manipulation Code Checkup with ManipulationTask() updated. -> Needs Review
 // StopWorking mechanism in Controller -> Done
-<<<<<<< HEAD
-// Timer Implementation Location Change to Task.hpp -> Done
-// Outside WaypointExec work -> build scripts and mainWaypoint.cpp
-=======
 // Timer Implementation Location Change to Task.hpp -> Done 
 // EndReport Details and Information Handling
->>>>>>> efd9862060ad4159339b445f86beba7900876e77
 
 
 
 struct Interrupts {
   bool SOCDANGER{false};
   bool BINS_SPOTTED{false};
-<<<<<<< HEAD
   bool DROP_INTO_BINS{false}; //READY_TO_DROP_INTO_BINS
-=======
- // bool DROP_INTO_BINS{false};
->>>>>>> efd9862060ad4159339b445f86beba7900876e77
   bool TriggerManipSendCode{false};
 };
 
-class WaypointExecutive {
-  WaypointExecutive() : MissionQueue("JSON_Parser/MissionPath.JSON") {
+class WaypointExecutive : public rclcpp::Node {
+  WaypointExecutive() : MissionQueue("JSON_Parser/MissionPath.JSON"), Node("WaypointExecutiveNode") {
     SetupROS();
     Controller();
   }
@@ -88,11 +82,12 @@ private:
   // callback ROS2 functions
   
   rclcpp::Publisher<std_msgs::msg::Float32Array>::SharedPtr WaypointPublisher;
-  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr ManipulationPublisher;
-  rclcpp::Subscriber<std_msgs::msg::String>::SharedPtr VisionSub;
-  rclcpp::Subscriber<std_msgs::msg::Bool>::SharedPtr SOCINTSub;
-  //Make This Pair or Class to save the interrupt details.
-  bool StopWorking{false};
+  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr ManipulationPublisher;
+  rclcpp::Subscription<std_msgs::msg::String>::SharedPtr VisionSub;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr SOCINTSub;
+  void SOCIntCallback(const std__msgs::msg::Bool::SharedPtr msg);
+      // Make This Pair or Class to save the interrupt details.
+      bool StopWorking{false};
   MissionAnalyser MissionQueue;
   bool MetPositionandTimeReq();
   void EndReport();
