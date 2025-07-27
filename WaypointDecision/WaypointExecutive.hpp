@@ -52,6 +52,7 @@ struct Interrupts {
 };
 
 class WaypointExecutive : public rclcpp::Node {
+  public:
   WaypointExecutive()
       : MissionQueue("JSON_Parser/MissionPath.JSON"),
         Node("WaypointExecutiveNode") {
