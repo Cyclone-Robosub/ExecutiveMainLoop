@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(executive_main_loop)
+project(waypoint_decision)
 
 # Option to mock RPi (Pico replacement)
 option(MOCK_RPI "Use mock RPi functions (no Pico)" OFF)
@@ -15,7 +15,6 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
-find_package(yaml-cpp REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(Threads REQUIRED)
 
@@ -29,15 +28,12 @@ add_subdirectory(lib/Executive_Propulsion)
 
 # Main executable
 add_executable(ExecutiveExecutable
-  src/main.cpp
-  src/ExecutiveLoop.cpp
-  src/ExecutiveLoop.hpp
-  src/SensorDataConfig.cpp
-  src/SensorDataConfig.hpp
-  src/Pwm_Command.cpp
-  src/Pwm_Command.hpp
-  SetupConfig/SetupRobot.cpp
-  src/Pwm_Command.cpp
+  WaypointDecision/mainWaypoint.cpp
+  WaypointDecision/Task.hpp
+  WaypointDecision/Task.cpp
+  WaypointDecision/WaypointExecutive.hpp
+  WaypointDecision/WaypointExecutive.cpp
+  WaypointDecision/JSON_Parser/MissionAnalyser.hpp
 )
 
 target_include_directories(ExecutiveExecutable PUBLIC
@@ -46,10 +42,10 @@ target_include_directories(ExecutiveExecutable PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/SetupConfig
   ${CMAKE_CURRENT_SOURCE_DIR}/Manipulation
   ${CMAKE_CURRENT_SOURCE_DIR}/lib/Executive_Propulsion/src
+  ${CMAKE_CURRENT_SOURCE_DIR}/lib/Json
 )
 
 target_link_libraries(ExecutiveExecutable
-  yaml-cpp
   PropulsionFunctions
 )
 
