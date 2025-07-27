@@ -39,7 +39,6 @@ void WaypointExecutive::Controller() {
 }
 ///@brief O(1) Algo and no conditional waiting.
 void WaypointExecutive::SendCurrentWaypoint() {
-  CurrentWaypointPtr = CurrentStep.WaypointPointer;
   auto message = std_msgs::msg::Float32MultiArray();
   message.data.resize(6);
   for (int i = 0; i < 6; ++i) {
@@ -74,7 +73,7 @@ void WaypointExecutive::CheckINTofStep() {
   // check vision if needed -> Manipulation Tasks can be coded apart and along
   // side this vision requriment along with position and altitude.
   if (CurrentStep.VisionCommand.has_value()) {
-    const auto &cmd = CurrentStep.VisionCommand.value();
+    const auto cmd = CurrentStep.VisionCommand.value();
 
     if (cmd == "BINS_SPOTTED") {
       // Handle BINS_SPOTTED
@@ -112,11 +111,11 @@ void WaypointExecutive::ServiceINTofStep() {
     // CurrentStep.WaypointPointer = std::make_shared<waypointPtr>(); //
     // Creating a new waypoint.
     SendCurrentWaypoint();
-    StopWorking = true;
     EndReport();
   }
   if (ServiceINT.BINS_SPOTTED) {
-    //
+    //Get Waypoint or coordinate from Vision. 
+    SendCurrentWaypoint();
   }
   if (ServiceINT.TriggerManipSendCode) {
     ManipulationStep(CurrentStep.ManipulationCodeandStatus.value().first);
@@ -136,6 +135,7 @@ void WaypointExecutive::getNewMissionStep() {
   // Predetermined -> Waypoint Objects?
   CurrentStep = CurrentTask.steps_queue.front();
   CurrentTask.steps_queue.pop();
+  CurrentWaypointPtr = CurrentStep.WaypointPointer;
 }
 
 void WaypointExecutive::SOCIntCallback(
@@ -174,15 +174,17 @@ bool WaypointExecutive::MetPositionandTimeReq() {
 }
 
 /// @brief: Will Exit itself after creating Report
-void WaypointExecutive::EndReport() {
-  std::ofstream ReportFile("End_Report");
+void WaypointExecutive::EndReport(Interrupts interrupt = Interrupts()) {
+  std::ofstream ReportFile;
+  ReportFile.open("End_Report.txt");
   ReportFile << "___________START OF REPORT__________" << std::endl;
   ReportFile << "Reason for Report : ";
-  if (StopWorking) {
-    ReportFile << "A predetermined flag to stop the controller." << std::endl;
-  } else {
-    ReportFile << "Finished all tasks." << std::endl;
+  if(MissionQueue.allTasksComplete()){
+    ReportFile << "All Tasks are Completed." << std::endl;
   }
+  if (interrupt.SOCDANGER) {
+    ReportFile << "State of Charge was low. Check Logs of SOC" << std::endl;
+  } 
   ReportFile << "___________END OF REPORT ___________" << std::endl;
   ReportFile.close();
   this->~WaypointExecutive();

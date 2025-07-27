@@ -35,6 +35,6 @@
 int main(int argc, char *argv[]) {
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<WaypointExecutive>());
-  rclcpp::shutdown();
+  //It is important not to have a shutdown...
   return 0;
 }
