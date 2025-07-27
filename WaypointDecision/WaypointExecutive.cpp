@@ -4,13 +4,16 @@
 #include <memory>
 
 void WaypointExecutive::SetupROS() {
-  WaypointPublisher =
-      this->create_publisher<std_msgs::msg::Float32MultiArray>("waypoint_topic", 10);
-  SOCINTSub = this->create_subscription<std_msgs::msg::Bool>("SOCIntTopic", 10, std::bind(&WaypointExecutive::SOCIntCallback, this, std::placeholders::_1));
+  WaypointPublisher = this->create_publisher<std_msgs::msg::Float32MultiArray>(
+      "waypoint_topic", 10);
+  SOCINTSub = this->create_subscription<std_msgs::msg::Bool>(
+      "SOCIntTopic", 10,
+      std::bind(&WaypointExecutive::SOCIntCallback, this,
+                std::placeholders::_1));
   VisionSub =
       this->create_subscription<std_msgs::msg::String>("VisionTopic", 10);
   Manipulation_Publisher =
-      this->create_publisher<std_msgs::msg::Int32>("manipulationCommand", 10);
+      this->create_publisher<std_msgs::msg::Int64>("manipulationCommand", 10);
 }
 
 // Need to think about a better StopWorking mechanism.
@@ -52,7 +55,7 @@ bool WaypointExecutive::isCurrentStepCompleted() {
     return false;
   }
 
-  //use the vision condition option to check if done?
+  // use the vision condition option to check if done?
 
   if (CurrentStep.ManipulationCodeandStatus.has_value()) {
     if (!CurrentStep.ManipulationCodeandStatus.value().second) {
@@ -62,7 +65,8 @@ bool WaypointExecutive::isCurrentStepCompleted() {
   // else
   return true;
 }
-///@brief Conditional waiting for some and for now. Pushes INT instance to the queue of Current Queue.
+///@brief Conditional waiting for some and for now. Pushes INT instance to the
+/// queue of Current Queue.
 void WaypointExecutive::CheckINTofStep() {
   Interrupts generateINT;
   // Make this better if possible.
@@ -105,18 +109,17 @@ void WaypointExecutive::ServiceINTofStep() {
   if (ServiceINT.SOCDANGER) {
     // Battery WayPoint
     CurrentStep = Step();
-//CurrentStep.WaypointPointer = std::make_shared<waypointPtr>(); // Creating a new waypoint.
+    // CurrentStep.WaypointPointer = std::make_shared<waypointPtr>(); //
+    // Creating a new waypoint.
     SendCurrentWaypoint();
     StopWorking = true;
     EndReport();
   }
-  if(ServiceINT.BINS_SPOTTED){
+  if (ServiceINT.BINS_SPOTTED) {
     //
   }
   if (ServiceINT.TriggerManipSendCode) {
- auto manipulation_msg = std::make_unique<std_msgs::msg::Int32>();
-    manipulation_msg->data = CurrentStep.ManipulationCodeandStatus.value().first;
-    Manipulation_Publisher->publish(std::move(manipulation_msg));
+    ManipulationStep(CurrentStep.ManipulationCodeandStatus.value().first);
     CurrentStep.ManipulationCodeandStatus.value().second = true;
   }
   Current_Interrupts.pop();
@@ -135,23 +138,26 @@ void WaypointExecutive::getNewMissionStep() {
   CurrentTask.steps_queue.pop();
 }
 
-void WaypointExecutive::SOCIntCallback(const std_msgs::msg::Bool::SharedPtr msg) {
+void WaypointExecutive::SOCIntCallback(
+    const std_msgs::msg::Bool::SharedPtr msg) {
   isSOCINT = msg->data;
 }
 
 void WaypointExecutive::ManipulationStep(int code) {
   // Send Manipulation Code over Publisher.
-  Manipulation_Publisher->publish(code);
+  auto manipulation_msg = std::make_unique<std_msgs::msg::Int64>();
+  manipulation_msg->data = code;
+  Manipulation_Publisher->publish(std::move(manipulation_msg));
 }
 
 ///@brief O(1) Algo and no conditional waiting.
 bool WaypointExecutive::MetPositionandTimeReq() {
   // check position var (include tolerance) with CurrentWaypointPtr
-  // if position not met -> if(optional) CurrentStep.StopTimer(); //Missed after reaching
-  // it. then return false; else if position met {
+  // if position not met -> if(optional) CurrentStep.StopTimer(); //Missed after
+  // reaching it. then return false; else if position met {
   if (CurrentStep.HoldWaypTime_TimeElapsed.has_value()) {
     if (!CurrentStep.isTimerOn) {
-     CurrentStep.StartTimer();
+      CurrentStep.StartTimer();
     }
   }
   //}
@@ -167,15 +173,14 @@ bool WaypointExecutive::MetPositionandTimeReq() {
   return true;
 }
 
-
 /// @brief: Will Exit itself after creating Report
-void WaypointExecutive::EndReport(){
+void WaypointExecutive::EndReport() {
   std::ofstream ReportFile("End_Report");
   ReportFile << "___________START OF REPORT__________" << std::endl;
   ReportFile << "Reason for Report : ";
-  if(StopWorking){
+  if (StopWorking) {
     ReportFile << "A predetermined flag to stop the controller." << std::endl;
-  }else{
+  } else {
     ReportFile << "Finished all tasks." << std::endl;
   }
   ReportFile << "___________END OF REPORT ___________" << std::endl;

@@ -3,8 +3,8 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "std_msgs/msg/float32_multi_array.hpp"
+#include "std_msgs/msg/int64.hpp"
 #include "std_msgs/msg/string.hpp"
-#include "std_msgs/msg/int32.hpp"
 #include <cstddef>
 #include <fstream>
 #include <iostream>
@@ -30,36 +30,36 @@ and Manipulation should solve this implementation problem.
 
 
 */
-///@TODO: 
-// Tasks to Complete 
-// Interrupt Handling 
+///@TODO:
+// Tasks to Complete
+// Interrupt Handling
 //    Controller vs Task Interrupts Handling and Implementaion Location -> Done
 //    Then Finish up CheckINTofStep and ServiceINTofStep -> Done
 //    Upload Design Image -> Not Needed.
 // ROS2
-//     Vision and Manipulation and Position ROS Topics -> Waiting for External (Manipulation Done)
-//     Custom MSG for Float or just get_x ... -> Done
+//     Vision and Manipulation and Position ROS Topics -> Waiting for External
+//     (Manipulation Done) Custom MSG for Float or just get_x ... -> Done
 // Manipulation Code Checkup with ManipulationTask() updated. -> Needs Review
 // StopWorking mechanism in Controller -> Done
-// Timer Implementation Location Change to Task.hpp -> Done 
+// Timer Implementation Location Change to Task.hpp -> Done
 // EndReport Details and Information Handling
-
-
 
 struct Interrupts {
   bool SOCDANGER{false};
   bool BINS_SPOTTED{false};
-  bool DROP_INTO_BINS{false}; //READY_TO_DROP_INTO_BINS
+  bool DROP_INTO_BINS{false}; // READY_TO_DROP_INTO_BINS
   bool TriggerManipSendCode{false};
 };
 
 class WaypointExecutive : public rclcpp::Node {
-  WaypointExecutive() : MissionQueue("JSON_Parser/MissionPath.JSON"), Node("WaypointExecutiveNode") {
+  WaypointExecutive()
+      : MissionQueue("JSON_Parser/MissionPath.JSON"),
+        Node("WaypointExecutiveNode") {
     SetupROS();
     Controller();
   }
 
-private: 
+private:
   void SetupROS();
   void Controller();
   void SendCurrentWaypoint();
@@ -80,14 +80,15 @@ private:
   // Need to resolve the Time Elapsed and Counting.
 
   // callback ROS2 functions
-  
-  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr WaypointPublisher;
-  rclcpp::Publisher<std_msgs::msg::Int32>::SharedPtr Manipulation_Publisher;
+
+  rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr
+      WaypointPublisher;
+  rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr Manipulation_Publisher;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr VisionSub;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr SOCINTSub;
   void SOCIntCallback(const std_msgs::msg::Bool::SharedPtr msg);
-      // Make This Pair or Class to save the interrupt details.
-      bool StopWorking{false};
+  // Make This Pair or Class to save the interrupt details.
+  bool StopWorking{false};
   MissionAnalyser MissionQueue;
   bool MetPositionandTimeReq();
   void EndReport();
