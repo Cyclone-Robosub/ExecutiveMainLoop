@@ -10,6 +10,8 @@ void WaypointExecutive::SetupROS() {
       "SOCIntTopic", 10,
       std::bind(&WaypointExecutive::SOCIntCallback, this,
                 std::placeholders::_1));
+  CurrentTaskPub =
+      this->create_publisher<std_msgs::msg::String>("CurrentTaskTopic", 10);
   VisionSub =
       this->create_subscription<std_msgs::msg::String>("VisionTopic", 10);
   Manipulation_Publisher =
@@ -111,10 +113,10 @@ void WaypointExecutive::ServiceINTofStep() {
     // CurrentStep.WaypointPointer = std::make_shared<waypointPtr>(); //
     // Creating a new waypoint.
     SendCurrentWaypoint();
-    EndReport();
+    EndReport(ServiceINT);
   }
   if (ServiceINT.BINS_SPOTTED) {
-    //Get Waypoint or coordinate from Vision. 
+    // Get Waypoint or coordinate from Vision.
     SendCurrentWaypoint();
   }
   if (ServiceINT.TriggerManipSendCode) {
@@ -126,6 +128,9 @@ void WaypointExecutive::ServiceINTofStep() {
 
 void WaypointExecutive::getNewMissionTask() {
   CurrentTask = MissionQueue.popNextTask();
+  auto msg = std::make_unique<std_msgs::msg::String>();
+  msg->data = CurrentTask.name;
+  CurrentTaskPub->publish(std::move(msg));
 }
 
 ///@brief O(1) Algo and no conditional waiting. Has authority of changing
@@ -136,6 +141,7 @@ void WaypointExecutive::getNewMissionStep() {
   CurrentStep = CurrentTask.steps_queue.front();
   CurrentTask.steps_queue.pop();
   CurrentWaypointPtr = CurrentStep.WaypointPointer;
+  auto msg = std::make_unique<std_msgs::msg::String>();
 }
 
 void WaypointExecutive::SOCIntCallback(
@@ -174,17 +180,17 @@ bool WaypointExecutive::MetPositionandTimeReq() {
 }
 
 /// @brief: Will Exit itself after creating Report
-void WaypointExecutive::EndReport(Interrupts interrupt = Interrupts()) {
+void WaypointExecutive::EndReport(Interrupts interrupt) {
   std::ofstream ReportFile;
   ReportFile.open("End_Report.txt");
   ReportFile << "___________START OF REPORT__________" << std::endl;
   ReportFile << "Reason for Report : ";
-  if(MissionQueue.allTasksComplete()){
+  if (MissionQueue.allTasksComplete()) {
     ReportFile << "All Tasks are Completed." << std::endl;
   }
   if (interrupt.SOCDANGER) {
     ReportFile << "State of Charge was low. Check Logs of SOC" << std::endl;
-  } 
+  }
   ReportFile << "___________END OF REPORT ___________" << std::endl;
   ReportFile.close();
   this->~WaypointExecutive();

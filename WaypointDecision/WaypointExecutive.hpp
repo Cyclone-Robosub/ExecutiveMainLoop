@@ -3,6 +3,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "std_msgs/msg/float32_multi_array.hpp"
+#include "std_msgs/msg/int32.hpp"
 #include "std_msgs/msg/int64.hpp"
 #include "std_msgs/msg/string.hpp"
 #include <cstddef>
@@ -42,7 +43,8 @@ and Manipulation should solve this implementation problem.
 // Manipulation Code Checkup with ManipulationTask() updated. -> Needs Review
 // StopWorking mechanism in Controller -> Done
 // Timer Implementation Location Change to Task.hpp -> Done
-// EndReport Details and Information Handling
+// EndReport Details and Information Handling -> Done
+//  Make the CurrentWaypointPtr a parameter for SendCurrentWaypoint.
 
 struct Interrupts {
   bool SOCDANGER{false};
@@ -52,7 +54,7 @@ struct Interrupts {
 };
 
 class WaypointExecutive : public rclcpp::Node {
-  public:
+public:
   WaypointExecutive()
       : MissionQueue("JSON_Parser/MissionPath.JSON"),
         Node("WaypointExecutiveNode") {
@@ -84,6 +86,7 @@ private:
 
   rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr
       WaypointPublisher;
+  rclcpp::Publisher<std_msgs::msg::String>::SharedPtr CurrentTaskPub;
   rclcpp::Publisher<std_msgs::msg::Int64>::SharedPtr Manipulation_Publisher;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr VisionSub;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr SOCINTSub;
@@ -92,5 +95,5 @@ private:
   bool StopWorking{false};
   MissionAnalyser MissionQueue;
   bool MetPositionandTimeReq();
-  void EndReport();
+  void EndReport(Interrupts interrupt = Interrupts());
 };
