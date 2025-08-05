@@ -4,16 +4,20 @@
 #include <memory>
 
 void WaypointExecutive::SetupROS() {
+  callbackINT = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+  auto INTOPTIONS = rclcpp::SubscriptionOptions();
+  INTOPTIONS.callback_group = callbackINT;
+
   WaypointPublisher = this->create_publisher<std_msgs::msg::Float32MultiArray>(
       "waypoint_topic", 10);
   SOCINTSub = this->create_subscription<std_msgs::msg::Bool>(
       "SOCIntTopic", 10,
       std::bind(&WaypointExecutive::SOCIntCallback, this,
-                std::placeholders::_1));
+                std::placeholders::_1), INTOPTIONS);
   CurrentTaskPub =
       this->create_publisher<std_msgs::msg::String>("CurrentTaskTopic", 10);
   VisionSub =
-      this->create_subscription<std_msgs::msg::String>("VisionTopic", 10);
+      this->create_subscription<std_msgs::msg::String>("VisionTopic", 10); //INTOPTIONS
   Manipulation_Publisher =
       this->create_publisher<std_msgs::msg::Int64>("manipulationCommand", 10);
 }

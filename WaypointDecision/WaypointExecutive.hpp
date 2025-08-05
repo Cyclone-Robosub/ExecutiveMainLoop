@@ -83,7 +83,7 @@ private:
   // Need to resolve the Time Elapsed and Counting.
 
   // callback ROS2 functions
-
+  rclcpp::CallbackGroup::SharedPtr callbackINT;
   rclcpp::Publisher<std_msgs::msg::Float32MultiArray>::SharedPtr
       WaypointPublisher;
   rclcpp::Publisher<std_msgs::msg::String>::SharedPtr CurrentTaskPub;
