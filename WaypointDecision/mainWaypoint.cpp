@@ -32,9 +32,17 @@
     Make the publisher shared ptr for the Waypoint so that either a linked list
    or vector impelmentation works.
 */
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<WaypointExecutive>());
+  std::shared_ptr<WaypointExecutive> Node = std::make_shared<WaypointExecutive>();
+  std::shared_ptr<rclcpp::executors::MultiThreadedExecutor> executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+  executor->add_node(Node);
+  std::cout << "ROS2 Waypoint running" << std::endl;
+  std::jthread spin_ros([executor]()
+                        { executor->spin(); });
+  int ResultCode = Node->Controller();
+  // This will end when it needs to ^.
   rclcpp::shutdown();
-  return 0;
+  return ResultCode;
 }

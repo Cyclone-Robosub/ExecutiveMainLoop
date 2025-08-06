@@ -7,6 +7,7 @@
 #include "std_msgs/msg/int64.hpp"
 #include "std_msgs/msg/string.hpp"
 #include <cstddef>
+#include "../../crs_common/position/position.hpp"
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -56,15 +57,13 @@ struct Interrupts {
 class WaypointExecutive : public rclcpp::Node {
 public:
   WaypointExecutive()
-      : MissionQueue("JSON_Parser/MissionPath.JSON"),
+      : MissionQueue("../../WaypointDecision/JSON_Parser/MissionPath.JSON"),
         Node("WaypointExecutiveNode") {
     SetupROS();
-    Controller();
   }
-
+int Controller();
 private:
   void SetupROS();
-  void Controller();
   void SendCurrentWaypoint();
   void getNewMissionStep();
   void getNewMissionTask();

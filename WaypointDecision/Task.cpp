@@ -4,6 +4,7 @@
 void Step::StartTimer() {
   timeInital = std::chrono::steady_clock::now();
   isTimerOn = true;
+  std::cout << "running" << std::endl;
 }
 
 ///@brief O(1) Algo and no conditional waiting.

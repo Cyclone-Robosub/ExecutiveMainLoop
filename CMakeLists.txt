@@ -33,7 +33,8 @@ add_executable(ExecutiveExecutable
   WaypointDecision/Task.cpp
   WaypointDecision/WaypointExecutive.hpp
   WaypointDecision/WaypointExecutive.cpp
-  WaypointDecision/JSON_Parser/MissionAnalyser.hpp
+  WaypointDecision/JSON_Parser/MissionAnalyser.cpp
+  ../crs_common/position/position.cpp
 )
 
 target_include_directories(ExecutiveExecutable PUBLIC

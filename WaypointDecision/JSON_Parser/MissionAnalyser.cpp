@@ -1,7 +1,7 @@
 #include "MissionAnalyser.hpp"
 #include <fstream>
 #include <iostream>
-
+#include <filesystem>
 using json = nlohmann::json;
 
 MissionAnalyser::MissionAnalyser(std::string filePath) : filePath(filePath) {}
@@ -14,7 +14,9 @@ Position MissionAnalyser::makePositionFromJSON(json::reference jsonData) {
 void MissionAnalyser::parseJSONForMission() {
     // Open and read the JSON file
     std::ifstream file(filePath);
-    
+    if(!file.is_open()){
+        throw std::runtime_error("The Mission path file did not open"); 
+    }
     json missionJson;
     file >> missionJson;
     
@@ -25,8 +27,8 @@ void MissionAnalyser::parseJSONForMission() {
     
     for (auto& taskJson : missionJson["tasks"]) { // TODO: Not sure when to set interruptable to true, so it's always false...
         for (auto it = taskJson.begin(); it != taskJson.end(); it++) {
-            Task task;
-            task.name = it.key(); // iterator key is name of steps list from JSON (i.e. "Octagon")
+            Task newTask;
+            newTask.name = it.key(); // iterator key is name of steps list from JSON (i.e. "Octagon")
             
             for (auto& stepJson : it.value()) { // iterator value is the list elements themselves
                 Step step;
@@ -39,7 +41,7 @@ void MissionAnalyser::parseJSONForMission() {
                 else if (stepJson.contains("set_control_mode")) { // not sure if this should be handled seperately. What does changing control mode involve?
                     std::string mode = stepJson["set_control_mode"].get<std::string>();
                     if (mode == "vision") {
-                        step.NeedsVision = true;
+                        step.VisionCommand = "Dropper";
                     }
                 }
                 else if (stepJson.contains("waypoint")) {
@@ -71,9 +73,9 @@ void MissionAnalyser::parseJSONForMission() {
                     }
                     // TODO: add handling for any other signals (not sure if we're going to have any others?)
                 }                    
-                task.steps_queue.push(step);
+                newTask.steps_queue.push(step);
             }                
-            mission.push(task);
+            mission.push(newTask);
         }
     }
 }
@@ -84,7 +86,7 @@ bool MissionAnalyser::allTasksComplete() {
 
 Task MissionAnalyser::popNextTask() {
     if (allTasksComplete()) {
-        return Task{}; // return empty task if queue is empty
+        return Task{}; // return empty newTask if queue is empty
     }
     Task nextTask = mission.front();
     mission.pop();
