@@ -1,6 +1,10 @@
-# DriverEnvironment
-Please Read https://www.notion.so/crsucd/GitHub-Organization-1d88a3eca2f0808f9eacc3a7fbea26df?pvs=4 if developing for us
-to understand the branch mangement.
+# Introduction
+This was a framework for the main software architecture for the robot during the 2024-2025 season. The idea was to scale all of the robot's functions and tasks with threads based on the Ubuntu operating system to with a primary focus on performance, data synchronization, and efficiency (Threads are easier to switch than processes),
+while not giving up completely on readability, flexibility, and testing. 
+Setting up, building, and compiling may be outdated due to outdated hardware, such as the IMU. This has been replaced by the leadership's decision for Waypoint Executive and Thrust Control.  
+
+Main contributors: Tanishq Dwivedi, William Barber, and Danny Kwong.
+
 ## Set up
 ---
 Run only once to set up ROS on your environment:
@@ -104,6 +108,8 @@ Then do:
 git submodule sync
 ```
 And finally, try initing the submodules.
+
+
 
 
 NOTES:
