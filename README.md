@@ -1,7 +1,7 @@
 # Introduction
-This was a framework for the main software architecture for the robot during the 2024-2025 season. The idea was to scale all of the robot's functions and tasks with threads based on the Ubuntu operating system to with a primary focus on performance, data synchronization, and efficiency (Threads are easier to switch than processes),
+This was the framework for the main software architecture for the robot during the 2024-2025 season. The idea was to scale all of the robot's functions and tasks with threads based on the Ubuntu operating system, with a primary focus on performance, data synchronization, and efficiency (Threads are easier to switch than processes).
 while not giving up completely on readability, flexibility, and testing. 
-Setting up, building, and compiling may be outdated due to outdated hardware, such as the IMU. This has been replaced by the leadership's decision for Waypoint Executive and Thrust Control.  
+Setting up, building, and compiling may be outdated due to outdated hardware, such as the IMU(replaced by a DVL). This repository has been replaced by the leadership's decision for Waypoint Executive and Thrust Control.  
 
 Main contributors: Tanishq Dwivedi, William Barber, and Danny Kwong.
 
